@@ -17,7 +17,7 @@ let sslConfig: any = false;
 
 if (sslCertPath) {
     try {
-        const certContent = readFileSync(join(process.cwd(), sslCertPath), 'utf8');
+        const certContent = process.env.SUPABASE_SSL_CERT_RAW ? process.env.SUPABASE_SSL_CERT_RAW : readFileSync(join(process.cwd(), sslCertPath), 'utf8');
         sslConfig = {
             ca: certContent,
             rejectUnauthorized: true
