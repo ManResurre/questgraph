@@ -36,7 +36,6 @@ const AppDataSource = new DataSource({
     password: process.env.SUPABASE_DB_PASSWORD,
     database: process.env.SUPABASE_DB_NAME,
     synchronize: false,
-    logging: true,
     entities: [User, Quest, Scene, Param, Choice, ParamValue, ParamOptions],
     subscribers: [],
     migrations: [__dirname + '/migration/*.ts'],
@@ -51,7 +50,8 @@ const AppDataSource = new DataSource({
             min: 1,
             idleTimeoutMillis: 30000
         }
-    }
+    },
+    logging: ['error']
 });
 
 declare global {

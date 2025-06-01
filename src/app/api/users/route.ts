@@ -1,9 +1,7 @@
 import {NextResponse} from 'next/server';
-import {DatabaseService} from '@/lib/database';
 import {User} from "@/entity";
 
 async function GET() {
-    await DatabaseService.create();
     try {
         const users = await User.find();
 
@@ -19,13 +17,6 @@ async function GET() {
 
 async function POST(request: Request) {
     try {
-        // const connection = await getDatabaseConnection();
-        // const userRepository = connection.getRepository(User);
-        // const body = await request.json();
-
-        // const newUser = userRepository.create(body);
-        // await userRepository.save(newUser);
-
         const res = {};
 
         return NextResponse.json(res, {status: 201});

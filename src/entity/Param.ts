@@ -17,7 +17,7 @@ import {ParamOptions} from "./ParamOptions";
 
 @Entity()
 export class Param extends BaseEntity {
-    @Expose({groups: ['update']})
+    @Expose()
     @PrimaryGeneratedColumn()
     id: number;
 

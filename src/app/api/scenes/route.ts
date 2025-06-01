@@ -1,0 +1,42 @@
+import {NextResponse} from 'next/server';
+import {plainToInstance} from "class-transformer";
+import {Scene} from "@/entity";
+import {DatabaseService} from "@/lib/DatabaseService";
+
+async function GET() {
+    try {
+        const scenes = await Scene.find();
+
+        return NextResponse.json(scenes);
+    } catch (error) {
+        console.error('API Error:', error);
+        return NextResponse.json(
+            {error: 'Internal Server Error'},
+            {status: 500}
+        );
+    }
+}
+
+async function POST(request: Request) {
+    await DatabaseService.getInstance();
+    const body = await request.json();
+
+    try {
+        const scene = plainToInstance(Scene, body);
+
+        const SceneRepository = Scene.getRepository();
+        await SceneRepository.manager.transaction(async (entityManager) => {
+            await entityManager.save(Scene, scene);
+        })
+
+        return NextResponse.json(scene, {status: 201});
+    } catch (error) {
+        console.error('API Error:', error);
+        return NextResponse.json(
+            {error: 'Failed to create/update quests'},
+            {status: 400}
+        );
+    }
+}
+
+export {GET, POST};

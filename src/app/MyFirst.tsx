@@ -1,5 +1,6 @@
 'use client';
 import {useEffect} from "react";
+import ParamsForm from "@/app/components/params_view/ParamsForm";
 
 // import supabase from "@/supabaseClient";
 
@@ -19,5 +20,6 @@ export function MyFirst() {
 
     return <div>
         <h1>QuestGraph Test</h1>
+        <ParamsForm/>
     </div>
 }

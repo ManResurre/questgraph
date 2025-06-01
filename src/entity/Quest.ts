@@ -1,10 +1,10 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm"
+import {BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm"
 import {Expose, Type} from "class-transformer";
 import {Scene} from "./Scene";
 import {Param} from "./Param";
 
 @Entity()
-export class Quest {
+export class Quest extends BaseEntity{
     @PrimaryGeneratedColumn()
     id: number;
 
