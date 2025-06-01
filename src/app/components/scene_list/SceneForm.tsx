@@ -22,7 +22,6 @@ import {Prec} from "@codemirror/state";
 import {Add} from "@mui/icons-material";
 import ChoiceForm from "@/app/components/choice/ChoiceForm";
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
-import {IScene, SceneService} from "@/app/components/scene_list/SceneService";
 import {redirect, useParams} from "next/navigation";
 import {Choice, Scene} from "@/entity";
 // import { format } from '@codemirror/formatting';

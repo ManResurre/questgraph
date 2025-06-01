@@ -26,6 +26,7 @@
       "@mui/styled-engine-sc": "^7.1.0",
       "@nestjs/typeorm": "^11.0.0",
       "@supabase/supabase-js": "^2.49.4",
+      "@uiw/codemirror-extensions-langs": "^4.23.12",
       "@uiw/codemirror-theme-darcula": "^4.23.12",
       "@uiw/react-codemirror": "^4.23.12",
       "class-transformer": "^0.5.1",
