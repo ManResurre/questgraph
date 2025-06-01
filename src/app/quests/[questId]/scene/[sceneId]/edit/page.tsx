@@ -3,7 +3,6 @@ import SceneForm from "@/app/components/scene_list/SceneForm";
 import {Box} from "@mui/material";
 import {Scene} from "@/entity";
 import {DatabaseService} from "@/lib/DatabaseService";
-import {classToPlain, instanceToPlain, TransformationType} from "class-transformer";
 
 export async function generateMetadata({params}: any) {
 
@@ -22,13 +21,7 @@ export async function generateMetadata({params}: any) {
 //     ];
 // }
 
-
-async function getSceneData(sceneId: number) {
-
-    return
-}
-
-export default async function EditScene({params}: { params: { sceneId: number } }) {
+export default async function EditScene({params}: { params: Promise<{ sceneId: number }> }) {
     await DatabaseService.getInstance();
     const {sceneId: id} = await params;
     const scene: any = await Scene.findOneBy({id});

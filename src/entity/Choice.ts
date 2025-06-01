@@ -1,7 +1,7 @@
 import {BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn, RelationId} from "typeorm";
 import {Scene} from "./Scene";
 
-@Entity()
+@Entity('choice')
 export class Choice extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;

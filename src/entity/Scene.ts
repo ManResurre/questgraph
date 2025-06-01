@@ -2,7 +2,6 @@ import {
     BaseEntity,
     Column,
     Entity,
-    Index,
     ManyToMany,
     ManyToOne,
     OneToMany,
@@ -14,7 +13,7 @@ import {Quest} from "./Quest";
 import {Param} from "./Param";
 import {Choice} from "./Choice";
 
-@Entity()
+@Entity('scene')
 export class Scene extends BaseEntity {
     @Expose()
     @PrimaryGeneratedColumn()

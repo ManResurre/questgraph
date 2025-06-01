@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "target": "ESNext",
-    "module": "CommonJS",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": [
       "dom",

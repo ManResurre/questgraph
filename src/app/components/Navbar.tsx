@@ -18,8 +18,6 @@ const Navbar = () => {
                             color="inherit">Home</Button>
                     <Button href="/quests" variant={pathname === '/quests' ? 'contained' : 'text'} component={Link}
                             color="inherit">Quests</Button>
-                    <Button href="/blog" variant={pathname.startsWith('/blog') ? 'contained' : 'text'} component={Link}
-                            color="inherit">Blog</Button>
                     <Button href="/about" variant={pathname === '/about' ? 'contained' : 'text'} component={Link}
                             color="inherit">About</Button>
                 </Toolbar>

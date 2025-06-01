@@ -4,13 +4,12 @@ import {Scene} from "@/entity";
 
 async function GET(
     request: Request,
-    {params}: { params: { sceneId: string } }
+    {params}: { params: Promise<{ sceneId: string }> }
 ) {
     try {
-        const resolvedParams = params instanceof Promise ? await params : params;
-        console.log(resolvedParams.sceneId);
+        const sceneId = await params;
 
-        const scene = await Scene.findOneBy({id: resolvedParams.sceneId});
+        const scene = await Scene.findOneBy({id: Number(sceneId)});
 
         // if (!scene) {
         //     return NextResponse.json(

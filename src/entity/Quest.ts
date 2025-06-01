@@ -3,7 +3,7 @@ import {Expose, Type} from "class-transformer";
 import {Scene} from "./Scene";
 import {Param} from "./Param";
 
-@Entity()
+@Entity('quest')
 export class Quest extends BaseEntity{
     @PrimaryGeneratedColumn()
     id: number;

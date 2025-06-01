@@ -2,7 +2,7 @@ import {BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typ
 import {Expose} from "class-transformer";
 import {Param} from "./Param";
 
-@Entity()
+@Entity('param_value')
 export class ParamValue extends BaseEntity {
     @Expose()
     @PrimaryGeneratedColumn()

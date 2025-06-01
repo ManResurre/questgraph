@@ -15,7 +15,7 @@ import {Scene} from "./Scene";
 import {ParamValue} from "./ParamValue";
 import {ParamOptions} from "./ParamOptions";
 
-@Entity()
+@Entity('param')
 export class Param extends BaseEntity {
     @Expose()
     @PrimaryGeneratedColumn()

@@ -8,14 +8,13 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {Choice, Scene} from "@/entity";
 
 export default function SceneList({scenes}: { scenes: Scene[] }) {
     const {questId} = useParams();
-    const {service} = useSceneContext();
+    // const {service} = useSceneContext();
 
     const [selectedScene, setSelectedScene] = useState(Number(localStorage.getItem('selected_scene')) || 1);
     const handleExpansion = (id: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -64,7 +63,7 @@ export default function SceneList({scenes}: { scenes: Scene[] }) {
                     <Card>
                         <CardContent>
                             <ol>
-                                {scene.choices.map((ch, index) => {
+                                {(scene.choices as unknown as Choice[]).map((ch, index) => {
                                     return <li key={`scene.${scene.name}.choice.${index}`}>
                                         <Button size="small" variant="text">{ch.label}</Button>
                                     </li>

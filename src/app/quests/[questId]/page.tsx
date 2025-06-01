@@ -17,7 +17,7 @@ function serializeEntities<T extends EntityWithId>(entities: any) {
     return serialized.sort((a: T, b: T) => Number(a.id) - Number(b.id));
 }
 
-export default async function QuestPage({params}: { params: { questId: string } }) {
+export default async function QuestPage({params}: { params: Promise<{ questId: string }> }) {
     await DatabaseService.getInstance();
     const {questId} = await params;
     const quest = await Quest.findOneBy({id: Number(questId)});

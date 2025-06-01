@@ -1,4 +1,4 @@
-import {BaseEntity, Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {BaseEntity, Column, Entity, OneToOne, PrimaryGeneratedColumn} from "typeorm";
 import {Expose} from "class-transformer";
 import {Param} from "./Param";
 
@@ -9,7 +9,7 @@ export enum ParamType {
     FATAL = "fatal"
 }
 
-@Entity()
+@Entity('param_options')
 export class ParamOptions extends BaseEntity {
     @Expose()
     @PrimaryGeneratedColumn()

@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import {Entity, PrimaryGeneratedColumn, Column, BaseEntity} from "typeorm"
 
-@Entity()
+@Entity('user')
 export class User extends BaseEntity{
 
     @PrimaryGeneratedColumn()
