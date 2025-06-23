@@ -7,16 +7,11 @@ async function GET(
     {params}: { params: Promise<{ sceneId: string }> }
 ) {
     try {
-        const sceneId = await params;
+        // const sceneId = await params;
+        //
+        // const scene = await Scene.findOneBy({id: Number(sceneId)});
 
-        const scene = await Scene.findOneBy({id: Number(sceneId)});
-
-        // if (!scene) {
-        //     return NextResponse.json(
-        //         { error: 'Scene not found' },
-        //         { status: 404 }
-        //     );
-        // }
+        const scene = {};
 
         return NextResponse.json(scene);
     } catch (error) {
@@ -32,12 +27,14 @@ async function POST(request: Request) {
     const body = await request.json();
 
     try {
-        const scene = plainToInstance(Scene, body);
+        // const scene = plainToInstance(Scene, body);
+        //
+        // const SceneRepository = Scene.getRepository();
+        // await SceneRepository.manager.transaction(async (entityManager) => {
+        //     await entityManager.save(Scene, scene);
+        // })
 
-        const SceneRepository = Scene.getRepository();
-        await SceneRepository.manager.transaction(async (entityManager) => {
-            await entityManager.save(Scene, scene);
-        })
+        const scene = {};
 
         return NextResponse.json(scene, {status: 201});
     } catch (error) {

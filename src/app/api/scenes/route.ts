@@ -1,12 +1,11 @@
 import {NextResponse} from 'next/server';
 import {plainToInstance} from "class-transformer";
 import {Scene} from "@/entity";
-import {DatabaseService} from "@/lib/DatabaseService";
 
 async function GET() {
     try {
-        const scenes = await Scene.find();
-
+        // const scenes = await Scene.find();
+        const scenes: any = [];
         return NextResponse.json(scenes);
     } catch (error) {
         console.error('API Error:', error);
@@ -18,16 +17,16 @@ async function GET() {
 }
 
 async function POST(request: Request) {
-    await DatabaseService.getInstance();
     const body = await request.json();
 
     try {
-        const scene = plainToInstance(Scene, body);
-
-        const SceneRepository = Scene.getRepository();
-        await SceneRepository.manager.transaction(async (entityManager) => {
-            await entityManager.save(Scene, scene);
-        })
+        // const scene = plainToInstance(Scene, body);
+        //
+        // const SceneRepository = Scene.getRepository();
+        // await SceneRepository.manager.transaction(async (entityManager) => {
+        //     await entityManager.save(Scene, scene);
+        // })
+        const scene = {};
 
         return NextResponse.json(scene, {status: 201});
     } catch (error) {

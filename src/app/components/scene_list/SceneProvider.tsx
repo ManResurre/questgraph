@@ -23,13 +23,8 @@ function SceneProvider(props: SceneProviderProps) {
     const [service, setService] = useState<SceneService | undefined>();
 
     useEffect(() => {
-        const initializeService = async () => {
-            const service = SceneService.getInstance(setUpdate);
-            // await service.load();
-            setService(service);
-        };
-
-        initializeService();
+        const service = new SceneService();
+        setService(service);
     }, []);
 
     const contextValue = useMemo((): SceneContextType => ({

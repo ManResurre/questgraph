@@ -2,9 +2,9 @@ import {Controller, useForm} from "react-hook-form";
 import {Button, FormControl, Paper, Stack, TextField} from "@mui/material";
 import React, {useEffect} from "react";
 import {useQuestContext} from "@/app/components/quest_list/QuestsProvider";
-import {IQuest} from "@/app/components/quest_list/QuestService";
+import {Quest} from "@/lib/db";
 
-interface IQuestEditForm extends IQuest {
+interface IQuestEditForm extends Quest {
 }
 
 export function QuestEditForm() {
@@ -16,19 +16,15 @@ export function QuestEditForm() {
         }
     });
 
-    useEffect(() => {
-        reset({
-            name: service?.edited?.name
-        })
-
-    }, [update]);
-
     const onSubmit = (data: IQuestEditForm) => {
-        service?.create<IQuestEditForm>({
-            ...service?.edited,
-            ...data
-        });
+        service?.create<IQuestEditForm>(data);
+        reset({name: ""})
     }
+
+    useEffect(() => {
+        if (service?.editing)
+            reset({name: service?.editing?.name})
+    }, [update]);
 
     return <Paper>
         <Stack

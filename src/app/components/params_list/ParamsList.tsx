@@ -8,7 +8,6 @@ import {useParams} from "next/navigation";
 export default function ParamsList({questParams}: { questParams?: Param[] }) {
     const {questId} = useParams();
 
-    console.log(questParams);
     return <Card>
         <List disablePadding>
             <ListItemButton href={`./${questId}/new_param`} component={Link}>

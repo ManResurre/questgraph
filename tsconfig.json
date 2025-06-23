@@ -7,7 +7,7 @@
     "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": [
+      "lib": [
       "dom",
       "dom.iterable",
       "esnext"

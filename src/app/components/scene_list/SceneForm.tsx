@@ -23,7 +23,7 @@ import {Add} from "@mui/icons-material";
 import ChoiceForm from "@/app/components/choice/ChoiceForm";
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 import {redirect, useParams} from "next/navigation";
-import {Choice, Scene} from "@/entity";
+import {Choice, Scene} from "@/lib/db";
 // import { format } from '@codemirror/formatting';
 
 const customTheme = EditorView.theme({
@@ -33,15 +33,15 @@ const customTheme = EditorView.theme({
 })
 
 export interface ISceneFormProps {
-    scene?: Scene
+    scene?: Scene & { choices: Choice[] | undefined }
 }
 
-export interface ISceneFormData {
-    id: number;
+export interface ISceneFormData extends Scene {
+    id?: number;
     name: string;
     text: string;
     choices: Partial<Choice>[];
-    quest: number;
+    questId: number;
 }
 
 function SceneForm({scene}: ISceneFormProps) {
@@ -50,15 +50,13 @@ function SceneForm({scene}: ISceneFormProps) {
 
     const elementRef = useRef(null);
 
-    const [loading, setLoading] = useState(false);
-
     const methods = useForm<ISceneFormData>({
         defaultValues: {
-            id: Number(sceneId),
+            id: scene?.id || undefined,
             name: scene?.name ?? '',
             text: scene?.text ?? "div>ul>li>span",
             choices: scene?.choices ?? [],
-            quest: Number(questId)
+            questId: Number(questId)
         }
     });
 
@@ -70,7 +68,6 @@ function SceneForm({scene}: ISceneFormProps) {
     });
 
     const onSubmit = async (data: any) => {
-        setLoading(true);
         await service?.create(data);
         if (sceneId) {
             redirect('../../');
@@ -84,7 +81,6 @@ function SceneForm({scene}: ISceneFormProps) {
     };
 
     const addChoice = () => append({label: "", text: "", nextSceneId: 0});
-
 
     // useEffect(() => {
     //     const observer = new IntersectionObserver((entries) => {
@@ -104,10 +100,6 @@ function SceneForm({scene}: ISceneFormProps) {
     //         }
     //     };
     // }, []);
-
-    if (loading) {
-        return <div>Saving...</div>
-    }
 
     return <FormProvider {...methods}>
         <Stack

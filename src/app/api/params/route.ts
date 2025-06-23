@@ -1,11 +1,9 @@
 import {NextResponse} from 'next/server';
-import {Param} from "@/entity";
-import {plainToInstance} from "class-transformer";
 
 async function GET() {
     try {
-        const params = await Param.find();
-
+        // const params = await Param.find();
+        const params = {};
         return NextResponse.json(params);
     } catch (error) {
         console.error('API Error:', error);
@@ -23,18 +21,19 @@ async function POST(request: Request) {
     }
 
     try {
-        const params = plainToInstance(Param, body);
-
-        const paramRepository = Param.getRepository();
-        await paramRepository.manager.transaction(async (entityManager) => {
-            const uniqueParams = Array.from(
-                new Map(params.map(p => [p.key, p])).values()
-            )
-
-            console.log(uniqueParams);
-
-            await entityManager.save(Param, uniqueParams);
-        })
+        //     const params = plainToInstance(Param, body);
+        //
+        //     const paramRepository = Param.getRepository();
+        //     await paramRepository.manager.transaction(async (entityManager) => {
+        //         const uniqueParams = Array.from(
+        //             new Map(params.map(p => [p.key, p])).values()
+        //         )
+        //
+        //         console.log(uniqueParams);
+        //
+        //         await entityManager.save(Param, uniqueParams);
+        //     })
+        const params = {};
 
         return NextResponse.json(params, {status: 201});
     } catch (error) {

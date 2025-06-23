@@ -4,13 +4,15 @@ import {
     Accordion, AccordionSummary,
     AccordionActions, AccordionDetails,
     Box, Button, Card, CardContent, Paper,
-    Typography, Toolbar
+    Typography, Toolbar, ListItemText, ListItemButton,
+    List
 } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import Link from "next/link";
 import {useParams} from "next/navigation";
-import {Choice, Scene} from "@/entity";
+import {Choice, Scene} from "@/lib/db";
+import ChoiceList from "@/app/components/choice/ChoiceList";
 
 export default function SceneList({scenes}: { scenes: Scene[] }) {
     const {questId} = useParams();
@@ -36,11 +38,15 @@ export default function SceneList({scenes}: { scenes: Scene[] }) {
     }
 
     return <>
-        <Toolbar sx={{justifyContent: "end"}}>
-            <Box sx={{display: {xs: 'none', sm: 'block'}}}>
-                <Button href={`${questId}/scene/new`} component={Link}>Create Scene</Button>
-            </Box>
-        </Toolbar>
+        <Box pb={1}>
+            <Paper>
+                <List disablePadding>
+                    <ListItemButton href={`${questId}/scene/new`} component={Link}>
+                        <ListItemText sx={{textAlign: "center"}} primary="Add Scene"/>
+                    </ListItemButton>
+                </List>
+            </Paper>
+        </Box>
 
         {scenes.map((scene) => {
             return <Accordion
@@ -60,17 +66,8 @@ export default function SceneList({scenes}: { scenes: Scene[] }) {
                             {scene.text}
                         </Box>
                     </Paper>
-                    <Card>
-                        <CardContent>
-                            <ol>
-                                {(scene.choices as unknown as Choice[]).map((ch, index) => {
-                                    return <li key={`scene.${scene.name}.choice.${index}`}>
-                                        <Button size="small" variant="text">{ch.label}</Button>
-                                    </li>
-                                })}
-                            </ol>
-                        </CardContent>
-                    </Card>
+                    <ChoiceList scene={scene}/>
+
                 </AccordionDetails>
                 <AccordionActions>
                     <Button href={`${questId}/scene/${scene.id}/edit`} component={Link}>Edit</Button>

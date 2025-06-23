@@ -2,7 +2,6 @@ import type {Metadata} from "next";
 import {Inter} from "next/font/google";
 // import "./globals.css";
 import ClientLayout from "@/app/ClientLayout";
-import {DatabaseService} from "@/lib/DatabaseService";
 
 const inter = Inter({subsets: ["latin"]});
 
@@ -17,7 +16,6 @@ export default async function RootLayout(
     }: Readonly<{
         children: React.ReactNode;
     }>) {
-    await DatabaseService.getInstance();
 
     return (
         <html lang="en">

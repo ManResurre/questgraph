@@ -1,26 +1,18 @@
+'use client';
 import {Box, Divider, Grid, Typography} from "@mui/material";
 import SceneList from "@/app/components/scene_list/SceneList";
-import {DatabaseService} from "@/lib/DatabaseService";
-import {Quest} from "@/entity";
 import ParamsList from "@/app/components/params_list/ParamsList";
+import {db} from "@/lib/db";
+import {useLiveQuery} from "dexie-react-hooks";
+import {useParams} from "next/navigation";
 
-// type PlainObject<T> = {
-//     [K in keyof T]: T[K] extends PlainObject<T[K]>;
-// };
 
-interface EntityWithId {
-    id: number | string;
-}
+export default function QuestPage() {
+    const {questId} = useParams();
+    const quest = useLiveQuery(() => db.quests.get(Number(questId)));
 
-function serializeEntities<T extends EntityWithId>(entities: any) {
-    const serialized = JSON.parse(JSON.stringify(entities));
-    return serialized.sort((a: T, b: T) => Number(a.id) - Number(b.id));
-}
-
-export default async function QuestPage({params}: { params: Promise<{ questId: string }> }) {
-    await DatabaseService.getInstance();
-    const {questId} = await params;
-    const quest = await Quest.findOneBy({id: Number(questId)});
+    const scenes = useLiveQuery(() => db.scenes.where('questId').equals(Number(questId)).toArray());
+    const questParams: any = [];
 
     if (!quest) {
         return <Typography>Quest not found :(</Typography>
@@ -31,10 +23,10 @@ export default async function QuestPage({params}: { params: Promise<{ questId: s
         <Divider/>
         <Grid container spacing={1} mt={1}>
             <Grid size={6}>
-                <SceneList scenes={serializeEntities(quest.scenes)}/>
+                {scenes && <SceneList scenes={scenes}/>}
             </Grid>
             <Grid size={6}>
-                <ParamsList questParams={serializeEntities(quest.params)}></ParamsList>
+                <ParamsList questParams={questParams}></ParamsList>
             </Grid>
         </Grid>
     </Box>
