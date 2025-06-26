@@ -16,25 +16,8 @@ export class SimplePeerProvider {
         this.userId = userId;
 
         this.setupSupabaseChannel();
-        // this.setupDocumentHandlers();
     }
 
-    private shouldBeInitiator(targetUserId: string): boolean {
-        // Создаем детерминированный "номер соединения" для пары участников
-        const connectionId = [this.userId, targetUserId]
-            .sort()
-            .join('|');
-
-        // Простой стабильный хеш (можно заменить на более сложный)
-        let hash = 0;
-        for (let i = 0; i < connectionId.length; i++) {
-            hash = (hash << 5) - hash + connectionId.charCodeAt(i);
-            hash |= 0; // Преобразование в 32-битное целое
-        }
-
-        // Инициатор определяется по четности хеша
-        return hash % 2 === 0;
-    }
     private async setupSupabaseChannel() {
         // Создаем Realtime-канал для комнаты
         this.channel = supabase.channel(this.room);
@@ -50,7 +33,11 @@ export class SimplePeerProvider {
         // 2. Настраиваем Presence
         this.channel.on('presence', {event: 'sync'}, () => {
             const state = this.channel.presenceState();
+            console.log(state);
+
             const onlineUserIds = Object.keys(state);
+
+            console.log(onlineUserIds);
 
             // Удаляем пиров, которые больше не онлайн
             this.peers.forEach((_, peerId) => {
@@ -79,15 +66,18 @@ export class SimplePeerProvider {
     private createPeer(targetUserId: string) {
         if (this.peers.has(targetUserId)) return;
 
+        console.log(this.userId);
+
         // Определяем, кто инициатор (пользователь с меньшим ID)
-        const isInitiator = this.userId < targetUserId;
-        const peer = new SimplePeer({initiator: isInitiator});
-        console.log(peer.connection);
+        // const isInitiator = this.userId < targetUserId;
+        // console.log(isInitiator, targetUserId);
+        // console.log(this.peers);
+        const peer = new SimplePeer({initiator: false});
 
         this.peers.set(targetUserId, peer);
 
         peer.on('signal', (signal: any) => {
-            console.log('signal', signal);
+            // console.log('signal', signal);
             // Отправляем сигнал через Supabase
             this.channel.send({
                 type: 'broadcast',
