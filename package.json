@@ -43,13 +43,13 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.56.4",
     "reflect-metadata": "^0.2.2",
+    "simple-peer": "^9.11.0",
     "ts-node": "^10.9.2",
     "use-debounce": "^10.0.5",
     "y-indexeddb": "^9.0.12",
     "y-protocols": "^1.0.5",
     "y-webrtc": "^10.3.0",
     "y-websocket": "^3.0.0",
-    "simple-peer": "^9.11.0",
     "yjs": "^13.6.27"
   },
   "devDependencies": {
@@ -58,6 +58,7 @@
     "@types/node": "^22.15.3",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
+    "@types/simple-peer": "^9.11.8",
     "env-cmd": "^10.1.0",
     "eslint": "8.56.0",
     "eslint-config-next": "14.2.5",

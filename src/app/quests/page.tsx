@@ -51,10 +51,10 @@ const roomId = 'document-123'
 const ydoc = new Doc()
 
 // Инициализация провайдера
-const provider = new SimplePeerProvider(ydoc, roomId, userId)
+const provider = new SimplePeerProvider(ydoc, roomId, String(userId))
 setInterval(() => {
-    provider.test("Hello")
-}, 1000)
+    // provider.test("Hello")
+}, 10000)
 
 // Подключаемся к другим участникам
 // provider.connectToPeers()

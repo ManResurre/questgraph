@@ -33,11 +33,9 @@ export class SimplePeerProvider {
         // 2. Настраиваем Presence
         this.channel.on('presence', {event: 'sync'}, () => {
             const state = this.channel.presenceState();
-            console.log(state);
+            const values = Object.values(state);
 
-            const onlineUserIds = Object.keys(state);
-
-            console.log(onlineUserIds);
+            const onlineUserIds = values.map((item: any) => item[0]).map(e => e.userId) //Object.keys(state);
 
             // Удаляем пиров, которые больше не онлайн
             this.peers.forEach((_, peerId) => {
@@ -58,7 +56,7 @@ export class SimplePeerProvider {
         this.channel.subscribe(async (status: string) => {
             if (status === 'SUBSCRIBED') {
                 // Отправляем текущее присутствие
-                await this.channel.track({online: true});
+                await this.channel.track({online: true, userId: this.userId});
             }
         });
     }
@@ -66,13 +64,14 @@ export class SimplePeerProvider {
     private createPeer(targetUserId: string) {
         if (this.peers.has(targetUserId)) return;
 
-        console.log(this.userId);
+        // console.log(this.userId, targetUserId);
+        // this.users.push(this.userId);
 
         // Определяем, кто инициатор (пользователь с меньшим ID)
-        // const isInitiator = this.userId < targetUserId;
+        const isInitiator = this.userId < targetUserId;
         // console.log(isInitiator, targetUserId);
         // console.log(this.peers);
-        const peer = new SimplePeer({initiator: false});
+        const peer = new SimplePeer({initiator: isInitiator});
 
         this.peers.set(targetUserId, peer);
 
@@ -130,16 +129,18 @@ export class SimplePeerProvider {
     }
 
     private destroyPeer(peerId: string) {
+        console.log(peerId);
         const peer = this.peers.get(peerId);
         if (peer) {
             peer.destroy();
             this.peers.delete(peerId);
+            console.log(this.peers);
         }
     }
 
     public test(text: string) {
         // Отправляем обновление всем подключенным пирам
-        this.peers.forEach((peer: SimplePeer) => {
+        this.peers.forEach((peer) => {
             if (peer.connected) peer.send(text);
         });
     }
