@@ -228,6 +228,13 @@ export class SupabaseDBProvider {
         peer.on('connect', () => {
             console.log(`Connected to ${targetUserId}`);
             // Логика после подключения
+            this.update('connected');
+        });
+
+        peer.on('end', () => {
+            console.log(`end to ${targetUserId}`);
+            this.destroyPeer(targetUserId);
+            this.update('end');
         });
 
         peer.on('data', (data: any) => {
@@ -245,6 +252,7 @@ export class SupabaseDBProvider {
                     .eq('user_id', targetUserId)
                     .eq('room_id', this.roomId);
 
+                this.destroyPeer(targetUserId);
 
                 // Плавный перезапуск соединения
                 // setTimeout(() => {
@@ -277,6 +285,7 @@ export class SupabaseDBProvider {
             // Очищаем связанные данные
             this.peers.delete(peerId);
             console.log(`Destroyed peer: ${peerId}`);
+            this.update('destroy peer');
         }
     }
 
