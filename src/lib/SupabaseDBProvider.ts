@@ -255,6 +255,8 @@ export class SupabaseDBProvider {
                 // }, 2000);
             }
         });
+
+        return peer;
     }
 
     private destroyPeer(peerId: string) {
@@ -283,7 +285,7 @@ export class SupabaseDBProvider {
 
         if (!peer) {
             // Создаем пир как не-инициатор
-            peer = this.createPeer(senderId, false);
+            peer = await this.createPeer(senderId, false);
         }
 
         if (peer && !peer.destroyed) {
