@@ -42,11 +42,13 @@
     "yjs": "^13.6.27"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.3.5",
     "@opennextjs/cloudflare": "1.0.0-beta.3",
     "@types/node": "^22.15.3",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@types/simple-peer": "^9.11.8",
+    "cross-env": "^7.0.3",
     "eslint": "8.56.0",
     "eslint-config-next": "14.2.5",
     "postcss": "8.5.3",
@@ -64,10 +66,6 @@
     "lint": "next lint",
     "preview": "opennextjs-cloudflare build && wrangler dev",
     "start": "ts-node src/index.ts",
-    "typeorm": "env-cmd ts-node --project tsconfig.json ./node_modules/typeorm/cli -d src/data-source.ts",
-    "schema:log": "npm run typeorm -- schema:log",
-    "migration:generate": "npm run typeorm -- migration:generate src/migration",
-    "migration:run": "npm run typeorm -- migration:run",
-    "migration:revert": "npm run typeorm -- migration:revert"
+    "analyze": "cross-env ANALYZE=true next build"
   }
 }
