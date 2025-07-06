@@ -111,10 +111,6 @@ export class SupabaseDBProvider {
                 table: this.PARTICIPANTS_TABLE,
                 filter: `room_id=eq.${this.roomId}`
             }, async (payload) => {
-                const userId = payload.new.user_id;
-                if (userId !== this.userId) {
-                    await this.connectToParticipant(userId);
-                }
                 const {data} = await supabase
                     .from(this.PARTICIPANTS_TABLE)
                     .select('id, user_id')
@@ -122,6 +118,11 @@ export class SupabaseDBProvider {
                     .eq('status', 'online');
                 this.participants = data;
                 this.update('new user');
+
+                const userId = payload.new.user_id;
+                if (userId !== this.userId) {
+                    await this.connectToParticipant(userId);
+                }
             })
             .on('postgres_changes', {
                 event: 'UPDATE',
@@ -130,6 +131,7 @@ export class SupabaseDBProvider {
                 filter: `room_id=eq.${this.roomId}`
             }, (payload) => {
                 // Обработка обновлений статуса
+                console.log(payload);
             })
             .subscribe();
 
@@ -188,8 +190,7 @@ export class SupabaseDBProvider {
         }
 
         // Определяем, кто подключился раньше
-        const [first, second] = participants;
-        console.log('first', first);
+        const [first] = participants;
         const isInitiator = first.user_id === this.userId;
 
         if (isInitiator) {
