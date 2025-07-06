@@ -1,14 +1,18 @@
 import SimplePeer from 'simple-peer';
 import * as Y from 'yjs';
 import supabase from "@/supabaseClient";
+import {channel} from "@cloudflare/unenv-preset/node/process";
 
 export class SimplePeerProvider {
     private ydoc: Y.Doc;
     private room: string;
     private userId: string;
-    private peers: Map<string, SimplePeer.Instance> = new Map();
+    public peers: Map<string, SimplePeer.Instance> = new Map();
     private channel: any;
     private presenceUnsubscribe: Function | null = null;
+
+    private pendingSignals: Map<string, any[]> = new Map();
+    private isNegotiating: Map<string, boolean> = new Map();
 
     constructor(ydoc: Y.Doc, room: string, userId: string) {
         this.ydoc = ydoc;
@@ -22,6 +26,13 @@ export class SimplePeerProvider {
         // Создаем Realtime-канал для комнаты
         this.channel = supabase.channel(this.room);
 
+        setInterval(() => {
+            this.peers.keys().forEach((key) => {
+                console.log(key, this.peers.get(key).connected);
+            })
+            // this.channel.track({online: true, userId: this.userId});
+        }, 10000)
+
         // 1. Подписываемся на сигналы
         this.channel.on('broadcast', {event: 'signal'}, ({payload}: any) => {
             const {senderId, signal} = payload;
@@ -31,26 +42,34 @@ export class SimplePeerProvider {
         });
 
         // 2. Настраиваем Presence
-        this.channel.on('presence', {event: 'sync'}, () => {
-            const state = this.channel.presenceState();
-            const values = Object.values(state);
+        this.channel
+            .on('presence', {event: 'sync'}, () => {
+                const state = this.channel.presenceState()
+                const values = Object.values(state);
+                const onlineUserIds = values.map((item: any) => item[0]).map(e => e.userId)
+                console.log(onlineUserIds);
+                onlineUserIds.forEach((id: string) => {
+                    if (this.userId == id) {
+                        return;
+                    }
+                    // const peer = this.peers.get(id);
+                    // console.log(this.peers);
+                })
+            })
+            .on('presence', {event: 'join'}, ({key, newPresences}) => {
+                console.log('join', key, newPresences)
+                const joinUser = newPresences.map((item: any) => item.userId)[0];
+                if (joinUser === this.userId)
+                    return;
 
-            const onlineUserIds = values.map((item: any) => item[0]).map(e => e.userId) //Object.keys(state);
+                if (!this.peers.has(joinUser))
+                    this.createPeer(joinUser);
+            })
+            .on('presence', {event: 'leave'}, ({key, leftPresences}) => {
+                console.log('leave', key, leftPresences)
+                leftPresences.map((item: any) => this.destroyPeer(item.userId))
+            })
 
-            // Удаляем пиров, которые больше не онлайн
-            this.peers.forEach((_, peerId) => {
-                if (!onlineUserIds.includes(peerId)) {
-                    this.destroyPeer(peerId);
-                }
-            });
-
-            // Создаем соединения с новыми пользователями
-            onlineUserIds.filter(id => id !== this.userId).forEach(peerId => {
-                if (!this.peers.has(peerId)) {
-                    this.createPeer(peerId);
-                }
-            });
-        });
 
         // Подписываемся на канал
         this.channel.subscribe(async (status: string) => {
@@ -62,21 +81,30 @@ export class SimplePeerProvider {
     }
 
     private createPeer(targetUserId: string) {
-        if (this.peers.has(targetUserId)) return;
+        // if (this.peers.has(targetUserId)) return;
 
-        // console.log(this.userId, targetUserId);
-        // this.users.push(this.userId);
+        const existingPeer = this.peers.get(targetUserId);
+        if (existingPeer && !existingPeer.destroyed) {
+            return existingPeer;
+        }
 
         // Определяем, кто инициатор (пользователь с меньшим ID)
         const isInitiator = this.userId < targetUserId;
-        // console.log(isInitiator, targetUserId);
-        // console.log(this.peers);
-        const peer = new SimplePeer({initiator: isInitiator});
+
+        if (isInitiator)
+            console.log('initiator:' + this.userId)
+
+        const peer = new SimplePeer({initiator: isInitiator, trickle: true});
+        // peer._debug = console.log
 
         this.peers.set(targetUserId, peer);
+        this.isNegotiating.set(targetUserId, false);
+        this.pendingSignals.set(targetUserId, []);
 
         peer.on('signal', (signal: any) => {
-            // console.log('signal', signal);
+            // Не отправляем сигналы, если пир уничтожен
+            if (peer.destroyed) return;
+
             // Отправляем сигнал через Supabase
             this.channel.send({
                 type: 'broadcast',
@@ -91,6 +119,9 @@ export class SimplePeerProvider {
 
         peer.on('connect', () => {
             console.log(`Connected to ${targetUserId}`);
+
+            // Очищаем отложенные сигналы после подключения
+            this.pendingSignals.delete(targetUserId);
 
             // Отправляем текущее состояние документа
             // const update = Y.encodeStateAsUpdate(this.ydoc);
@@ -108,33 +139,108 @@ export class SimplePeerProvider {
         });
 
         peer.on('error', (err: any) => {
-            console.error('Peer error:', err);
-            this.destroyPeer(targetUserId);
+            console.log('Peer error:', err);
+            // this.destroyPeer(targetUserId);
         });
+
+        peer.on('close', () => {
+            console.log(`Connection closed with ${targetUserId}`);
+            this.destroyPeer(targetUserId);
+            // this.channel.track({online: true, userId: targetUserId});
+        });
+
+        // Обработка событий ICE
+        peer.on('iceStateChange', (state: any) => {
+            // console.log(`ICE state for ${targetUserId}:`, state);
+        });
+
+        return peer;
     }
 
     private handleSignal(senderId: string, signal: any) {
+        // Игнорируем сигналы от себя
+        if (senderId === this.userId) return;
+
+        // console.log(`Received signal from ${senderId}:`, signal.type);
+
         let peer = this.peers.get(senderId);
 
-        if (!peer) {
-            // Создаем новое соединение для входящего сигнала
-            this.createPeer(senderId);
-            peer = this.peers.get(senderId);
+        // Ранняя проверка на установленное соединение
+        if (peer?.connected) {
+            console.log(`Signal ignored (already connected): ${signal.type}`);
+            return;
         }
 
-        // Передаем сигнал в SimplePeer
-        if (peer) {
+        // Если пира нет - создаем и сохраняем сигнал для будущей обработки
+        if (!peer) {
+            peer = this.createPeer(senderId);
+            this.pendingSignals.get(senderId)?.push(signal);
+            return;
+        }
+
+        // Если пир уничтожен - игнорируем сигнал
+        if (peer.destroyed) {
+            console.warn(`Ignoring signal for destroyed peer: ${senderId}`);
+            return;
+        }
+
+        // Если идет процесс согласования - сохраняем сигнал в очередь
+        if (this.isNegotiating.get(senderId)) {
+            console.log(`Queuing signal (negotiation in progress): ${signal.type}`);
+            this.pendingSignals.get(senderId)?.push(signal);
+            return;
+        }
+
+        try {
+            // Помечаем начало процесса обработки сигнала
+            this.isNegotiating.set(senderId, true);
+
+            // Обрабатываем текущий сигнал
             peer.signal(signal);
+
+            // Обрабатываем все ожидающие сигналы
+            const pending = this.pendingSignals.get(senderId) || [];
+            while (pending.length > 0) {
+                const nextSignal = pending.shift();
+                if (nextSignal) {
+                    console.log(`Processing queued signal: ${nextSignal.type}`);
+                    peer.signal(nextSignal);
+                }
+            }
+        } catch (err: any) {
+            console.error(`Signal handling error for ${senderId}:`, err);
+
+            // Для нефатальных ошибок не уничтожаем соединение
+            if (err.name !== 'InvalidStateError') {
+                this.destroyPeer(senderId);
+            }
+        } finally {
+            // Снимаем флаг независимо от результата
+            this.isNegotiating.set(senderId, false);
         }
     }
 
     private destroyPeer(peerId: string) {
-        console.log(peerId);
         const peer = this.peers.get(peerId);
         if (peer) {
-            peer.destroy();
+            // Удаляем все обработчики событий
+            peer.removeAllListeners();
+
+            // Безопасное уничтожение
+            try {
+                if (!peer.destroyed) {
+                    peer.destroy();
+                }
+            } catch (e) {
+                console.error('Error destroying peer:', e);
+            }
+
+            // Очищаем связанные данные
             this.peers.delete(peerId);
-            console.log(this.peers);
+            this.pendingSignals.delete(peerId);
+            this.isNegotiating.delete(peerId);
+
+            console.log(`Destroyed peer: ${peerId}`);
         }
     }
 

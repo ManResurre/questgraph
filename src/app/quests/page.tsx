@@ -1,12 +1,12 @@
 'use client'
-import React, {useEffect, useMemo, useRef} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {NextPage} from "next";
 
 import * as Y from 'yjs';
 import {QuestList} from "@/app/components/quest_list/QuestList";
 import {useLiveQuery} from "dexie-react-hooks";
 import {db} from "@/lib/db";
-import {Button, Grid} from "@mui/material";
+import {Box, Button, Grid, List, ListItem, ListItemText, Paper, Typography} from "@mui/material";
 import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
 import supabase from "@/supabaseClient";
 import {getYWebRTCProvider} from "@/lib/signaling";
@@ -43,78 +43,22 @@ import {CustomProvider, MyWebRTCProvider} from "@/lib/CustomProvider";
 
 
 import {Doc} from 'yjs'
-import {SimplePeerProvider} from "@/lib/SupabaseWebRTCProvider";
+import {SupabaseDBProvider} from "@/lib/SupabaseDBProvider";
+import {theme} from "@/theme";
 
 // Генерируем уникальный ID пользователя
-const userId = Date.now() //crypto.randomUUID()
-const roomId = 'document-123'
-const ydoc = new Doc()
-
-// Инициализация провайдера
-const provider = new SimplePeerProvider(ydoc, roomId, String(userId))
-setInterval(() => {
-    // provider.test("Hello")
-}, 10000)
-
-// Подключаемся к другим участникам
-// provider.connectToPeers()
-
-// Слушаем обновления документа
-// ydoc.on('update', (update, origin) => {
-//     if (origin !== provider) {
-//         provider.sendUpdate(update)
-//     }
-// })
-//
-// // Пример работы с данными
-// const ytext = ydoc.getText('content')
-// ytext.insert(0, 'Привет мир!')
-//
+const userId = crypto.randomUUID();
+const roomId = '0a13648f-1a69-44de-8017-981dfcb00f07'//'document-123'
 
 const QuestsPage: NextPage = () => {
     const yDoc = useRef(new Y.Doc()).current;
-    const providerRef = useRef<MyWebRTCProvider | null>(null);
+    const providerRef = useRef<SupabaseDBProvider | null>(null);
 
     const quests = useLiveQuery(() => db.quests.toArray());
 
+    const [update, setUpdate] = useState('init')
+
     useEffect(() => {
-
-        // Создаем провайдер только один раз
-        if (!providerRef.current) {
-
-            // providerRef.current = new MyWebRTCProvider(yDoc, {});
-            // const config: any = {
-            //     channel: 'testroom',
-            //     id: 'f6a16ff7-4a31-11eb-be7b-8344edc8f36b',
-            //     tableName: "yjs_signals",
-            //     columnName: "signal_data"
-            // }
-            // const provider = new SupabaseProvider(yDoc, supabase, config);
-            // const provider = getYWebRTCProvider('testroom', yDoc);
-            // providerRef.current = provider;
-            //
-            // const allChanges = supabase
-            //     .channel('testroom')
-            //     .on(
-            //         'postgres_changes',
-            //         {
-            //             event: '*',
-            //             schema: 'public',
-            //         },
-            //         (payload) => console.log(payload)
-            //     )
-            //     .subscribe()
-            // providerRef.current = new WebrtcProviderRework('testroom', yDoc, {
-            //     signaling: ['ws://localhost:4444'],
-            // });
-
-            // providerRef.current.on('synced', synced => {
-            //     console.log('synced!', synced);
-            // });
-
-
-        }
-
         const yText = yDoc.getText('sharedText');
         yText.insert(0, "test text");
         const updateState = async () => {
@@ -122,22 +66,13 @@ const QuestsPage: NextPage = () => {
         };
         yText.observe(updateState);
 
-        // const load = async () => {
-        //     // const ydoc = new Y.Doc()
-        //     // const provider = initYWebRTC("test-room", ydoc)
-        //
-        //     const {data} = await supabase
-        //         .from('quest')
-        //         .select('*')
-        //         .overrideTypes<Array<{ id: string }>>()
-        //
-        //     console.log(data);
-        //     return data;
-        // }
-        // load();
+        const loadData = async () => {
+            providerRef.current = await SupabaseDBProvider.create(yDoc, roomId, String(userId), setUpdate);
+        }
+
+        loadData();
+
         return () => {
-            // yText.unobserve(updateState);
-            // yArray.unobserve(syncToDexie);
             yDoc.destroy();
             if (providerRef.current) {
                 providerRef.current.destroy();
@@ -145,9 +80,30 @@ const QuestsPage: NextPage = () => {
             }
         };
     }, [yDoc]);
-
-
+    console.log(providerRef.current?.peers);
+    console.log(providerRef.current?.peers.get(userId));
     return <Grid container spacing={1} py={1}>
+        <Grid size={12}>
+            <Paper>
+                <Box p={1}>
+                    <Typography component="h1">UserId: {userId}</Typography>
+                    <List disablePadding>
+                        {providerRef.current?.participants.map((item: any) =>
+                            <ListItem key={item.id}>
+                                <ListItemText
+                                    slotProps={{
+                                        primary: {
+                                            sx: {color: item.user_id == userId ? 'red' : theme.palette.text.primary}
+                                        },
+                                    }}
+                                >{item.user_id}</ListItemText>
+                            </ListItem>
+                        )}
+                    </List>
+                </Box>
+            </Paper>
+        </Grid>
+
         <Grid size={6}>
             <QuestList quests={quests}/>
         </Grid>
