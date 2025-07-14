@@ -1,15 +1,15 @@
 'use client'
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {NextPage} from "next";
 
 import * as Y from 'yjs';
 import {QuestList} from "@/app/components/quest_list/QuestList";
 import {useLiveQuery} from "dexie-react-hooks";
 import {db} from "@/lib/db";
-import {Box, Button, Grid, List, ListItem, ListItemText, Paper, Typography} from "@mui/material";
+import {Grid} from "@mui/material";
 import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
 import {SupabaseDBProvider} from "@/lib/SupabaseDBProvider";
-import {theme} from "@/theme";
+import PeerList from "@/app/components/peer_list/PeerList";
 
 // Генерируем уникальный ID пользователя
 const userId = crypto.randomUUID();
@@ -46,31 +46,15 @@ const QuestsPage: NextPage = () => {
         };
     }, [yDoc]);
 
-    const isConnected = (userId: string) => {
-        const peer = providerRef.current?.peers.get(userId);
-        return peer?.connected;
-    }
-
     return <Grid container spacing={1} py={1}>
         <Grid size={12}>
-            <Paper>
-                <Box p={1}>
-                    <Typography component="h1">UserId: {userId}</Typography>
-                    <List disablePadding>
-                        {providerRef.current?.participants.map((item: any) =>
-                            <ListItem key={item.id}>
-                                <ListItemText
-                                    slotProps={{
-                                        primary: {
-                                            sx: {color: item.user_id == userId ? 'red' : (isConnected(item.user_id)) ? 'green' : theme.palette.text.primary}
-                                        },
-                                    }}
-                                >{item.user_id}</ListItemText>
-                            </ListItem>
-                        )}
-                    </List>
-                </Box>
-            </Paper>
+            {providerRef.current &&
+                <PeerList
+                    participants={providerRef.current.participants}
+                    peers={providerRef.current.peers}
+                    userId={userId}
+                />
+            }
         </Grid>
 
         <Grid size={6}>

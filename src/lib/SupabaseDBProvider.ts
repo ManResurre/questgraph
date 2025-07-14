@@ -2,6 +2,12 @@ import SimplePeer from 'simple-peer';
 import * as Y from 'yjs';
 import supabase from "@/supabaseClient";
 import {Dispatch, SetStateAction} from "react";
+import {REALTIME_SUBSCRIBE_STATES} from "@supabase/realtime-js";
+
+export interface Participant {
+    id: string;
+    user_id: string;
+}
 
 export class SupabaseDBProvider {
     static #instance: SupabaseDBProvider;
@@ -9,7 +15,7 @@ export class SupabaseDBProvider {
     private roomId: string;
     private userId: string;
     public peers: Map<string, SimplePeer.Instance> = new Map();
-    public participants: any = [];
+    public participants: Participant[] = [];
     private intervalId: NodeJS.Timeout | null = null;
 
     update: Dispatch<SetStateAction<string>>;
@@ -103,8 +109,32 @@ export class SupabaseDBProvider {
         });
 
         // Подписываемся на изменения в реальном времени
-        supabase
-            .channel('participants')
+        const channel = supabase
+            .channel('participants', {
+                config: {
+                    presence: {key: this.userId}
+                }
+            })
+            .on('presence', {event: 'sync'}, async () => {
+                const onlineUsers = channel.presenceState();
+
+                const offline = this.participants
+                    .filter((item: any) => Object.keys(onlineUsers).indexOf(item.user_id) === -1)
+                    .map((item: any) => item.user_id);
+
+                await supabase
+                    .from(this.PARTICIPANTS_TABLE)
+                    .update({status: 'offline'})
+                    .eq('room_id', this.roomId)
+                    .in('user_id', offline)
+            })
+            .on('presence', {event: 'join'}, async ({key}) => {
+                await supabase
+                    .from(this.PARTICIPANTS_TABLE)
+                    .update({status: 'online'})
+                    .eq('room_id', this.roomId)
+                    .eq('user_id', key)
+            })
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -115,7 +145,8 @@ export class SupabaseDBProvider {
                     .from(this.PARTICIPANTS_TABLE)
                     .select('id, user_id')
                     .eq('room_id', this.roomId)
-                    .eq('status', 'online');
+                    .eq('status', 'online') as { data: Participant[] };
+
                 this.participants = data;
                 this.update('new user');
 
@@ -131,9 +162,13 @@ export class SupabaseDBProvider {
                 filter: `room_id=eq.${this.roomId}`
             }, (payload) => {
                 // Обработка обновлений статуса
-                console.log(payload);
+                // console.log(payload);
             })
-            .subscribe();
+            .subscribe(async (status) => {
+                if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+                    await channel.track({userId: this.userId, status: 'active'});
+                }
+            });
 
         this.update('subscribeToParticipants');
     }
@@ -167,7 +202,7 @@ export class SupabaseDBProvider {
                 table: this.SIGNALS_TABLE,
                 filter: `to_user=eq.${this.userId}`
             }, (payload) => {
-                console.log('payload', payload);
+                // console.log('payload', payload);
                 const signal = payload.new;
                 this.handleSignal(signal.from_user, signal.signal);
                 this.markSignalConsumed(signal.id);
@@ -247,21 +282,8 @@ export class SupabaseDBProvider {
             if (state === 'disconnected') {
                 console.warn(`Disconnected from ${targetUserId}, reconnecting...`);
 
-                supabase
-                    .from(this.PARTICIPANTS_TABLE)
-                    .delete()
-                    .eq('user_id', targetUserId)
-                    .eq('room_id', this.roomId);
-
+                this.unregisterParticipant(targetUserId);
                 this.destroyPeer(targetUserId);
-
-                // Плавный перезапуск соединения
-                // setTimeout(() => {
-                //     if (!peer.connected && !peer.destroyed) {
-                //         this.destroyPeer(targetUserId);
-                //         this.createPeer(targetUserId, true);
-                //     }
-                // }, 2000);
             }
         });
 
@@ -310,12 +332,12 @@ export class SupabaseDBProvider {
             .eq('id', signalId);
     }
 
-    private async unregisterParticipant() {
+    private async unregisterParticipant(userId: string) {
         await supabase
             .from(this.PARTICIPANTS_TABLE)
             .update({status: 'offline'})
             .eq('room_id', this.roomId)
-            .eq('user_id', this.userId);
+            .eq('user_id', userId);
     }
 
     public async destroy() {
@@ -323,7 +345,7 @@ export class SupabaseDBProvider {
         if (this.intervalId) clearInterval(this.intervalId);
 
         // Обновление статуса
-        await this.unregisterParticipant();
+        await this.unregisterParticipant(this.userId);
 
         // Закрытие соединений
         this.peers.forEach(peer => peer.destroy());
