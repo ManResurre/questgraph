@@ -15,6 +15,7 @@ export class SupabaseDBProvider {
     private roomId: string;
     private userId: string;
     public peers: Map<string, SimplePeer.Instance> = new Map();
+    public peersMessages: { user_id: string; text: string, time: number }[] = [];
     public participants: Participant[] = [];
     private intervalId: NodeJS.Timeout | null = null;
 
@@ -275,7 +276,10 @@ export class SupabaseDBProvider {
 
         peer.on('data', (data: any) => {
             // Обработка входящих данных
-            console.log(data);
+            const decoder = new TextDecoder();
+            const message = decoder.decode(data);
+            this.peersMessages.push({...JSON.parse(message), user_id: targetUserId});
+            this.update(message);
         });
 
         peer.on('iceStateChange', (state: any) => {

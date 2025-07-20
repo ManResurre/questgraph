@@ -21,7 +21,7 @@ const QuestsPage: NextPage = () => {
 
     const quests = useLiveQuery(() => db.quests.toArray());
 
-    const [update, setUpdate] = useState('init')
+    const [, setUpdate] = useState('init')
 
     useEffect(() => {
         const yText = yDoc.getText('sharedText');
@@ -52,7 +52,9 @@ const QuestsPage: NextPage = () => {
                 <PeerList
                     participants={providerRef.current.participants}
                     peers={providerRef.current.peers}
+                    messages={providerRef.current.peersMessages}
                     userId={userId}
+                    update={providerRef.current.update}
                 />
             }
         </Grid>
