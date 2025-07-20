@@ -41,17 +41,25 @@ export default function PeerList({participants, peers, userId, messages, update}
     //     })
     // }
 
-    const {handleSubmit, control} = useForm<any>({
+    const {handleSubmit, control, setValue} = useForm<any>({
         defaultValues: {
-            message: ""
+            message: "",
+            selectedParticipants: []
         }
     });
     const onSubmit = ({message, selectedParticipants}: any) => {
+        if (!message) {
+            return;
+        }
+
         messages?.push({user_id: userId, text: message, time: Date.now()});
+        setValue("message", "");
 
         [...peers].filter(([key]) => {
             return selectedParticipants[key];
         }).map(([, peer]) => {
+            if (!peer.connected)
+                return;
             peer.send(JSON.stringify({text: message, time: Date.now()}));
             if (update)
                 update(String(Date.now()));
