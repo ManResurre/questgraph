@@ -6,7 +6,7 @@ import * as Y from 'yjs';
 import {QuestList} from "@/app/components/quest_list/QuestList";
 import {useLiveQuery} from "dexie-react-hooks";
 import {db} from "@/lib/db";
-import {Grid} from "@mui/material";
+import {Grid, TextField} from "@mui/material";
 import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
 import {SupabaseDBProvider} from "@/lib/SupabaseDBProvider";
 import PeerList from "@/app/components/peer_list/PeerList";
@@ -16,6 +16,7 @@ const userId = crypto.randomUUID();
 const roomId = '96e1d418-9e13-472f-9006-67df2069d6aa'//'document-123'
 
 const QuestsPage: NextPage = () => {
+    const [text, setText] = useState('test');
     const yDoc = useRef(new Y.Doc()).current;
     const providerRef = useRef<SupabaseDBProvider | null>(null);
 
@@ -25,9 +26,8 @@ const QuestsPage: NextPage = () => {
 
     useEffect(() => {
         const yText = yDoc.getText('sharedText');
-        yText.insert(0, "test text");
         const updateState = async () => {
-            console.log(yText.toString());
+            setText(yText.toString())
         };
         yText.observe(updateState);
 
@@ -45,6 +45,16 @@ const QuestsPage: NextPage = () => {
             }
         };
     }, [yDoc]);
+
+    const handleChangeText = (e: any) => {
+        const yText = yDoc.getText('sharedText');
+
+        yDoc.transact(() => {
+            yText.delete(0, yText.length);
+            yText.insert(0, e.target.value);
+        });
+    }
+
 
     return <Grid container spacing={1} py={1}>
         <Grid size={12}>
@@ -65,6 +75,16 @@ const QuestsPage: NextPage = () => {
         <Grid size={6}>
             <QuestEditForm/>
         </Grid>
+        <TextField
+            label="Messages"
+            multiline
+            fullWidth
+            value={text}
+            onChange={handleChangeText}
+            rows={4}
+            placeholder="Введите ваш текст..."
+            sx={{ mb: 3 }}
+        />
     </Grid>
 }
 

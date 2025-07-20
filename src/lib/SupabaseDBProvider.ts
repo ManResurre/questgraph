@@ -59,6 +59,26 @@ export class SupabaseDBProvider {
 
         // 4. Подписка на сигналы
         await this.subscribeToSignals();
+
+        this.subscribeYDoc();
+    }
+
+    private subscribeYDoc() {
+        this.ydoc.on('update', (update: Uint8Array) => {
+            this.broadcastUpdate(update);
+        });
+    }
+
+    private broadcastUpdate(update: Uint8Array) {
+        this.peers.forEach((peer) => {
+            if (peer.connected) {
+                try {
+                    peer.send(update);
+                } catch (e) {
+                    console.error('Send error:', e);
+                }
+            }
+        });
     }
 
     private async registerParticipant() {
@@ -266,6 +286,8 @@ export class SupabaseDBProvider {
             console.log(`Connected to ${targetUserId}`);
             // Логика после подключения
             this.update('connected');
+            const update = Y.encodeStateAsUpdate(this.ydoc);
+            peer.send(update);
         });
 
         peer.on('end', () => {
@@ -276,10 +298,12 @@ export class SupabaseDBProvider {
 
         peer.on('data', (data: any) => {
             // Обработка входящих данных
-            const decoder = new TextDecoder();
-            const message = decoder.decode(data);
-            this.peersMessages.push({...JSON.parse(message), user_id: targetUserId});
-            this.update(message);
+            // const decoder = new TextDecoder();
+            // const message = decoder.decode(data);
+            // this.peersMessages.push({...JSON.parse(message), user_id: targetUserId});
+            // this.update(message);
+            Y.applyUpdate(this.ydoc, data);
+            this.update(String(Date.now()));
         });
 
         peer.on('iceStateChange', (state: any) => {
