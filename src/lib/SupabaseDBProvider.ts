@@ -262,6 +262,15 @@ export class SupabaseDBProvider {
 
         const peer = new SimplePeer({
             initiator: isInitiator,
+            config: {
+                iceCandidatePoolSize: 10,
+                // iceTransportPolicy: 'all',
+                // bundlePolicy: 'max-bundle',
+                // rtcpMuxPolicy: 'require',
+                // Экспериментальные настройки (Chrome только)
+                // iceCheckInterval: 3000,
+                // iceCheckMinInterval: 2000
+            }
             // trickle: true
         });
         peer._debug = console.log;
@@ -307,6 +316,7 @@ export class SupabaseDBProvider {
         });
 
         peer.on('iceStateChange', (state: any) => {
+            console.log('ICE state:', state);
             if (state === 'disconnected') {
                 console.warn(`Disconnected from ${targetUserId}, reconnecting...`);
 

@@ -2,44 +2,27 @@
 import {
     Box,
     Button,
-    Card,
-    CardContent,
-    CardHeader, Divider, Grid,
-    Paper,
     Stack,
     TextField
 } from "@mui/material";
-import {Controller, FormProvider, useFieldArray, useForm} from "react-hook-form";
-import React, {useEffect, useRef, useState} from "react";
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CodeMirror, {EditorView} from '@uiw/react-codemirror';
-import {darcula} from '@uiw/codemirror-theme-darcula';
-import {langs} from '@uiw/codemirror-extensions-langs';
-import {keymap} from '@codemirror/view';
-import {abbreviationTracker, expandAbbreviation} from '@emmetio/codemirror6-plugin';
-import {Prec} from "@codemirror/state";
-import {Add} from "@mui/icons-material";
-import ChoiceForm from "@/app/components/choice/ChoiceForm";
+import {Controller, FormProvider, useForm} from "react-hook-form";
+import React, {useRef} from "react";
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 import {redirect, useParams} from "next/navigation";
-import {Choice, Scene} from "@/lib/db";
+import {Choice, Scene, SceneText} from "@/lib/db";
+import SceneFormChoice from "@/app/components/scene_list/SceneFormChoice";
+import SceneFormText from "@/app/components/scene_list/SceneFormText";
 // import { format } from '@codemirror/formatting';
 
-const customTheme = EditorView.theme({
-    '&': {
-        fontSize: '18px'
-    }
-})
 
 export interface ISceneFormProps {
-    scene?: Scene & { choices: Choice[] | undefined }
+    scene?: any;
 }
 
 export interface ISceneFormData extends Scene {
     id?: number;
     name: string;
-    text: string;
+    texts: Partial<SceneText>[];
     choices: Partial<Choice>[];
     questId: number;
 }
@@ -54,18 +37,14 @@ function SceneForm({scene}: ISceneFormProps) {
         defaultValues: {
             id: scene?.id || undefined,
             name: scene?.name ?? '',
-            text: scene?.text ?? "div>ul>li>span",
+            texts: scene?.texts ?? [],
             choices: scene?.choices ?? [],
             questId: Number(questId)
         }
     });
 
-    const {control, handleSubmit} = methods;
+    const {control, handleSubmit, formState: {errors}} = methods;
 
-    const {fields, append, remove} = useFieldArray({
-        control,
-        name: 'choices'
-    });
 
     const onSubmit = async (data: any) => {
         await service?.create(data);
@@ -79,8 +58,6 @@ function SceneForm({scene}: ISceneFormProps) {
         e.stopPropagation();
         await handleSubmit(onSubmit)(e);
     };
-
-    const addChoice = () => append({label: "", text: "", nextSceneId: 0});
 
     // useEffect(() => {
     //     const observer = new IntersectionObserver((entries) => {
@@ -113,8 +90,12 @@ function SceneForm({scene}: ISceneFormProps) {
             <Controller
                 name="name"
                 control={control}
+                rules={{
+                    required: "Поле 'Scene' обязательно для заполнения"
+                }}
                 render={({field: {value, onChange}}) => (
                     <TextField
+                        required
                         id={'scene'}
                         key={'scene'}
                         value={value}
@@ -122,60 +103,15 @@ function SceneForm({scene}: ISceneFormProps) {
                         placeholder={'Scene'}
                         label={'Scene'}
                         size="small"
+                        error={!!errors.name}          // Показываем состояние ошибки
+                        helperText={errors.name?.message} // Отображаем сообщение об ошибке
                     />
                 )}
             />
 
-            <Controller
-                name="text"
-                control={control}
-                render={({field: {value, onChange}}) => (
-                    <CodeMirror
-                        value={value}
-                        theme={darcula}
-                        extensions={[
-                            langs.html(),
-                            abbreviationTracker(),
-                            customTheme,
-                            Prec.highest(
-                                keymap.of([
-                                    {
-                                        key: "Tab", run: expandAbbreviation
-                                    }
-                                ])
-                            )
-                        ]}
-                        onChange={onChange}
-                    />)}
-            />
 
-            <Paper>
-                <Box py={1} display="flex" justifyContent="end">
-                    <Button onClick={addChoice} size="small" variant="contained" startIcon={<Add/>}>
-                        Add Choice
-                    </Button>
-                </Box>
-            </Paper>
-            <Divider/>
-            <Grid container spacing={0.5} columns={{xs: 4, sm: 6, md: 12}}>
-                {fields.map((item, index) => (
-                    <Grid key={item.id}>
-                        <Card variant="outlined">
-                            <CardHeader
-                                subheader={`Choice ${index + 1}`}
-                                action={
-                                    <IconButton onClick={() => remove(index)} size="small">
-                                        <DeleteIcon fontSize="small"/>
-                                    </IconButton>
-                                }
-                            />
-                            <CardContent>
-                                <ChoiceForm prefix="choices" index={index}/>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+            <SceneFormText methods={methods}/>
+            <SceneFormChoice methods={methods}/>
 
             <Box
                 ref={elementRef}

@@ -1,5 +1,5 @@
 'use client'
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     Accordion, AccordionSummary,
     AccordionActions, AccordionDetails,
@@ -12,13 +12,20 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {Choice, Scene} from "@/lib/db";
-import ChoiceList from "@/app/components/choice/ChoiceList";
+import ChoiceSceneList from "@/app/components/choice/ChoiceSceneList";
+import SceneTextList from "@/app/components/scene_list/SceneTextList";
+import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 
 export default function SceneList({scenes}: { scenes: Scene[] }) {
     const {questId} = useParams();
-    // const {service} = useSceneContext();
+    const {service} = useSceneContext();
 
     const [selectedScene, setSelectedScene] = useState(Number(localStorage.getItem('selected_scene')) || 1);
+
+    useEffect(() => {
+        service?.setSelectedScene(selectedScene);
+    }, [selectedScene]);
+
     const handleExpansion = (id: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
         if (isExpanded) {
             setSelectedScene(id);
@@ -63,10 +70,10 @@ export default function SceneList({scenes}: { scenes: Scene[] }) {
                     <Paper variant="outlined">
                         <Box p={1}>
                             {/*<QuestMainText text={scene.text}/>*/}
-                            {scene.text}
+                            <SceneTextList scene={scene}></SceneTextList>
                         </Box>
                     </Paper>
-                    <ChoiceList scene={scene}/>
+                    <ChoiceSceneList scene={scene}/>
 
                 </AccordionDetails>
                 <AccordionActions>

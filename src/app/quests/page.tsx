@@ -10,6 +10,7 @@ import {Grid, TextField} from "@mui/material";
 import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
 import {SupabaseDBProvider} from "@/lib/SupabaseDBProvider";
 import PeerList from "@/app/components/peer_list/PeerList";
+import FileLoader from "@/app/components/file_loader/FileLoader";
 
 // Генерируем уникальный ID пользователя
 const userId = crypto.randomUUID();
@@ -83,7 +84,7 @@ const QuestsPage: NextPage = () => {
             onChange={handleChangeText}
             rows={4}
             placeholder="Введите ваш текст..."
-            sx={{ mb: 3 }}
+            sx={{mb: 3}}
         />
     </Grid>
 }

@@ -5,6 +5,9 @@ import ParamsList from "@/app/components/params_list/ParamsList";
 import {db} from "@/lib/db";
 import {useLiveQuery} from "dexie-react-hooks";
 import {useParams} from "next/navigation";
+import FileLoader from "@/app/components/file_loader/FileLoader";
+import React from "react";
+import AvailableChoiceList from "@/app/components/choice/AvailableChoiceList";
 
 
 export default function QuestPage() {
@@ -27,6 +30,8 @@ export default function QuestPage() {
             </Grid>
             <Grid size={6}>
                 <ParamsList questParams={questParams}></ParamsList>
+                <FileLoader/>
+                <AvailableChoiceList/>
             </Grid>
         </Grid>
     </Box>
