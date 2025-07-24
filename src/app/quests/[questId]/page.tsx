@@ -12,9 +12,16 @@ import AvailableChoiceList from "@/app/components/choice/AvailableChoiceList";
 
 export default function QuestPage() {
     const {questId} = useParams();
-    const quest = useLiveQuery(() => db.quests.get(Number(questId)));
+    const questIdNum = Number(questId!);
 
-    const scenes = useLiveQuery(() => db.scenes.where('questId').equals(Number(questId)).toArray());
+    const {quest, scenes, choices} = useLiveQuery(async () => {
+        const quest = await db.quests.get(questIdNum);
+        const scenes = await db.scenes.where('questId').equals(questIdNum).toArray();
+        const choices = await db.choices.where('questId').equals(questIdNum).toArray()
+
+        return {quest, scenes, choices}
+    }) ?? {quest: null, scenes: [], choices: []}
+
     const questParams: any = [];
 
     if (!quest) {
@@ -31,7 +38,7 @@ export default function QuestPage() {
             <Grid size={6}>
                 <ParamsList questParams={questParams}></ParamsList>
                 <FileLoader/>
-                <AvailableChoiceList/>
+                <AvailableChoiceList scenes={scenes} choices={choices}/>
             </Grid>
         </Grid>
     </Box>

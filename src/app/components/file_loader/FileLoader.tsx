@@ -79,8 +79,6 @@ const FileLoader = () => {
 
 
         service?.createFromFile(fileContent, Number(questId!))
-// db.scene_texts.put()
-//         console.log(parsed);
     }, [fileContent])
 
     return (

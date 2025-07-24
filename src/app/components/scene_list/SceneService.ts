@@ -1,5 +1,5 @@
 import {Dispatch, SetStateAction} from "react";
-import {Choice, ChoiceText, db, Scene, SceneChoice, SceneText} from "@/lib/db";
+import {Choice, db, Scene, SceneChoice, SceneText} from "@/lib/db";
 import {ISceneFormData} from "@/app/components/scene_list/SceneForm";
 
 export interface IChoice {
@@ -104,66 +104,35 @@ export class SceneService {
         return result;
     }
 
-    parsePaths(text: any) {
-        const result = new Map();
-        const lines = text.split(/\r?\n/);
+    parsePaths(text: string) {
+        const lines = text.split('\n');
+        const map = new Map();
         let currentKey = null;
-        let currentLines = [];
-        let inStarredSection = false;
+        let currentText = '';
 
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const trimmedLine = line.trim();
-
-            // Проверка на начало новой локации
-            const pathMatch = trimmedLine.match(/^(Path\d+[\w-]*)(?:\s+|$)/);
-
-            if (pathMatch) {
-                // Сохраняем предыдущую локацию
-                if (currentKey && currentLines.length > 0) {
-                    result.set(currentKey, currentLines)
+        for (const line of lines) {
+            if (line.startsWith('Path')) {
+                // Сохраняем предыдущий путь при обнаружении нового
+                if (currentKey !== null) {
+                    map.set(currentKey, currentText);
                 }
-
-                // Начинаем новую локацию
-                currentKey = pathMatch[1];
-                currentLines = [];
-                inStarredSection = false;
-
-                // Извлекаем основной текст после идентификатора
-                const mainText = trimmedLine.slice(pathMatch[0].length).trim();
-                if (mainText) {
-                    currentLines.push(mainText);
-                }
-            }
-            // Обработка строк со звёздочкой
-            else if (trimmedLine.startsWith('*')) {
-                inStarredSection = true;
-                const content = trimmedLine.slice(1).trim();
-                if (content) {
-                    currentLines.push(content);
-                }
-            }
-            // Обработка пустых строк внутри звездочного блока
-            else if (inStarredSection && trimmedLine === '') {
-                continue; // Пропускаем пустые строки внутри блока
-            }
-            // Обработка продолжения текста
-            else if (currentKey && trimmedLine) {
-                if (currentLines.length === 0) {
-                    currentLines.push(trimmedLine);
-                } else {
-                    // Объединяем с последней строкой
-                    currentLines[currentLines.length - 1] += "\n" + trimmedLine;
+                const tabIndex = line.indexOf('\t');
+                currentKey = line.substring(0, tabIndex);
+                currentText = line.substring(tabIndex + 1);
+            } else if (line.startsWith('*')) {
+                if (currentKey === null) continue; // Пропуск, если нет активного пути
+                const tabIndex = line.indexOf('\t');
+                if (tabIndex !== -1) {
+                    const textPart = line.substring(tabIndex + 1);
+                    currentText += (currentText ? '\n' : '') + textPart;
                 }
             }
         }
-
-        // Сохраняем последнюю локацию
-        if (currentKey && currentLines.length > 0) {
-            result.set(currentKey, currentLines)
+        // Сохранение последнего обработанного пути
+        if (currentKey !== null) {
+            map.set(currentKey, currentText);
         }
-
-        return result;
+        return map;
     }
 
     async createFromFile(fileContent: string, questId: number) {
@@ -174,7 +143,6 @@ export class SceneService {
             db.scenes,
             db.choices,
             db.scene_texts,
-            db.choice_texts,
             async () => {
 
                 for (const loc of locations.keys()) {
@@ -188,18 +156,11 @@ export class SceneService {
                     })
                     await db.scene_texts.bulkPut(texts as SceneText[]);
                 }
-
+                const pathsForDb: Choice[] = [];
                 for (const path of paths.keys()) {
-                    const choiceId = await db.choices.put({label: path, questId} as Choice);
-
-                    const texts = paths.get(path).map((text: string) => {
-                        return {
-                            text,
-                            choiceId
-                        }
-                    })
-                    await db.choice_texts.bulkPut(texts as ChoiceText[]);
+                    pathsForDb.push({label: path, text: paths.get(path), questId});
                 }
+                await db.choices.bulkPut(pathsForDb);
             })
     }
 

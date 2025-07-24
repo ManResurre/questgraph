@@ -1,8 +1,9 @@
-import {Choice, ChoiceText, db, Scene} from "@/lib/db";
+import {Choice, db, Scene} from "@/lib/db";
 import {Button, Card, CardContent} from "@mui/material";
 import React from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import ChoiceButton from "@/app/components/choice/ChoiceButton";
+import {getChoices} from "@/app/components/choice/Helper";
 
 interface ChoiceListProps {
     scene: Scene
@@ -11,19 +12,7 @@ interface ChoiceListProps {
 export default function ChoiceSceneList({scene}: ChoiceListProps) {
 
     const choicesForScene = useLiveQuery(async () => {
-        const sceneChoices = await db.scene_choice
-            .where('sceneId')
-            .equals(scene?.id!)
-            .toArray();
-
-        if (!sceneChoices.length) return [];
-
-        const choiceIds = sceneChoices?.map(sc => sc.choiceId);
-
-        return db.choices
-            .where('id')
-            .anyOf(choiceIds!)
-            .toArray()
+        return getChoices(Number(scene.id))
     })
 
     if (!choicesForScene) {

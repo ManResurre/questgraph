@@ -1,6 +1,5 @@
 import React from "react";
-import {Choice, db} from "@/lib/db";
-import {useLiveQuery} from "dexie-react-hooks";
+import {Choice} from "@/lib/db";
 import {Button} from "@mui/material";
 
 export interface ChoiceButtonProps {
@@ -8,7 +7,5 @@ export interface ChoiceButtonProps {
 }
 
 export default function ChoiceButton({choice}: ChoiceButtonProps) {
-    const choiceTexts = useLiveQuery(() => db.choice_texts.where('choiceId').equals(choice.id!).toArray());
-
-    return <Button size="small" variant="text">{choiceTexts ? choiceTexts[0].text : ''}</Button>
+    return <Button size="small" variant="text">{choice.text}</Button>
 }
