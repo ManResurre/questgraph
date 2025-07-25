@@ -84,7 +84,7 @@ const FileLoader = () => {
     return (
         <Box sx={{maxWidth: 800, mx: 'auto', p: 3}}>
             <Typography variant="h5" gutterBottom>
-                Загрузка текстового файла
+                Загрузка квеста из файла
             </Typography>
 
             <input

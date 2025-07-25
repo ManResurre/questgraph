@@ -1,132 +1,82 @@
-import {useLiveQuery} from "dexie-react-hooks";
-import {Choice, db, Scene} from "@/lib/db";
-import {useParams} from "next/navigation";
-import React, {useCallback, useMemo} from "react";
+import {Choice, Scene} from "@/lib/db";
+import React, {useCallback, useRef, useState, useTransition} from "react";
 import {
-    ListItem,
-    List,
-    ListItemText,
-    IconButton,
-    Chip,
-    Typography,
-    Autocomplete,
     Box,
     TextField,
-    Stack
+    CircularProgress
 } from "@mui/material";
-import CheckIcon from '@mui/icons-material/Check';
-import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
-import LocationList from "@/app/components/choice/LocationList";
-import AutoSizer from "react-virtualized-auto-sizer";
-import {FixedSizeList as VirtualizedList} from "react-window";
+import {Virtuoso, VirtuosoHandle} from 'react-virtuoso';
+import ChoiceItem from "@/app/components/choice/ChoiceItem";
 
 export interface AvailableChoiceListParams {
     scenes: Scene[];
     choices: Choice[];
 }
 
-const OptimizedAutocomplete = React.memo(({scenes}: any) => {
-    return <Autocomplete
-        size={'small'}
-        sx={{width: 300}}
-        options={scenes}
-        autoHighlight
-        getOptionLabel={(option: Scene) => option.name}
-        renderOption={(props, option) => {
-            const {key, ...optionProps} = props;
-            return (
-                <Box
-                    key={key}
-                    component="li"
-                    sx={{'& > img': {mr: 2, flexShrink: 0}}}
-                    {...optionProps}
-                >
-                    {option.name}
-                </Box>
-            );
-        }}
-        renderInput={(params) => (
-            <TextField
-                {...params}
-                label="Choose a Scene"
-                slotProps={{
-                    htmlInput: {
-                        ...params.inputProps,
-                        autoComplete: 'new-password',
-                    },
-                }}
-            />
-        )}
-    />
-})
-
-const ChoiceItem = React.memo(({choice, scenes}: any) => {
-    const {service} = useSceneContext();
-    const locationList = useMemo(() => (
-        <LocationList choiceId={choice.id}/>
-    ), [choice.id]);
-
-    const handleSelectClick = useCallback((choice: Choice) => {
-        service?.addChoice(choice);
-    }, [service]);
-
-    return (
-        <ListItem
-            secondaryAction={
-                <IconButton
-                    edge="end"
-                    aria-label="edit"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectClick(choice);
-                    }}
-                    sx={{mr: 0.5}}
-                >
-                    <CheckIcon color={false ? "success" : "primary"} fontSize="small"/>
-                </IconButton>
-            }
-        >
-            <ListItemText
-                primary={choice.label}
-                secondary={<Stack alignItems="flex-start" spacing={1}>
-                    <Typography component={'div'}>{choice.text}</Typography>
-                    {locationList}
-                    <OptimizedAutocomplete scenes={scenes}/>
-                </Stack>}
-                slotProps={
-                    {
-                        secondary: {
-                            component: "div"
-                        }
-                    }
-                }
-            />
-        </ListItem>
-    )
-});
-
 export default function AvailableChoiceList({scenes, choices}: AvailableChoiceListParams) {
-    return <Box height="80vh" width="100%">
-        <AutoSizer>
-            {({height, width}) => (
-                <VirtualizedList
-                    height={height}
-                    width={width}
-                    itemCount={choices.length}
-                    itemSize={200}
-                    overscanCount={5}
-                    itemData={choices}
-                >
-                    {({index, style, data}) => (
-                        <Box style={style} key={`choice_${data[index].id}`}>
-                            <ChoiceItem
-                                choice={data[index]}
-                                scenes={scenes}
-                            />
-                        </Box>
-                    )}
-                </VirtualizedList>
-            )}
-        </AutoSizer>
+    const [searchTerm, setSearchTerm] = useState("");
+    const virtuosoRef = useRef<VirtuosoHandle>(null);
+    const [isPending, startTransition] = useTransition();
+
+    const handleSearch = useCallback((term: string) => {
+        setSearchTerm(term);
+
+        if (!term) return;
+
+        // Поиск индекса элемента по тексту
+        const index = choices.findIndex(
+            (choice: Choice) =>
+                choice.label.toLowerCase().includes(term.toLowerCase()) ||
+                choice.text.toLowerCase().includes(term.toLowerCase())
+        );
+
+        if (index !== -1 && virtuosoRef.current) {
+            // Прокрутка к элементу
+            virtuosoRef.current.scrollToIndex({
+                index,
+                align: "start",
+                behavior: "smooth"
+            });
+        }
+    }, [choices]);
+
+    const handleSearchChange = (term: string) => {
+        setSearchTerm(term);
+
+        // Откладываем операцию поиска как неблокирующую
+        startTransition(() => {
+            handleSearch(term);
+        });
+    };
+
+    return <Box height="100%">
+        <TextField
+            label="Search choices"
+            variant="outlined"
+            size="small"
+            fullWidth
+            value={searchTerm}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            sx={{mb: 2}}
+        />
+        {isPending && <CircularProgress size={20}/>}
+        <Box height="300vh">
+            <Virtuoso
+                ref={virtuosoRef}
+                style={{
+                    height: '100%',
+                    scrollbarWidth: 'none'
+                }}
+                className="hide-scrollbar"
+                data={choices}
+                itemContent={(index: number, choice: Choice) => (
+                    <ChoiceItem
+                        choice={choice}
+                        scenes={scenes}
+                        highlight={searchTerm}
+                    />
+                )}
+            />
+        </Box>
     </Box>
 }

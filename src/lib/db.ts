@@ -11,7 +11,7 @@ export interface Choice {
     id?: number;
     questId: number;
     label: string;
-    text?: string;
+    text: string;
     nextSceneId?: number;
 }
 
@@ -37,6 +37,8 @@ export interface Param {
     id?: number;
     label: string;
     questId: number;
+    value: number;
+    desc: string;
 }
 
 export interface Quest {

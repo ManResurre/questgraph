@@ -172,4 +172,8 @@ export class SceneService {
         const sceneChoice: SceneChoice = {choiceId: choice.id!, sceneId: this.selectedSceneId};
         await db.scene_choice.put(sceneChoice);
     }
+
+    setNextScene(choiceId: number, sceneId: number | undefined) {
+        db.choices.update(choiceId, {nextSceneId: sceneId})
+    }
 }
