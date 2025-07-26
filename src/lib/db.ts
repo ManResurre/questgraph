@@ -35,10 +35,11 @@ export interface Scene {
 
 export interface Param {
     id?: number;
-    label: string;
     questId: number;
-    value: number;
-    desc: string;
+    key: string;
+    label: string;
+    value: string;
+    desc?: string;
 }
 
 export interface Quest {

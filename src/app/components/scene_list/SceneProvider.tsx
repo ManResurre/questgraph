@@ -23,7 +23,7 @@ function SceneProvider(props: SceneProviderProps) {
     const [service, setService] = useState<SceneService | undefined>();
 
     useEffect(() => {
-        const service = new SceneService();
+        const service = SceneService.init(setUpdate);
         setService(service);
     }, []);
 

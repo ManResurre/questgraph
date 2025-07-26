@@ -1,5 +1,5 @@
 import {Dispatch, SetStateAction} from "react";
-import {Choice, db, Scene, SceneChoice, SceneText} from "@/lib/db";
+import {Choice, db, Param, Scene, SceneChoice, SceneText} from "@/lib/db";
 import {ISceneFormData} from "@/app/components/scene_list/SceneForm";
 
 export interface IChoice {
@@ -16,10 +16,34 @@ export interface IScene {
 }
 
 export class SceneService {
+    static #instance: SceneService;
     update: Dispatch<SetStateAction<string>> | undefined;
     editing: Scene | undefined;
 
     selectedSceneId: number;
+
+    editedParam?: Param = undefined;
+
+    private constructor() {
+    }
+
+    public static init(update: Dispatch<SetStateAction<string>>): SceneService {
+        if (!SceneService.#instance) {
+            SceneService.#instance = new SceneService();
+            SceneService.#instance.setUpdate(update);
+        }
+        return SceneService.#instance;
+    }
+
+    setUpdate(update: Dispatch<SetStateAction<string>>) {
+        this.update = update;
+    }
+
+    setEditParam(param: Param | undefined) {
+        this.editedParam = param;
+        if (this.update)
+            this.update(`edit param ${param ? JSON.stringify(param) : 'clear'}`)
+    }
 
     edit(scene: Scene) {
         this.editing = scene;
@@ -40,22 +64,6 @@ export class SceneService {
             } else {
                 sceneId = await db.scenes.add(scene as Scene);
             }
-
-            // const choices = data.choices.map((choice) => ({
-            //     ...choice,
-            //     questId: scene.questId
-            // }));
-            //
-            // const existingChoicesIds = choices
-            //     .filter(c => c.id !== undefined)
-            //     .map(c => c.id!);
-            //
-            // await db.choices
-            //     .where('sceneId').equals(sceneId)
-            //     .and(c => !existingChoicesIds.includes(c.id!))
-            //     .delete();
-            //
-            // await db.choices.bulkPut(choices as Choice[]);
 
             const texts = data.texts.map((text) => ({
                 ...text,
