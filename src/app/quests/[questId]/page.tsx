@@ -1,12 +1,11 @@
 'use client';
 import {Box, Divider, Grid, Typography} from "@mui/material";
 import SceneList from "@/app/components/scene_list/SceneList";
-import ParamsList from "@/app/components/params_list/ParamsList";
 import {db} from "@/lib/db";
 import {useLiveQuery} from "dexie-react-hooks";
 import {useParams} from "next/navigation";
 import FileLoader from "@/app/components/file_loader/FileLoader";
-import React, {useEffect} from "react";
+import React from "react";
 import AvailableChoiceList from "@/app/components/choice/AvailableChoiceList";
 import SimpleParamForm from "@/app/components/params_list/SimpleParamForm";
 import SimpleParamsList from "@/app/components/params_list/SimpleParamsList";

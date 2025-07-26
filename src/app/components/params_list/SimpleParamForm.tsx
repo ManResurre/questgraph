@@ -2,7 +2,6 @@ import React, {useEffect} from "react";
 import {Button, FormControl, Stack, TextField} from "@mui/material";
 import {Controller, useForm} from "react-hook-form";
 import {db, Param} from "@/lib/db";
-import EditIcon from '@mui/icons-material/Edit';
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 
 interface PramFormData {

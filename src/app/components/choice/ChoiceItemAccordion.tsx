@@ -5,14 +5,11 @@ import {Choice, Scene} from "@/lib/db";
 import {
     Accordion, AccordionActions,
     AccordionDetails,
-    AccordionSummary, Box, Button,
-    IconButton,
-    ListItem,
-    ListItemText, Paper,
+    AccordionSummary,
+    Button,
     Stack,
     Typography
 } from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
 import ScenesAutocomplete from "@/app/components/choice/ScenesAutocomplete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
