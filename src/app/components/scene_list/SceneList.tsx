@@ -15,6 +15,7 @@ import {Choice, Scene} from "@/lib/db";
 import ChoiceSceneList from "@/app/components/choice/ChoiceSceneList";
 import SceneTextList from "@/app/components/scene_list/SceneTextList";
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
+import SceneAccordionDetails from "@/app/components/scene_list/SceneAccordionDetails";
 
 export default function SceneList({scenes}: { scenes: Scene[] }) {
     const {questId} = useParams();
@@ -25,6 +26,11 @@ export default function SceneList({scenes}: { scenes: Scene[] }) {
     useEffect(() => {
         service?.setSelectedScene(selectedScene);
     }, [selectedScene]);
+
+    useEffect(() => {
+        if (service?.selectedSceneId)
+            setSelectedScene(service.selectedSceneId)
+    }, [service?.selectedSceneId]);
 
     const handleExpansion = (id: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
         if (isExpanded) {
@@ -66,16 +72,7 @@ export default function SceneList({scenes}: { scenes: Scene[] }) {
                 >
                     <Typography component="h6">{scene.name}</Typography>
                 </AccordionSummary>
-                <AccordionDetails>
-                    <Paper variant="outlined">
-                        <Box p={1}>
-                            {/*<QuestMainText text={scene.text}/>*/}
-                            <SceneTextList scene={scene}></SceneTextList>
-                        </Box>
-                    </Paper>
-                    <ChoiceSceneList scene={scene}/>
-
-                </AccordionDetails>
+                <SceneAccordionDetails scene={scene}/>
                 <AccordionActions>
                     <Button href={`${questId}/scene/${scene.id}/edit`} component={Link}>Edit</Button>
                     <Button onClick={() => handleDelete(scene.id!)}>Delete</Button>

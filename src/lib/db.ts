@@ -27,6 +27,21 @@ export interface SceneText {
     sceneId: number;
 }
 
+export interface SceneParam {
+    id?: number;
+    sceneId: number;
+    paramId: number;
+    value: string;
+    hide: boolean;
+}
+
+export interface ChoiceParam {
+    id?: number;
+    choiceId: number;
+    paramId: number;
+    value: string;
+}
+
 export interface Scene {
     id?: number;
     name: string;
@@ -40,6 +55,7 @@ export interface Param {
     label: string;
     value: string;
     desc?: string;
+    hide: boolean;
 }
 
 export interface Quest {
@@ -54,6 +70,8 @@ export class QuestsDB extends Dexie {
     quests!: Dexie.Table<Quest, number>;
     scenes!: Dexie.Table<Scene, number>;
     scene_texts!: Dexie.Table<SceneText, number>;
+    scene_param!: Dexie.Table<SceneParam, number>;
+    choice_param!: Dexie.Table<ChoiceParam, number>;
     choices!: Dexie.Table<Choice, number>;
     scene_choice!: Dexie.Table<SceneChoice, number>;
     params!: Dexie.Table<Param, number>;
@@ -65,6 +83,8 @@ export class QuestsDB extends Dexie {
             quests: '++id',
             choices: '++id, questId',
             scene_texts: '++id, sceneId',
+            scene_param: '++id, sceneId, paramId',
+            choice_param: '++id, choiceId, paramId',
             scene_choice: '++id, sceneId,choiceId',
             scenes: '++id, questId',
             params: '++id, questId'

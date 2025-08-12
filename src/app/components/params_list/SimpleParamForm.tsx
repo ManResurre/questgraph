@@ -1,13 +1,14 @@
 import React, {useEffect} from "react";
-import {Button, FormControl, Stack, TextField} from "@mui/material";
+import {Button, Checkbox, FormControl, FormControlLabel, Stack, TextField} from "@mui/material";
 import {Controller, useForm} from "react-hook-form";
 import {db, Param} from "@/lib/db";
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 
 interface PramFormData {
-    key: string,
-    label: string,
-    value: string
+    key: string;
+    label: string;
+    value: string;
+    hide: boolean;
 }
 
 export interface SimpleParamFormParams {
@@ -22,7 +23,8 @@ const SimpleParamForm = ({questId}: SimpleParamFormParams) => {
         defaultValues: {
             key: "",
             label: "",
-            value: ""
+            value: "",
+            hide: true
         }
     });
 
@@ -91,6 +93,25 @@ const SimpleParamForm = ({questId}: SimpleParamFormParams) => {
                         placeholder={'Value'}
                         label={'Value'}
                         size="small"
+                    />
+                )}
+            />
+        </FormControl>
+
+        <FormControl>
+            <Controller
+                name="hide"
+                control={control}
+                defaultValue={true}
+                render={({field: {value, onChange}}) => (
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={value}
+                                onChange={(e) => onChange(e.target.checked)}
+                            />
+                        }
+                        label="Скрыть/Показать"
                     />
                 )}
             />

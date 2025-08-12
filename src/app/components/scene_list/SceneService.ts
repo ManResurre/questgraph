@@ -35,6 +35,12 @@ export class SceneService {
         return SceneService.#instance;
     }
 
+    setExpandedScene(sceneId: number) {
+        this.selectedSceneId = sceneId;
+        if (this.update)
+            this.update(`selectedSceneId: ${sceneId}`)
+    }
+
     setUpdate(update: Dispatch<SetStateAction<string>>) {
         this.update = update;
     }

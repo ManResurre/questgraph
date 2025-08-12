@@ -10,6 +10,7 @@ import AvailableChoiceList from "@/app/components/choice/AvailableChoiceList";
 import SimpleParamForm from "@/app/components/params_list/SimpleParamForm";
 import SimpleParamsList from "@/app/components/params_list/SimpleParamsList";
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
+import Status from "@/app/components/status/Status";
 
 
 export default function QuestPage() {
@@ -40,6 +41,7 @@ export default function QuestPage() {
                 <SimpleParamForm editedParam={service?.editedParam} questId={questIdNum}/>
                 <SimpleParamsList questId={questIdNum}/>
                 <FileLoader/>
+                <Status questId={questIdNum}/>
                 <AvailableChoiceList scenes={scenes} choices={choices}/>
             </Grid>
         </Grid>
