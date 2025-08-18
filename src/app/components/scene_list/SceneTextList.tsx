@@ -4,12 +4,13 @@ import {db, Scene} from "@/lib/db";
 import {useLiveQuery} from "dexie-react-hooks";
 
 interface SceneTextListProps {
-    scene?: Scene
+    sceneId: number;
 }
 
-export default function SceneTextList({scene}: SceneTextListProps) {
-    const texts = useLiveQuery(() => db.scene_texts.where('sceneId').equals(scene?.id!).toArray());
-
+export default function SceneTextList({sceneId}: SceneTextListProps) {
+    const texts = useLiveQuery(() =>
+            db.scene_texts.where('sceneId').equals(sceneId).toArray()
+        , [sceneId]);
 
     return <List>
         {texts && texts.map((item) =>

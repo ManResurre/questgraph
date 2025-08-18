@@ -1,19 +1,18 @@
-import {Choice, db, Scene} from "@/lib/db";
-import {Button, Card, CardContent} from "@mui/material";
+import {Card, CardContent} from "@mui/material";
 import React from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import ChoiceButton from "@/app/components/choice/ChoiceButton";
 import {getChoices} from "@/app/components/choice/Helper";
 
 interface ChoiceListProps {
-    scene: Scene
+    sceneId: number
 }
 
-export default function ChoiceSceneList({scene}: ChoiceListProps) {
+export default function ChoiceSceneList({sceneId}: ChoiceListProps) {
 
-    const choicesForScene = useLiveQuery(async () => {
-        return getChoices(Number(scene.id))
-    })
+    const choicesForScene = useLiveQuery(() =>
+            getChoices(sceneId),
+        [sceneId])
 
     if (!choicesForScene) {
         return <></>;
@@ -23,7 +22,7 @@ export default function ChoiceSceneList({scene}: ChoiceListProps) {
         <CardContent>
             <ol>
                 {choicesForScene && choicesForScene.map((ch, index) => {
-                    return <li key={`scene.${scene?.name}.choice.${index}`}>
+                    return <li key={`scene.choice.${index}`}>
                         <ChoiceButton choice={ch}/>
                     </li>
                 })}

@@ -1,10 +1,22 @@
 import Dexie from 'dexie';
 
 export interface User {
-    id?: number;
+    id: string;
     name: string;
     privateKey: string;
     publicKey: string;
+}
+
+export interface Game {
+    id?: number;
+    questId: number;
+    userId: string;
+    sceneId: number;
+}
+
+export interface Status {
+    id?: number;
+    gameId: number;
 }
 
 export interface Choice {
@@ -75,11 +87,12 @@ export class QuestsDB extends Dexie {
     choices!: Dexie.Table<Choice, number>;
     scene_choice!: Dexie.Table<SceneChoice, number>;
     params!: Dexie.Table<Param, number>;
+    game!: Dexie.Table<Game, number>;
 
     constructor() {
         super('QuestsDB');
         this.version(1).stores({
-            user: '++id',
+            user: 'id',
             quests: '++id',
             choices: '++id, questId',
             scene_texts: '++id, sceneId',
@@ -87,7 +100,8 @@ export class QuestsDB extends Dexie {
             choice_param: '++id, choiceId, paramId',
             scene_choice: '++id, sceneId,choiceId',
             scenes: '++id, questId',
-            params: '++id, questId'
+            params: '++id, questId',
+            game: '++id'
         });
     }
 }

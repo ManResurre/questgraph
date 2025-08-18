@@ -23,8 +23,10 @@ function QuestsProvider(props: QuestsProviderProps) {
     const [service, setService] = useState<QuestService | undefined>();
 
     useEffect(() => {
-        const qs = new QuestService(setUpdate);
-        setService(qs);
+        QuestService.init(setUpdate).then((qs) => {
+            setService(qs);
+        });
+
     }, []);
 
     const contextValue = useMemo((): QuestsContextType => ({

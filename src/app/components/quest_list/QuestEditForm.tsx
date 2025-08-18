@@ -8,7 +8,7 @@ interface IQuestEditForm extends Quest {
 }
 
 export function QuestEditForm() {
-    const {service, update} = useQuestContext();
+    const {questService, update} = useQuestContext();
 
     const {handleSubmit, control, reset} = useForm<IQuestEditForm>({
         defaultValues: {
@@ -17,13 +17,13 @@ export function QuestEditForm() {
     });
 
     const onSubmit = (data: IQuestEditForm) => {
-        service?.create<IQuestEditForm>(data);
+        questService?.create<IQuestEditForm>(data);
         reset({name: ""})
     }
 
     useEffect(() => {
-        if (service?.editing)
-            reset({name: service?.editing?.name})
+        if (questService?.editing)
+            reset({name: questService?.editing?.name})
     }, [update]);
 
     return <Paper>

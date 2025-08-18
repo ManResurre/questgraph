@@ -10,10 +10,8 @@ import {Grid, TextField} from "@mui/material";
 import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
 import {SupabaseDBProvider} from "@/lib/SupabaseDBProvider";
 import PeerList from "@/app/components/peer_list/PeerList";
-import FileLoader from "@/app/components/file_loader/FileLoader";
 
-// Генерируем уникальный ID пользователя
-const userId = crypto.randomUUID();
+const userId = localStorage.getItem('userId');
 const roomId = '96e1d418-9e13-472f-9006-67df2069d6aa'//'document-123'
 
 const QuestsPage: NextPage = () => {
@@ -61,10 +59,11 @@ const QuestsPage: NextPage = () => {
         <Grid size={12}>
             {providerRef.current &&
                 <PeerList
+                    provider={providerRef.current}
                     participants={providerRef.current.participants}
                     peers={providerRef.current.peers}
                     messages={providerRef.current.peersMessages}
-                    userId={userId}
+                    userId={userId!}
                     update={providerRef.current.update}
                 />
             }

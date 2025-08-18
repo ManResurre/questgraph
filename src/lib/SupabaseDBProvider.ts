@@ -89,7 +89,7 @@ export class SupabaseDBProvider {
                 user_id: this.userId,
                 status: 'online',
                 last_seen: new Date().toISOString()
-            });
+            }, {onConflict: 'room_id, user_id'});
 
         if (error) console.error('Participant registration error:', error);
     }
@@ -257,20 +257,20 @@ export class SupabaseDBProvider {
         }
     }
 
-    private async createPeer(targetUserId: string, isInitiator: boolean) {
+    public async createPeer(targetUserId: string, isInitiator: boolean) {
         if (this.peers.has(targetUserId)) return;
 
         const peer = new SimplePeer({
             initiator: isInitiator,
-            config: {
-                iceCandidatePoolSize: 10,
-                // iceTransportPolicy: 'all',
-                // bundlePolicy: 'max-bundle',
-                // rtcpMuxPolicy: 'require',
-                // Экспериментальные настройки (Chrome только)
-                // iceCheckInterval: 3000,
-                // iceCheckMinInterval: 2000
-            }
+            // config: {
+            //     // iceCandidatePoolSize: 10,
+            //     // iceTransportPolicy: 'all',
+            //     // bundlePolicy: 'max-bundle',
+            //     // rtcpMuxPolicy: 'require',
+            //     // Экспериментальные настройки (Chrome только)
+            //     // iceCheckInterval: 3000,
+            //     // iceCheckMinInterval: 2000
+            // }
             // trickle: true
         });
         peer._debug = console.log;
@@ -328,7 +328,7 @@ export class SupabaseDBProvider {
         return peer;
     }
 
-    private destroyPeer(peerId: string) {
+    public destroyPeer(peerId: string) {
         const peer = this.peers.get(peerId);
         if (peer) {
             // Удаляем все обработчики событий

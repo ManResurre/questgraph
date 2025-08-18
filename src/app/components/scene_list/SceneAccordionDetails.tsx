@@ -29,14 +29,14 @@ const SceneAccordionDetails = ({scene}: SceneAccordionDetailsParams) => {
             <Paper variant="outlined">
                 <Box p={1}>
                     {/*<QuestMainText text={scene.text}/>*/}
-                    <SceneTextList scene={scene}></SceneTextList>
+                    <SceneTextList sceneId={scene.id!}></SceneTextList>
                 </Box>
             </Paper>
         )}
         {tabValue === 1 && (
-            <SceneParams scene={scene} />
+            <SceneParams scene={scene}/>
         )}
-        <ChoiceSceneList scene={scene}/>
+        <ChoiceSceneList sceneId={scene.id!}/>
     </AccordionDetails>
 }
 

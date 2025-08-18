@@ -24,10 +24,10 @@ import Link from "next/link";
 import {Quest} from "@/lib/db";
 
 export function QuestList({quests}: { quests?: Quest[] }) {
-    const {service} = useQuestContext();
+    const {questService} = useQuestContext();
 
     const handleEditClick = (quest: Quest) => {
-        service?.edit(quest);
+        questService?.edit(quest);
     }
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -39,7 +39,7 @@ export function QuestList({quests}: { quests?: Quest[] }) {
 
     const confirmDelete = () => {
         if (itemToDelete) {
-            service?.delete(itemToDelete);
+            questService?.delete(itemToDelete);
         }
         setDeleteDialogOpen(false);
         setItemToDelete(null);

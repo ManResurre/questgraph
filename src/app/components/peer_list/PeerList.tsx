@@ -12,7 +12,7 @@ import {
 import {theme} from "@/theme";
 import React from "react";
 import SimplePeer from "simple-peer";
-import {Participant} from "@/lib/SupabaseDBProvider";
+import {Participant, SupabaseDBProvider} from "@/lib/SupabaseDBProvider";
 import {Controller, useForm} from "react-hook-form";
 import MessageList from "@/app/components/peer_list/MessageList";
 
@@ -21,10 +21,11 @@ export interface PeerListProps {
     peers: Map<string, SimplePeer.Instance>,
     userId: string,
     messages?: { user_id: string; text: string; time: number }[],
-    update?: React.Dispatch<React.SetStateAction<string>>
+    update?: React.Dispatch<React.SetStateAction<string>>,
+    provider?: SupabaseDBProvider
 }
 
-export default function PeerList({participants, peers, userId, messages, update}: PeerListProps) {
+export default function PeerList({participants, peers, userId, messages, update, provider}: PeerListProps) {
 
     const isConnected = (userId: string) => {
         const peer = peers.get(userId);
@@ -48,22 +49,43 @@ export default function PeerList({participants, peers, userId, messages, update}
         }
     });
     const onSubmit = ({message, selectedParticipants}: any) => {
-        if (!message) {
-            return;
-        }
+        [...peers].map(([key, peer]) => {
+            if (!selectedParticipants[key]) {
+                return
+            }
 
-        messages?.push({user_id: userId, text: message, time: Date.now()});
-        setValue("message", "");
+            console.log(key, peer.connected);
 
-        [...peers].filter(([key]) => {
-            return selectedParticipants[key];
-        }).map(([, peer]) => {
-            if (!peer.connected)
+            provider?.destroyPeer(key);
+
+            if (!provider)
                 return;
-            peer.send(JSON.stringify({text: message, time: Date.now()}));
-            if (update)
-                update(String(Date.now()));
+
+            provider.createPeer(key, true).then((p) => {
+                console.log(p);
+            });
+
         })
+
+        console.log(peers);
+
+        // console.log(peers);
+        // if (!message) {
+        //     return;
+        // }
+        //
+        // messages?.push({user_id: userId, text: message, time: Date.now()});
+        // setValue("message", "");
+        //
+        // [...peers].filter(([key]) => {
+        //     return selectedParticipants[key];
+        // }).map(([, peer]) => {
+        //     if (!peer.connected)
+        //         return;
+        //     peer.send(JSON.stringify({text: message, time: Date.now()}));
+        //     if (update)
+        //         update(String(Date.now()));
+        // })
     }
 
     return <Paper>
@@ -127,7 +149,7 @@ export default function PeerList({participants, peers, userId, messages, update}
                         variant="contained"
                         type="submit"
                         fullWidth
-                >Send message</Button>
+                >Connect</Button>
             </Stack>
 
             <Box>

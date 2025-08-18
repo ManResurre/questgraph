@@ -1,5 +1,5 @@
 'use client';
-import {Box, Divider, Grid, Typography} from "@mui/material";
+import {Box, Button, Divider, Grid, Typography} from "@mui/material";
 import SceneList from "@/app/components/scene_list/SceneList";
 import {db} from "@/lib/db";
 import {useLiveQuery} from "dexie-react-hooks";
@@ -11,6 +11,7 @@ import SimpleParamForm from "@/app/components/params_list/SimpleParamForm";
 import SimpleParamsList from "@/app/components/params_list/SimpleParamsList";
 import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 import Status from "@/app/components/status/Status";
+import Link from "next/link";
 
 
 export default function QuestPage() {
@@ -32,6 +33,8 @@ export default function QuestPage() {
 
     return <Box mt={1}>
         <Typography>{quest?.name}</Typography>
+        <Button href={`${questId}/player`} variant="contained" component={Link}
+                color="inherit">Play</Button>
         <Divider/>
         <Grid container spacing={1} mt={1}>
             <Grid size={6}>
