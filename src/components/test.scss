@@ -1,0 +1,14 @@
+.react-flow__handle {
+  position: inherit;
+}
+
+.labeledHandle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row-reverse;
+}
+
+.react-flow__handle-right {
+  top: auto;
+}

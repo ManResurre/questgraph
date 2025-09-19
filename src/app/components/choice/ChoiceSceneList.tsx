@@ -2,7 +2,7 @@ import {Card, CardContent} from "@mui/material";
 import React from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import ChoiceButton from "@/app/components/choice/ChoiceButton";
-import {getChoices} from "@/app/components/choice/Helper";
+import {getChoices} from "@/lib/SceneRepository";
 
 interface ChoiceListProps {
     sceneId: number

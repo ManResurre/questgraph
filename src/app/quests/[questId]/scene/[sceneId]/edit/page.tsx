@@ -5,7 +5,7 @@ import {Box} from "@mui/material";
 import {useLiveQuery} from "dexie-react-hooks";
 import {Choice, db, SceneText} from "@/lib/db";
 import {useParams} from "next/navigation";
-import {getChoices} from "@/app/components/choice/Helper";
+import {getChoices} from "@/lib/SceneRepository";
 
 export default function EditScenePage() {
     const {sceneId} = useParams();

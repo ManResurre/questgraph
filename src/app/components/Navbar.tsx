@@ -16,6 +16,8 @@ const Navbar = () => {
 
                     <Button href="/" variant={pathname === '/' ? 'contained' : 'text'} component={Link}
                             color="inherit">Home</Button>
+                    <Button href="/test" variant={pathname === '/test' ? 'contained' : 'text'} component={Link}
+                            color="inherit">Test</Button>
                     <Button href="/quests" variant={pathname === '/quests' ? 'contained' : 'text'} component={Link}
                             color="inherit">Quests</Button>
                     <Button href="/about" variant={pathname === '/about' ? 'contained' : 'text'} component={Link}
