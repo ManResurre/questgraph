@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface GraphSidebarContextType {
     isSidebarOpen: boolean;
-    selectedNodeId: string | null;
+    selectedNodeId: number | null;
     selectedElementData: any;
-    openSidebar: (nodeId: string, elementData?: any) => void;
+    openSidebar: (nodeId: number, elementData?: any) => void;
     closeSidebar: () => void;
 }
 
@@ -24,10 +24,10 @@ interface GraphSidebarProviderProps {
 
 export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+    const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
     const [selectedElementData, setSelectedElementData] = useState<any>(null);
 
-    const openSidebar = (nodeId: string, elementData?: any) => {
+    const openSidebar = (nodeId: number, elementData?: any) => {
         setSelectedNodeId(nodeId);
         setSelectedElementData(elementData);
         setIsSidebarOpen(true);

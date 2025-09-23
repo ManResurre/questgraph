@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Card,
     TextField,
@@ -19,10 +19,29 @@ import {
     Help as HelpIcon,
     ViewQuilt as LayoutIcon
 } from '@mui/icons-material';
-import {Panel} from "@xyflow/react";
+import {Panel, useReactFlow} from "@xyflow/react";
+import {useDebounce} from "@uidotdev/usehooks";
+import {SceneNodeData} from "@/app/components/rf/SceneNode";
 
-const NodeMenu = ({ onLayout }) => {
+const NodeMenu = ({onLayout}:any) => {
     const [searchValue, setSearchValue] = useState('');
+    const debouncedSearchTerm = useDebounce(searchValue, 300);
+    const {setCenter, getNodes} = useReactFlow();
+
+
+    React.useEffect(() => {
+        const nodes = getNodes() as unknown as SceneNodeData[];
+        const filteredNodes = nodes.filter(({data}) => {
+            return data.name.toLocaleUpperCase().indexOf(searchValue.toLocaleUpperCase()) !== -1;
+        })
+
+        if (!filteredNodes.length)
+            return;
+
+        const focusNone = filteredNodes[0];
+        const zoom = 0.7;
+        setCenter(focusNone.position.x, focusNone.position.y, {zoom, duration: 1000});
+    }, [debouncedSearchTerm]);
 
     return (
         <Panel position="top-right">
@@ -41,35 +60,37 @@ const NodeMenu = ({ onLayout }) => {
                     placeholder="Поиск ноды..."
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon sx={{ color: 'grey.500', fontSize: 20 }} />
-                            </InputAdornment>
-                        ),
-                        sx: {
-                            borderRadius: 1,
-                            backgroundColor: 'rgba(50, 50, 60, 0.7)',
-                            color: 'white',
-                            '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'rgba(100, 100, 120, 0.3)',
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'rgba(100, 100, 120, 0.5)',
-                            },
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'rgba(100, 150, 250, 0.8)',
-                                borderWidth: '1px',
+                    slotProps={{
+                        input:{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon sx={{color: 'grey.500', fontSize: 20}}/>
+                                </InputAdornment>
+                            ),
+                            sx: {
+                                borderRadius: 1,
+                                backgroundColor: 'rgba(50, 50, 60, 0.7)',
+                                color: 'white',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(100, 100, 120, 0.3)',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(100, 100, 120, 0.5)',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(100, 150, 250, 0.8)',
+                                    borderWidth: '1px',
+                                }
                             }
                         }
                     }}
-                    sx={{ mb: 1.5 }}
+                    sx={{mb: 1.5}}
                 />
 
-                <Divider sx={{ my: 1, borderColor: 'rgba(100, 100, 120, 0.3)' }} />
+                <Divider sx={{my: 1, borderColor: 'rgba(100, 100, 120, 0.3)'}}/>
 
                 {/* Меню */}
-                <MenuList sx={{ p: 0 }}>
+                <MenuList sx={{p: 0}}>
                     <MenuItem sx={{
                         borderRadius: 1,
                         mb: 0.5,
@@ -77,8 +98,8 @@ const NodeMenu = ({ onLayout }) => {
                             backgroundColor: 'rgba(100, 100, 120, 0.2)'
                         }
                     }}>
-                        <ListItemIcon sx={{ minWidth: 36, color: 'grey.400' }}>
-                            <NodeIcon fontSize="small" />
+                        <ListItemIcon sx={{minWidth: 36, color: 'grey.400'}}>
+                            <NodeIcon fontSize="small"/>
                         </ListItemIcon>
                         <ListItemText
                             primary="Ноды"
@@ -98,8 +119,8 @@ const NodeMenu = ({ onLayout }) => {
                             backgroundColor: 'rgba(100, 100, 120, 0.2)'
                         }
                     }}>
-                        <ListItemIcon sx={{ minWidth: 36, color: 'grey.400' }}>
-                            <SettingsIcon fontSize="small" />
+                        <ListItemIcon sx={{minWidth: 36, color: 'grey.400'}}>
+                            <SettingsIcon fontSize="small"/>
                         </ListItemIcon>
                         <ListItemText
                             primary="Настройки"
@@ -119,8 +140,8 @@ const NodeMenu = ({ onLayout }) => {
                             backgroundColor: 'rgba(100, 100, 120, 0.2)'
                         }
                     }}>
-                        <ListItemIcon sx={{ minWidth: 36, color: 'grey.400' }}>
-                            <HelpIcon fontSize="small" />
+                        <ListItemIcon sx={{minWidth: 36, color: 'grey.400'}}>
+                            <HelpIcon fontSize="small"/>
                         </ListItemIcon>
                         <ListItemText
                             primary="Помощь"
@@ -134,7 +155,7 @@ const NodeMenu = ({ onLayout }) => {
                     </MenuItem>
                 </MenuList>
 
-                <Divider sx={{ my: 1, borderColor: 'rgba(100, 100, 120, 0.3)' }} />
+                <Divider sx={{my: 1, borderColor: 'rgba(100, 100, 120, 0.3)'}}/>
 
                 {/* Кнопка переключения лэйаута */}
                 <Stack direction="row" justifyContent="center">
@@ -150,7 +171,7 @@ const NodeMenu = ({ onLayout }) => {
                         }}
                         title="Горизонтальный layout"
                     >
-                        <LayoutIcon />
+                        <LayoutIcon/>
                     </IconButton>
                 </Stack>
             </Card>

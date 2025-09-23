@@ -1,14 +1,13 @@
-import {Choice, db, Scene} from "@/lib/db";
-import {Box, Button, FormControl, Stack, TextField} from "@mui/material";
+import {Choice, db, SceneText} from "@/lib/db";
+import {Button, Stack, TextField} from "@mui/material";
 import {Controller, useForm} from "react-hook-form";
-import SceneFormText from "@/app/components/scene_list/SceneFormText";
-import SceneFormChoice from "@/app/components/scene_list/SceneFormChoice";
 import React from "react";
-import {OptionsFormData} from "@/app/components/params_view/IParamsView";
 import ChoiceAutocomplete from "@/app/components/choice/ChoiceAutocomplete";
 import {useLiveQuery} from "dexie-react-hooks";
-import {updateChoices} from "@/lib/SceneRepository";
-import {plainToClass, plainToInstance} from "class-transformer";
+import updateScene, {SceneFullData, updateChoices, updateSceneTexts} from "@/lib/SceneRepository";
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import SceneFormText from "@/app/components/scene_list/SceneFormText";
+import {useParams} from "next/navigation";
 
 interface IChoice {
     id: string | number;
@@ -20,8 +19,9 @@ interface IChoice {
 
 interface ISceneFormData {
     id?: string | number;
-    label: string;
+    name: string;
     choices: IChoice[];
+    texts: SceneText[];
     questId: number;
 }
 
@@ -29,29 +29,35 @@ interface SceneNodeEditProps {
     questId?: number; //TODO WIP
     data: {
         id: string;
-        label: string;
-        choices: IChoice[]
+        name: string;
+        choices: IChoice[],
+        texts: SceneText[]
     }
 }
 
 export default function SceneNodeEdit({data}: SceneNodeEditProps) {
+    const {questId} = useParams();
+    const {closeSidebar} = useSidebar();
     const {choices} = useLiveQuery(async () => {
-        const choices = await db.choices.where('questId').equals(2).toArray();
+        const choices = await db.choices.where('questId').equals(Number(questId)).toArray();
         return {choices}
     }) ?? {choices: []};
 
-    const {handleSubmit, control, formState: {errors}} = useForm<ISceneFormData>({
+    const methods = useForm<ISceneFormData>({
         defaultValues: {
             id: data?.id || undefined,
-            label: data?.label ?? '',
-            // texts: data?.texts ?? [],
+            name: data?.name ?? '',
+            texts: data?.texts ?? [],
             choices: data.choices ?? [],
             questId: Number(2)
         }
     });
 
+    const {handleSubmit, control, formState: {errors}} = methods;
+
     const onSubmit = (scene: ISceneFormData) => {
-        updateChoices(Number(scene.id), scene.choices as Choice[]);
+        updateScene(scene as SceneFullData)
+        closeSidebar();
     }
 
     return <Stack
@@ -64,7 +70,7 @@ export default function SceneNodeEdit({data}: SceneNodeEditProps) {
     >
 
         <Controller
-            name="label"
+            name="name"
             control={control}
             rules={{
                 required: "Поле 'Scene' обязательно для заполнения"
@@ -79,8 +85,8 @@ export default function SceneNodeEdit({data}: SceneNodeEditProps) {
                     placeholder={'Scene'}
                     label={'Scene'}
                     size="small"
-                    error={!!errors.label}          // Показываем состояние ошибки
-                    helperText={errors.label?.message} // Отображаем сообщение об ошибке
+                    error={!!errors.name}          // Показываем состояние ошибки
+                    helperText={errors.name?.message} // Отображаем сообщение об ошибке
                 />
             )}
         />
@@ -94,7 +100,7 @@ export default function SceneNodeEdit({data}: SceneNodeEditProps) {
         />
 
 
-        {/*<SceneFormText methods={methods}/>*/}
+        <SceneFormText methods={methods}/>
         {/*<SceneFormChoice methods={methods}/>*/}
 
 

@@ -8,7 +8,7 @@ interface IQuestEditForm extends Quest {
 }
 
 export function QuestEditForm() {
-    const {questService, update} = useQuestContext();
+    const {service: questService, update} = useQuestContext();
 
     const {handleSubmit, control, reset} = useForm<IQuestEditForm>({
         defaultValues: {

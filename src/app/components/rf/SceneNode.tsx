@@ -1,53 +1,26 @@
-import React, {type HTMLAttributes, memo} from "react";
-import {BaseNode, BaseNodeContent} from "@/components/base-node";
+import React, {memo} from "react";
 import {Position} from "@xyflow/system";
-import {Box, Divider, IconButton, Paper} from "@mui/material";
-import {Choice, db} from "@/lib/db";
-import "./style.scss";
-import {useLiveQuery} from "dexie-react-hooks";
-import {Handle, HandleType, useNodeConnections, useNodeId, useUpdateNodeInternals} from '@xyflow/react';
-import type {HandleProps as HandlePropsSystem} from "@xyflow/system/dist/esm/types/handles";
+import {Divider, IconButton} from "@mui/material";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import {SettingsIcon} from "lucide-react";
+import CustomHandle from "@/app/components/rf/CustomHandle";
+import "./style.scss";
+import {SceneFullData} from "@/lib/SceneRepository";
 
-export type SceneNodeData = {
-    data: {
-        id: string;
-        label: string;
-        choices: Choice[];
-    }
-};
-
-const CustomHandle = (props: {
-    connectionCount?: number,
-    nextSceneId?: number,
-    type: HandleType
-} & HandlePropsSystem & Omit<HTMLAttributes<HTMLDivElement>, "id">) => {
-    const {connectionCount, type, id, nextSceneId, ...restProps} = props;
-
-    const connections = useNodeConnections();
-
-    // console.log(connections);
-
-    const isConnectable = !nextSceneId;
-    // && connectionCount && connections
-    // .filter((c) => c.sourceHandle == id).length < connectionCount
-
-    return (
-        <Handle
-            {...restProps}
-            id={id}
-            type={type}
-            isConnectable={isConnectable}
-        />
-    );
+export interface SceneNodeData {
+    data: SceneFullData;
+    id: string;
+    measured: { width: number, height: number };
+    position: { x: number, y: number }
+    sourcePosition: string;
+    targetPosition: string;
+    type: string;
 }
 
 const SceneNode = memo(({data}: SceneNodeData) => {
             const {openSidebar} = useSidebar();
-
             const handleClick = () => {
-                openSidebar(data.id, {type: 'node', data});
+                openSidebar(data.id as number, {type: 'node', data});
             }
             return (
                 <div
@@ -56,7 +29,7 @@ const SceneNode = memo(({data}: SceneNodeData) => {
                         <CustomHandle id={`s${data.id}`}
                                       type={'target'} position={Position.Left}/>
                         <div className="p-1 flex justify-between">
-                            {data.label}
+                            {data.name}
                             <IconButton sx={{
                                 minWidth: 'auto',
                                 height: 24,
@@ -66,9 +39,19 @@ const SceneNode = memo(({data}: SceneNodeData) => {
                             </IconButton>
                         </div>
 
+                        {/* Улучшенное текстовое поле в стиле ComfyUI */}
+                        <div className="px-2">
+                            <div className="bg-neutral-900/50 dark:bg-neutral-700/30 border border-gray-300 dark:border-neutral-600 rounded-[4px] p-2 min-h-[60px] max-h-[120px] overflow-y-auto
+                    scrollbar-thin scrollbar-thumb-neutral-800/70 scrollbar-track-transparent">
+        <pre className="text-xs text-gray-600 dark:text-gray-300 font-sans whitespace-pre-wrap break-words leading-4">
+        {data.texts && data.texts[0] && data.texts[0].text}
+        </pre>
+                            </div>
+                        </div>
+
                         <Divider/>
                         <ul className="p-2">
-                            {data.choices.map((choice) => {
+                            {data.choices && data.choices.map((choice) => {
                                 return <li key={`SceneNode_s${data.id}_c${choice.id}_s${choice.nextSceneId}`}
                                            className="flex items-center rounded-[2px] bg-neutral-900 p-2 mb-1 last:mb-0">
 
@@ -78,9 +61,10 @@ const SceneNode = memo(({data}: SceneNodeData) => {
                                         </span>
 
 
-                                    <CustomHandle id={`c${choice.id}_s${choice.nextSceneId}`}
+                                    <CustomHandle id={`c${choice.id}_s${choice.nextSceneId ?? ''}`}
                                                   type={'source'}
                                                   connectionCount={1}
+                                                  style={{top: "auto"}}
                                                   nextSceneId={choice.nextSceneId}
                                                   position={Position.Right}/>
                                 </li>

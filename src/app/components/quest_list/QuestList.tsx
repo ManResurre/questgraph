@@ -22,9 +22,11 @@ import {Edit, Delete} from '@mui/icons-material';
 import {useQuestContext} from "@/app/components/quest_list/QuestsProvider";
 import Link from "next/link";
 import {Quest} from "@/lib/db";
+import {usePathname} from "next/navigation";
 
 export function QuestList({quests}: { quests?: Quest[] }) {
-    const {questService} = useQuestContext();
+    const {service: questService} = useQuestContext();
+    const pathname = usePathname()
 
     const handleEditClick = (quest: Quest) => {
         questService?.edit(quest);
@@ -94,7 +96,7 @@ export function QuestList({quests}: { quests?: Quest[] }) {
                     >
                         <ListItemButton
                             component={Link}
-                            href={`/quests/${quest.id}`}
+                            href={`${pathname}/${quest.id}`}
                         >
 
                             <ListItemText
