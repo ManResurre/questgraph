@@ -46,7 +46,6 @@ const CONTAINER_STYLE = {width: '100vw', height: 'calc(100vh - 100px)'};
 
 export default function QuestPage() {
     const {questId} = useParams();
-    const {selectedNodeId} = useSidebar();
     const {setCenter} = useReactFlow();
 
     const [nodes, setNodes] = useState<SceneNodeType[]>([]);
@@ -84,6 +83,8 @@ export default function QuestPage() {
     useEffect(() => {
         if (!scenes?.length) return;
 
+        // console.log('changed', scenes);
+
         // Создание edges
         const newEdges = scenes.flatMap(scene =>
             scene.data.choices
@@ -97,7 +98,6 @@ export default function QuestPage() {
                     type: 'buttonEdge' as const,
                 }))
         );
-
 
         // Создание nodes
         const newNodes: SceneNodeType[] = scenes.map((scene) => ({
@@ -117,7 +117,7 @@ export default function QuestPage() {
         });
 
 
-    }, [scenes, selectedNodeId]);
+    }, [scenes]);
 
     return (
         <Grid container spacing={1} py={1}>

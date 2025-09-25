@@ -22,8 +22,9 @@ import {
 import {Panel, useReactFlow} from "@xyflow/react";
 import {useDebounce} from "@uidotdev/usehooks";
 import {SceneNodeData} from "@/app/components/rf/SceneNode";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
-const NodeMenu = ({onLayout}:any) => {
+const NodeMenu = ({onLayout}: any) => {
     const [searchValue, setSearchValue] = useState('');
     const debouncedSearchTerm = useDebounce(searchValue, 300);
     const {setCenter, getNodes} = useReactFlow();
@@ -43,6 +44,10 @@ const NodeMenu = ({onLayout}:any) => {
         setCenter(focusNone.position.x, focusNone.position.y, {zoom, duration: 1000});
     }, [debouncedSearchTerm]);
 
+    const handlePlay = () => {
+
+    }
+
     return (
         <Panel position="top-right">
             <Card sx={{
@@ -61,7 +66,7 @@ const NodeMenu = ({onLayout}:any) => {
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
                     slotProps={{
-                        input:{
+                        input: {
                             startAdornment: (
                                 <InputAdornment position="start">
                                     <SearchIcon sx={{color: 'grey.500', fontSize: 20}}/>
@@ -87,6 +92,31 @@ const NodeMenu = ({onLayout}:any) => {
                     sx={{mb: 1.5}}
                 />
 
+                <Divider sx={{my: 1, borderColor: 'rgba(100, 100, 120, 0.3)'}}/>
+                <MenuList sx={{p: 0}}>
+                    <MenuItem
+                        onClick={handlePlay}
+                        sx={{
+                            borderRadius: 1,
+                            mb: 0.5,
+                            '&:hover': {
+                                backgroundColor: 'rgba(100, 100, 120, 0.2)'
+                            }
+                        }}>
+                        <ListItemIcon sx={{minWidth: 36, color: 'grey.400'}}>
+                            <PlayArrowIcon fontSize="small"/>
+                        </ListItemIcon>
+                        <ListItemText
+                            primary="Start"
+                            sx={{
+                                '& .MuiTypography-root': {
+                                    fontSize: '0.9rem',
+                                    color: 'grey.300'
+                                }
+                            }}
+                        />
+                    </MenuItem>
+                </MenuList>
                 <Divider sx={{my: 1, borderColor: 'rgba(100, 100, 120, 0.3)'}}/>
 
                 {/* Меню */}

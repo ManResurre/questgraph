@@ -3,6 +3,7 @@ import {useNodesInitialized, useReactFlow} from '@xyflow/react';
 import dagre from 'dagre';
 import {CustomEdgeType, SceneNodeType} from "@/app/new-quests/[questId]/page";
 import getLayoutedElements from "@/app/new-quests/[questId]/elkLayout";
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 
 const defaultNodeWidth = 200;
 const defaultNodeHeight = 70;
@@ -14,14 +15,14 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
     setEdges: (value: (((prevState: CustomEdgeType[]) => CustomEdgeType[]) | CustomEdgeType[])) => void
 }) {
     const nodesInitialized = useNodesInitialized(); // Проверяем, отмерились ли узлы
-    const {setCenter, getNodes} = useReactFlow();
+    const {setCenter} = useReactFlow();
+    const {selectedNodeId} = useSidebar();
 
     const setupPositions = useCallback((direction = 'LR') => {
-       // const res =  getLayoutedElements(getNodes(), edges).then((data)=>{
-       //     setNodes(data.nodes as SceneNodeType[]);
-       //     setEdges(data.edges);
-       // });
-
+        // const res =  getLayoutedElements(getNodes(), edges).then((data)=>{
+        //     setNodes(data.nodes as SceneNodeType[]);
+        //     setEdges(data.edges);
+        // });
 
         const dagreGraph = new dagre.graphlib.Graph();
         dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -63,7 +64,7 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
 
         const firstNode = layoutNodes[0];
         setCenter(firstNode.position.x, firstNode.position.y, {
-            zoom: 0.1,
+            zoom: 0.5,
             duration: 1000
         });
 
@@ -72,6 +73,19 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
         });
     }, [nodes, edges, setNodes, setEdges, nodesInitialized]); // Зависимости хука
 
+    useEffect(() => {
+        if (!selectedNodeId)
+            return;
+
+        const foundNode = nodes.find(node => node.data.id === selectedNodeId)
+        if (!foundNode)
+            return;
+
+        setCenter(foundNode.position.x, foundNode.position.y, {
+            zoom: 0.5,
+            duration: 1000
+        });
+    }, [selectedNodeId])
 
     useEffect(() => {
         if (!nodesInitialized) {

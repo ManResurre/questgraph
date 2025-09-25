@@ -1,5 +1,5 @@
 import {Box, Drawer, useMediaQuery, useTheme} from "@mui/material";
-import React, {useEffect, useRef} from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneNodeEdit from "@/app/components/rf/SceneNodeEdit";
 
@@ -25,7 +25,7 @@ export default function GraphSidebar() {
         document.body.style.userSelect = 'none';
     };
 
-    const handleMouseMove = React.useCallback((e: MouseEvent) => {
+    const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isResizing.current) return;
         const updateWidth = () => {
             const diff = e.clientX - startX.current;
@@ -36,7 +36,7 @@ export default function GraphSidebar() {
         requestAnimationFrame(updateWidth);
     }, []);
 
-    const handleMouseUp = React.useCallback(() => {
+    const handleMouseUp = useCallback(() => {
         if (!isResizing.current) return;
 
         isResizing.current = false;
@@ -113,7 +113,9 @@ export default function GraphSidebar() {
                 width: '100%',
                 height: '100%',
                 overflow: 'auto',
-            }}>
+            }}
+                 className="scrollbar-thin scrollbar-thumb-neutral-800/70 scrollbar-track-transparent"
+            >
                 {selectedElementData && <SceneNodeEdit data={selectedElementData.data}/>}
             </Box>
         </Drawer>
