@@ -1,6 +1,6 @@
 'use client'
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {
     addEdge,
     applyEdgeChanges,
@@ -12,7 +12,7 @@ import {
     ReactFlow,
     useReactFlow,
     Node,
-    Edge
+    Edge, FinalConnectionState, NodeChange
 } from "@xyflow/react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {getScenesWithChoices, SceneFullData} from "@/lib/SceneRepository";
@@ -27,6 +27,7 @@ import useLayoutedElements from "@/app/new-quests/[questId]/helper";
 
 import '@xyflow/react/dist/style.css';
 import {SmartBezierEdge} from "@tisoap/react-flow-smart-edge";
+import SearchNode from "@/app/components/rf/SearchNode";
 
 export type SceneNodeType = Node<SceneFullData>;
 export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: string };
@@ -34,6 +35,7 @@ export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: stri
 // Константы
 const NODE_TYPES = {
     sceneNode: SceneNode,
+    searchNode: SearchNode
 };
 
 const EDGE_TYPES = {
@@ -44,19 +46,49 @@ const EDGE_TYPES = {
 const CONNECTION_LINE_TYPE = ConnectionLineType.SmoothStep;
 const CONTAINER_STYLE = {width: '100vw', height: 'calc(100vh - 100px)'};
 
-export default function QuestPage() {
+const QuestPage = () => {
     const {questId} = useParams();
-    const {selectedNodeId} = useSidebar();
-    const {setCenter} = useReactFlow();
-
-    const [nodes, setNodes] = useState<SceneNodeType[]>([]);
-    const [edges, setEdges] = useState<CustomEdgeType[]>([]);
+    const {screenToFlowPosition} = useReactFlow();
 
     const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)));
+    const {nodes: initialNodes, edges: initialEdges} = useMemo(() => {
+        if (!scenes?.length) return {nodes: [], edges: []};
+
+        const newEdges = scenes.flatMap(scene =>
+            scene.data.choices
+                .filter(choice => choice.nextSceneId)
+                .map(choice => ({
+                    id: `edge_${scene.id}_c${choice.id}_ns${choice.nextSceneId}`,
+                    source: `${scene.id}`,
+                    sourceHandle: `c${choice.id}_s${choice.nextSceneId}`,
+                    target: `${choice.nextSceneId}`,
+                    targetHandle: `s${choice.nextSceneId}`,
+                    type: 'buttonEdge' as const,
+                }))
+        );
+
+        const newNodes: SceneNodeType[] = scenes.map((scene, index) => ({
+            id: scene.id.toString(),
+            position: {x: 0, y: 0 },
+            data: {...scene.data, id: Number(scene.data.id)},
+            type: 'sceneNode',
+        } as SceneNodeType));
+
+        return {nodes: newNodes, edges: newEdges};
+    }, [scenes]);
+
+    const [nodes, setNodes] = useState<SceneNodeType[]>(initialNodes);
+    const [edges, setEdges] = useState<CustomEdgeType[]>(initialEdges);
+
     const {onLayout} = useLayoutedElements({nodes, edges, setNodes, setEdges});
 
     const onNodesChange = useCallback(
-        (changes: any) => setNodes(nodes => applyNodeChanges(changes, nodes)),
+        (changes: NodeChange<SceneNodeType>[]) => {
+            // if (changes.some(change => change.type === "position" && change.dragging)) {
+            //     return
+            // }
+            setNodes(nodes => applyNodeChanges(changes, nodes))
+        },
         []
     );
 
@@ -81,53 +113,45 @@ export default function QuestPage() {
         []
     );
 
-    useEffect(() => {
-        if (!scenes?.length) return;
+    const onConnectEnd = useCallback((event: MouseEvent, connectionState: FinalConnectionState) => {
+        const pos = screenToFlowPosition({x: event.clientX, y: event.clientY})
+        const id = `search-node-${Date.now()}`;
+        const searchNode = {
+            id,
+            type: 'searchNode',
+            position: {x: pos.x, y: pos.y},
+            data: {
+                connectionState
+            }
+        }
 
-        // Создание edges
-        const newEdges = scenes.flatMap(scene =>
-            scene.data.choices
-                .filter(choice => choice.nextSceneId)
-                .map(choice => ({
-                    id: `edge_${scene.id}_c${choice.id}_ns${choice.nextSceneId}`,
-                    source: `${scene.id}`,
-                    sourceHandle: `c${choice.id}_s${choice.nextSceneId}`,
-                    target: `${choice.nextSceneId}`,
-                    targetHandle: `s${choice.nextSceneId}`,
-                    type: 'buttonEdge' as const,
-                }))
+        setNodes((nodes) => nodes.concat(searchNode))
+        setEdges((eds) =>
+            eds.concat({id, source: connectionState.fromNode.id, target: id}),
         );
+    }, [screenToFlowPosition])
 
+    useEffect(() => {
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+    }, [initialNodes, initialEdges]);
 
-        // Создание nodes
-        const newNodes: SceneNodeType[] = scenes.map((scene) => ({
-            id: scene.id.toString(),
-            position: {x: 0, y: 0},
-            data: {...scene.data, id: Number(scene.data.id)},
-            type: 'sceneNode',
-        } as SceneNodeType));
-
-        setNodes(newNodes);
-        setEdges(newEdges);
-
-        const firstNode = newNodes[0];
-        setCenter(firstNode.position.x, firstNode.position.y, {
-            zoom: 0.7,
-            duration: 1000
-        });
-
-
-    }, [scenes, selectedNodeId]);
+    const memoizedNodes = useMemo(() => nodes, [nodes]);
 
     return (
         <Grid container spacing={1} py={1}>
             <div style={CONTAINER_STYLE}>
                 <ReactFlow
-                    nodes={nodes}
+                    nodes={memoizedNodes}
                     edges={edges}
                     onNodesChange={onNodesChange}
+                    selectNodesOnDrag={true}
+                    elevateNodesOnSelect={true}
+                    nodesDraggable={true}
+
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    onConnectEnd={onConnectEnd}
                     connectionLineType={CONNECTION_LINE_TYPE}
                     colorMode="dark"
                     edgeTypes={EDGE_TYPES}
@@ -142,4 +166,6 @@ export default function QuestPage() {
             </div>
         </Grid>
     );
-}
+};
+
+export default React.memo(QuestPage);

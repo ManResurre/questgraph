@@ -1,10 +1,10 @@
-import {Choice, db, SceneText} from "@/lib/db";
+import {db, SceneText} from "@/lib/db";
 import {Button, Stack, TextField} from "@mui/material";
 import {Controller, useForm} from "react-hook-form";
 import React from "react";
 import ChoiceAutocomplete from "@/app/components/choice/ChoiceAutocomplete";
 import {useLiveQuery} from "dexie-react-hooks";
-import updateScene, {SceneFullData, updateChoices, updateSceneTexts} from "@/lib/SceneRepository";
+import updateScene, {SceneFullData} from "@/lib/SceneRepository";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 import {useParams} from "next/navigation";
@@ -35,7 +35,7 @@ interface SceneNodeEditProps {
     }
 }
 
-export default function SceneNodeEdit({data}: SceneNodeEditProps) {
+const SceneNodeEdit = ({data}: SceneNodeEditProps)=> {
     const {questId} = useParams();
     const {closeSidebar} = useSidebar();
     const {choices} = useLiveQuery(async () => {
@@ -99,10 +99,7 @@ export default function SceneNodeEdit({data}: SceneNodeEditProps) {
             )}
         />
 
-
         <SceneFormText methods={methods}/>
-        {/*<SceneFormChoice methods={methods}/>*/}
-
 
         <Button size="small"
                 variant="contained"
@@ -112,3 +109,5 @@ export default function SceneNodeEdit({data}: SceneNodeEditProps) {
 
     </Stack>
 }
+
+export default React.memo(SceneNodeEdit);

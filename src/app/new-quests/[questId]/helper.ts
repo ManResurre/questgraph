@@ -1,11 +1,13 @@
 import {useCallback, useEffect} from 'react';
-import {useNodesInitialized, useReactFlow} from '@xyflow/react';
+import {applyNodeChanges, NodeChange, useNodesInitialized, useReactFlow} from '@xyflow/react';
 import dagre from 'dagre';
 import {CustomEdgeType, SceneNodeType} from "@/app/new-quests/[questId]/page";
 import getLayoutedElements from "@/app/new-quests/[questId]/elkLayout";
 
 const defaultNodeWidth = 200;
 const defaultNodeHeight = 70;
+
+const dagreGraph = new dagre.graphlib.Graph();
 
 function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
     setNodes: (value: (((prevState: SceneNodeType[]) => SceneNodeType[]) | SceneNodeType[])) => void;
@@ -14,63 +16,82 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
     setEdges: (value: (((prevState: CustomEdgeType[]) => CustomEdgeType[]) | CustomEdgeType[])) => void
 }) {
     const nodesInitialized = useNodesInitialized(); // Проверяем, отмерились ли узлы
-    const {setCenter, getNodes} = useReactFlow();
+    const {setCenter} = useReactFlow();
 
     const setupPositions = useCallback((direction = 'LR') => {
-       // const res =  getLayoutedElements(getNodes(), edges).then((data)=>{
-       //     setNodes(data.nodes as SceneNodeType[]);
-       //     setEdges(data.edges);
-       // });
+        // const res =  getLayoutedElements(getNodes(), edges).then((data)=>{
+        //     setNodes(data.nodes as SceneNodeType[]);
+        //     // setEdges(data.edges);
+        // });
 
-
-        const dagreGraph = new dagre.graphlib.Graph();
         dagreGraph.setDefaultEdgeLabel(() => ({}));
-        dagreGraph.setGraph({rankdir: direction});
+        dagreGraph.setGraph({
+            rankdir: direction,
+            // ranksep: 35,   // расстояние между рангами
+            // nodesep: 35,   // расстояние между узлами в одном ранге
+            // marginx: 35,   // отступ по x
+            // marginy: 35,
+            align: 'UL',
+            edgesep: 5,
+            acyclicer: 'greedy',
+            ranker: 'network-simplex'
+        });
 
         nodes.forEach((node) => {
             const width = node.measured?.width || defaultNodeWidth;
             const height = node.measured?.height || defaultNodeHeight;
 
-            dagreGraph.setNode(node.id, {width, height});
+            dagreGraph.setNode(node.id, {
+                width: width + 35,
+                height: height + 35,
+            });
         });
 
         edges.forEach((edge) => {
-            dagreGraph.setEdge(edge.source, edge.target);
+            dagreGraph.setEdge(edge.source, edge.target, {
+                // Минимальная длина ребра
+                minlen: 2,
+                // Вес ребра (влияет на приоритет при расположении)
+                weight: 1,
+                // Настройки для изгибов
+                curve: 'simple'
+            });
         });
 
         dagre.layout(dagreGraph);
 
-        const isHorizontal = direction === 'LR';
-        const layoutNodes = nodes.map((node) => {
-            const nodeWithPosition = dagreGraph.node(node.id);
-            const width = node.measured?.width || 150;
-            const height = node.measured?.height || 50;
+        const newPositions: NodeChange<SceneNodeType>[] = nodes
+            .filter((node) => node.type === 'sceneNode')
+            .map((node) => {
+                const nodeWithPosition = dagreGraph.node(node.id);
+                const width = node.measured?.width || 150;
+                const height = node.measured?.height || 50;
 
-            // Смещаем позицию так, чтобы центр узла Dagre совпал с верхним левым углом узла React Flow
-            const x = nodeWithPosition.x - width / 2;
-            const y = nodeWithPosition.y - height / 2;
+                // Смещаем позицию так, чтобы центр узла Dagre совпал с верхним левым углом узла React Flow
+                const x = nodeWithPosition.x - width / 2;
+                const y = nodeWithPosition.y - height / 2;
 
-            return {
-                ...node,
-                position: {x, y},
-                targetPosition: isHorizontal ? 'left' : 'top',
-                sourcePosition: isHorizontal ? 'right' : 'bottom',
-            };
-        });
+                return {
+                    dragging: false,
+                    id: node.id,
+                    position: {
+                        x, y
+                    },
+                    type: "position"
+                } as NodeChange<SceneNodeType>;
+            });
 
-        setNodes(layoutNodes as SceneNodeType[]);
-        setEdges(edges);
-
-        const firstNode = layoutNodes[0];
-        setCenter(firstNode.position.x, firstNode.position.y, {
-            zoom: 0.1,
-            duration: 1000
-        });
+        setNodes(nodes => applyNodeChanges(newPositions, nodes))
 
         window.requestAnimationFrame(() => {
-            // fitView(); // Подгоняем viewport после обновления узлов
+            // Подгоняем viewport после обновления узлов
+            if (newPositions.length) {
+                const first = newPositions[0];
+                if (first.type == 'position' && first.position)
+                    setCenter(first.position.x, first.position.y, {zoom: 0.5})
+            }
         });
-    }, [nodes, edges, setNodes, setEdges, nodesInitialized]); // Зависимости хука
+    }, [nodesInitialized]); // Зависимости хука
 
 
     useEffect(() => {
@@ -78,6 +99,7 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
             console.log('Узлы еще не готовы для расчета компоновки.');
             return;
         }
+
         setupPositions();
     }, [nodesInitialized])
 

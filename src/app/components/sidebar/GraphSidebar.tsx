@@ -3,8 +3,11 @@ import React, {useEffect, useRef} from "react";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneNodeEdit from "@/app/components/rf/SceneNodeEdit";
 
-export default function GraphSidebar() {
+const GraphSidebar = ()=> {
     const {isSidebarOpen, closeSidebar, selectedElementData} = useSidebar();
+    // const isSidebarOpen = true;
+    // const closeSidebar = ()=>{}
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [width, setWidth] = React.useState(400);
@@ -119,3 +122,5 @@ export default function GraphSidebar() {
         </Drawer>
     );
 }
+
+export default React.memo(GraphSidebar);

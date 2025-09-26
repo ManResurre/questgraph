@@ -179,4 +179,4 @@ const NodeMenu = ({onLayout}:any) => {
     );
 };
 
-export default NodeMenu;
+export default React.memo(NodeMenu);

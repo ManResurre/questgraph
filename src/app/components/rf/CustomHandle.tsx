@@ -22,4 +22,4 @@ const CustomHandle = (props: {
     );
 }
 
-export default CustomHandle;
+export default React.memo(CustomHandle);

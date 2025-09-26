@@ -12,7 +12,7 @@ const getLayoutedElements = (nodes: any, edges: CustomEdgeType[]) => {
         layoutOptions: {
             'elk.algorithm': 'layered',
             'elk.direction': 'RIGHT',
-            'org.eclipse.elk.portConstraints': 'FIXED_ORDER', // Ключевая настройка
+            'org.eclipse.elk.portConstraints': 'FIXED_ORDER',
             'elk.layered.spacing.edgeNodeBetweenLayers': '140',
             'elk.spacing.nodeNode': '140',
             'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
