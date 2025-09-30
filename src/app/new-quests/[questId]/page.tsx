@@ -27,6 +27,7 @@ import useLayoutedElements from "@/app/new-quests/[questId]/helper";
 import '@xyflow/react/dist/style.css';
 import {SmartBezierEdge} from "@tisoap/react-flow-smart-edge";
 import SearchNode from "@/app/components/rf/SearchNode";
+import MiniDrawer from "@/app/components/sidebar/GraphMenuSidebar";
 
 export type SceneNodeType = Node<SceneFullData>;
 export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: string };
@@ -46,7 +47,7 @@ const EDGE_TYPES = {
 };
 
 const CONNECTION_LINE_TYPE = ConnectionLineType.SmoothStep;
-const CONTAINER_STYLE = {width: '100vw', height: 'calc(100vh - 100px)'};
+const CONTAINER_STYLE = {width: '100vw', height: 'calc(100vh - 64px)'};
 
 const QuestPage = () => {
     const {questId} = useParams();
@@ -166,7 +167,7 @@ const QuestPage = () => {
     const memoizedNodes = useMemo(() => nodes, [nodes]);
 
     return (
-        <Grid container spacing={1} py={1}>
+        <Grid container spacing={1}>
             <div style={CONTAINER_STYLE}>
                 <ReactFlow
                     nodes={memoizedNodes}
@@ -185,11 +186,12 @@ const QuestPage = () => {
                     nodeTypes={NODE_TYPES}
                     fitView
                 >
-                    <NodeMenu onLayout={onLayout}/>
+                    {/*<NodeMenu onLayout={onLayout}/>*/}
                     <Background/>
                     <Controls/>
                 </ReactFlow>
                 <GraphSidebar/>
+                <MiniDrawer onLayout={onLayout}/>
             </div>
         </Grid>
     );
