@@ -1,5 +1,5 @@
 import {Choice, db, Scene, SceneChoice, SceneText} from "@/lib/db";
-import {unknown} from "zod";
+import {FinalConnectionState} from "@xyflow/react";
 
 export async function getChoices(sceneId: number) {
     const sceneChoices = await db.scene_choice
@@ -76,6 +76,7 @@ export async function getScenesWithChoices(questId: number) {
 export interface SceneFullData extends Scene, Record<string, unknown> {
     choices?: Choice[];
     texts?: SceneText[];
+    connectionState?: FinalConnectionState;
 }
 
 export default async function updateScene(scene: SceneFullData) {
@@ -85,8 +86,8 @@ export default async function updateScene(scene: SceneFullData) {
         db.scene_choice,
         async () => {
             db.scenes.update(Number(scene.id), {name: scene.name});
-            updateSceneTexts(Number(scene.id), scene.texts)
-            updateChoices(Number(scene.id), scene.choices);
+            updateSceneTexts(Number(scene.id), scene.texts as SceneText[])
+            updateChoices(Number(scene.id), scene.choices as Choice[]);
         })
 }
 

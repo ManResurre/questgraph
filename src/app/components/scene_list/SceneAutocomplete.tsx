@@ -3,7 +3,7 @@ import {Autocomplete, Box, TextField} from "@mui/material";
 import {Scene} from "@/lib/db";
 
 export interface ScenesAutocompleteParams {
-    scenes: Scene[],
+    scenes?: Scene[],
     onChange?: (...event: any[]) => void,
     value?: Scene
 }
@@ -34,7 +34,7 @@ const SceneAutocomplete = ({scenes, onChange, value}: ScenesAutocompleteParams) 
         size={'small'}
         fullWidth
         sx={{width: '100%'}}
-        options={scenes}
+        options={scenes ?? []}
         value={value}
         autoHighlight
         disablePortal

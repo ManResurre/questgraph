@@ -64,4 +64,6 @@ const ChoiceItem = React.memo(({choice, scenes, highlight}: any) => {
     )
 });
 
+ChoiceItem.displayName = 'ChoiceItem';
+
 export default React.memo(ChoiceItem);

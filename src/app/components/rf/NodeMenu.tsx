@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState} from 'react';
 import {
     Card,
     TextField,
@@ -8,7 +8,6 @@ import {
     ListItemIcon,
     ListItemText,
     Divider,
-    Box,
     IconButton,
     Stack
 } from '@mui/material';
@@ -30,7 +29,7 @@ const NodeMenu = ({onLayout}:any) => {
 
 
     React.useEffect(() => {
-        const nodes = getNodes() as unknown as SceneNodeData[];
+        const nodes = getNodes() as SceneNodeData[];
         const filteredNodes = nodes.filter(({data}) => {
             return data.name.toLocaleUpperCase().indexOf(searchValue.toLocaleUpperCase()) !== -1;
         })

@@ -2,7 +2,6 @@ import {useCallback, useEffect} from 'react';
 import {applyNodeChanges, NodeChange, useNodesInitialized, useReactFlow} from '@xyflow/react';
 import dagre from 'dagre';
 import {CustomEdgeType, SceneNodeType} from "@/app/new-quests/[questId]/page";
-import getLayoutedElements from "@/app/new-quests/[questId]/elkLayout";
 
 const defaultNodeWidth = 200;
 const defaultNodeHeight = 70;

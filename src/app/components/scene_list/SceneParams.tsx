@@ -54,7 +54,6 @@ const SceneParams = ({scene}: SceneParamsProps) => {
     }) ?? {sceneParams: [], allParams: []};
 
     const onSubmit = (data: ISceneParamsFormData) => {
-        db.scene_param.put({...data, sceneId: scene?.id!})
     }
 
     return <Card variant="outlined">

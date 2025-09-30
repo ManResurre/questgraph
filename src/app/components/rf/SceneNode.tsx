@@ -6,21 +6,19 @@ import {SettingsIcon} from "lucide-react";
 import CustomHandle from "@/app/components/rf/CustomHandle";
 import "./style.scss";
 import {SceneFullData} from "@/lib/SceneRepository";
+import {NodeProps, XYPosition} from "@xyflow/react";
 
-export interface SceneNodeData {
+export interface SceneNodeData extends Node {
+    id:string;
+    position: XYPosition;
     data: SceneFullData;
-    id: string;
-    measured: { width: number, height: number };
-    position: { x: number, y: number }
-    sourcePosition: string;
-    targetPosition: string;
-    type: string;
 }
+type SceneNodeProps = NodeProps<SceneNodeData>;
 
-const SceneNode = ({data}: SceneNodeData) => {
+const SceneNode = ({data}: SceneNodeProps) => {
     const {openSidebar} = useSidebar();
     const handleClick = useCallback(() => {
-        openSidebar(data.id as number, {type: 'node', data});
+        openSidebar(Number(data.id), {type: 'node', data});
     }, [data])
 
     return (

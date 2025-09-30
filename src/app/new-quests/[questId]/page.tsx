@@ -1,6 +1,5 @@
 'use client'
-import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {ComponentType, useCallback, useEffect, useMemo, useState} from "react";
 import {
     addEdge,
     applyEdgeChanges,
@@ -12,7 +11,7 @@ import {
     ReactFlow,
     useReactFlow,
     Node,
-    Edge, FinalConnectionState, NodeChange
+    Edge, FinalConnectionState, NodeChange, NodeTypes, NodeProps
 } from "@xyflow/react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {getScenesWithChoices, SceneFullData} from "@/lib/SceneRepository";
@@ -33,8 +32,11 @@ export type SceneNodeType = Node<SceneFullData>;
 export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: string };
 
 // Константы
-const NODE_TYPES = {
-    sceneNode: SceneNode,
+const NODE_TYPES: NodeTypes = {
+    sceneNode: SceneNode as ComponentType<NodeProps & {
+        data: SceneFullData;
+        type: string;
+    }>,
     searchNode: SearchNode
 };
 
@@ -69,7 +71,7 @@ const QuestPage = () => {
 
         const newNodes: SceneNodeType[] = scenes.map((scene, index) => ({
             id: scene.id.toString(),
-            position: {x: 0, y: 0 },
+            position: {x: 0, y: 0},
             data: {...scene.data, id: Number(scene.data.id)},
             type: 'sceneNode',
         } as SceneNodeType));
@@ -113,8 +115,33 @@ const QuestPage = () => {
         []
     );
 
-    const onConnectEnd = useCallback((event: MouseEvent, connectionState: FinalConnectionState) => {
-        const pos = screenToFlowPosition({x: event.clientX, y: event.clientY})
+    const getEventCoordinates = useCallback((event: MouseEvent | TouchEvent) => {
+        // Type guard для TouchEvent
+        const isTouchEvent = (e: MouseEvent | TouchEvent): e is TouchEvent => {
+            return 'touches' in e;
+        };
+
+        if (isTouchEvent(event) && event.touches.length > 0) {
+            return {
+                clientX: event.touches[0].clientX,
+                clientY: event.touches[0].clientY
+            };
+        } else {
+            // Теперь TypeScript знает, что это MouseEvent
+            const mouseEvent = event as MouseEvent;
+            return {
+                clientX: mouseEvent.clientX,
+                clientY: mouseEvent.clientY
+            };
+        }
+    }, []);
+
+    const onConnectEnd = useCallback((
+        event: MouseEvent | TouchEvent, connectionState: FinalConnectionState
+    ) => {
+        const {clientX, clientY} = getEventCoordinates(event);
+
+        const pos = screenToFlowPosition({x: clientX, y: clientY})
         const id = `search-node-${Date.now()}`;
         const searchNode = {
             id,
@@ -123,11 +150,11 @@ const QuestPage = () => {
             data: {
                 connectionState
             }
-        }
+        } as SceneNodeType;
 
         setNodes((nodes) => nodes.concat(searchNode))
         setEdges((eds) =>
-            eds.concat({id, source: connectionState.fromNode.id, target: id}),
+            eds.concat({id, source: connectionState.fromNode?.id, target: id} as CustomEdgeType),
         );
     }, [screenToFlowPosition])
 
