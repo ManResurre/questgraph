@@ -58,6 +58,8 @@ export interface Scene {
     id?: number;
     name: string;
     questId: number;
+    position?: string;
+    locPosition?: boolean;
 }
 
 export interface Param {

@@ -104,7 +104,7 @@ export default function SceneFormText({methods}: any) {
                         <NavigateBefore/>
                     </IconButton>
 
-                    <FormControl variant="outlined" size="small" sx={{minWidth: 120}}>
+                    <FormControl variant="outlined" size="small" sx={{minWidth: 100}}>
                         <InputLabel>Page</InputLabel>
                         <Select
                             value={currentPage}

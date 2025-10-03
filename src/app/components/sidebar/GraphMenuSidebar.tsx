@@ -10,34 +10,44 @@ import {
     IconButton,
     InputAdornment,
     ListItemButton,
-    Menu,
     MenuItem,
     MenuList,
-    Stack,
     TextField
 } from "@mui/material";
 import {ChevronLeftIcon, ChevronRightIcon} from "lucide-react";
 import {
-    AccountTree as NodeIcon, ExpandLess, ExpandMore, Help as HelpIcon,
+    AccountTree as NodeIcon, ExpandLess, ExpandMore,
     Search as SearchIcon,
     Settings as SettingsIcon,
     ViewQuilt as LayoutIcon
 } from "@mui/icons-material";
-import {useRef, useState} from "react";
+import {ReactNode, useState} from "react";
 import {useReactFlow} from "@xyflow/react";
 import {SceneNodeData} from "@/app/components/rf/SceneNode";
 import {useDebounce} from "@uidotdev/usehooks";
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 
 interface MiniDrawerProps {
     onLayout?: (direction?: string) => void
 }
 
-function Submenu({icon, label, open, items}:any) {
+interface SubmenuProps {
+    icon: ReactNode;
+    label: string;
+    open: boolean;
+    items: string[];
+    component?: React.ElementType;
+    slotProps?: any;
+}
+
+function Submenu({icon, label, open, items, component = ListItemButton, slotProps}: SubmenuProps) {
     const [submenuOpen, setSubmenuOpen] = useState(false);
 
     const handleClick = () => {
         setSubmenuOpen(!submenuOpen);
     };
+
+    const Component = component;
 
     return (
         <>
@@ -51,10 +61,15 @@ function Submenu({icon, label, open, items}:any) {
 
             <Collapse in={submenuOpen} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
-                    {items.map((item:any, index:any) => (
-                        <ListItemButton key={index} sx={{pl: 4}}>
+                    {items.map((item, index) => (
+                        <Component
+                            key={index}
+                            sx={{pl: 4}}
+                            {...slotProps}
+                            onDragStart={(event: React.DragEvent) => slotProps?.onDragStart(event, index)}
+                        >
                             <ListItemText primary={item}/>
-                        </ListItemButton>
+                        </Component>
                     ))}
                 </List>
             </Collapse>
@@ -63,6 +78,7 @@ function Submenu({icon, label, open, items}:any) {
 }
 
 export default function MiniDrawer({onLayout}: MiniDrawerProps) {
+    const {setTypeDraggable} = useSidebar();
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = useState('');
     const debouncedSearchTerm = useDebounce(searchValue, 300);
@@ -72,7 +88,6 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
     }
 
     const {setCenter, getNodes} = useReactFlow();
-
 
     React.useEffect(() => {
         const nodes = getNodes() as SceneNodeData[];
@@ -87,6 +102,26 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
         const zoom = 0.7;
         setCenter(focusNone.position.x, focusNone.position.y, {zoom, duration: 1000});
     }, [debouncedSearchTerm]);
+
+
+    const nodeTemplates = [
+        {name: 'Scene', type: 'sceneNode'},
+        {name: 'Default', type: 'default'}
+    ]
+
+    const settings = [
+        {name:''}
+    ]
+
+    const onDragStart = ({
+                             event,
+                             index,
+                         }: { event: React.DragEvent, index: number }) => {
+        const nodeType = nodeTemplates[index].type;
+        event.dataTransfer.setData('text/plain', nodeType);
+        event.dataTransfer.effectAllowed = 'move';
+        setTypeDraggable(nodeType);
+    };
 
     return <>
         <Drawer
@@ -137,38 +172,26 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
                 </Box>}
 
                 <MenuList sx={{p: 0, justifyContent: 'center'}}>
-                    {/*<MenuItem sx={{*/}
-                    {/*    borderRadius: 1,*/}
-                    {/*    mb: 0.5,*/}
-                    {/*    '&:hover': {*/}
-                    {/*        backgroundColor: 'rgba(100, 100, 120, 0.2)'*/}
-                    {/*    }*/}
-                    {/*}}>*/}
-                    {/*    <ListItemIcon sx={{minWidth: 36, color: 'grey.400'}}>*/}
-                    {/*        <SettingsIcon fontSize="small"/>*/}
-                    {/*    </ListItemIcon>*/}
-                    {/*    {open && <ListItemText*/}
-                    {/*        primary="Настройки"*/}
-                    {/*        sx={{*/}
-                    {/*            '& .MuiTypography-root': {*/}
-                    {/*                fontSize: '0.9rem',*/}
-                    {/*                color: 'grey.300'*/}
-                    {/*            }*/}
-                    {/*        }}*/}
-                    {/*    />}*/}
-                    {/*</MenuItem>*/}
                     <Submenu
                         icon={<SettingsIcon fontSize="small"/>}
-                        label="Настройки"
+                        label="Settings"
                         open={open}
-                        items={["Subsetting 1", "Subsetting 2", "Subsetting 3"]}
+                        items={[" example1", "example 2", "example 3"]}
                     />
-
+                    <Divider/>
                     <Submenu
                         icon={<NodeIcon fontSize="small"/>}
-                        label="Ноды"
+                        label="Nodes"
                         open={open}
-                        items={["Subnode 1", "Subnode 2", "Subnode 3"]}
+                        items={nodeTemplates.map(node => node.name)}
+                        component={ListItemButton}
+                        slotProps={{
+                            onDragStart: (event: React.DragEvent, index: number) => onDragStart({
+                                event,
+                                index
+                            }),
+                            draggable: true,
+                        }}
                     />
                 </MenuList>
                 <Divider/>
@@ -187,7 +210,6 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
                         </IconButton>
                     </Box>
                 }
-
             </Box>
         </Drawer>
     </>

@@ -60,7 +60,7 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
         dagre.layout(dagreGraph);
 
         const newPositions: NodeChange<SceneNodeType>[] = nodes
-            .filter((node) => node.type === 'sceneNode')
+            .filter((node) => node.type === 'sceneNode' && !node.data.locPosition)
             .map((node) => {
                 const nodeWithPosition = dagreGraph.node(node.id);
                 const width = node.measured?.width || 150;

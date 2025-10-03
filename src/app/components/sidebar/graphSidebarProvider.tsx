@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {createContext, useContext, useState, ReactNode} from 'react';
 
 interface GraphSidebarContextType {
     isSidebarOpen: boolean;
@@ -6,6 +6,8 @@ interface GraphSidebarContextType {
     selectedElementData: any;
     openSidebar: (nodeId: number, elementData?: any) => void;
     closeSidebar: () => void;
+    typeDraggable: string | null;
+    setTypeDraggable: (type: string | null) => void;
 }
 
 const GraphSidebarContext = createContext<GraphSidebarContextType | undefined>(undefined);
@@ -22,10 +24,11 @@ interface GraphSidebarProviderProps {
     children: ReactNode;
 }
 
-export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({ children }) => {
+export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({children}) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
     const [selectedElementData, setSelectedElementData] = useState<any>(null);
+    const [typeDraggable, setTypeDraggable] = useState<string | null>(null);
 
     const openSidebar = (nodeId: number, elementData?: any) => {
         setSelectedNodeId(nodeId);
@@ -47,6 +50,8 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({ chil
                 selectedElementData,
                 openSidebar,
                 closeSidebar,
+                typeDraggable,
+                setTypeDraggable
             }}
         >
             {children}

@@ -1,5 +1,5 @@
 'use client'
-import React, {ComponentType, useCallback, useEffect, useMemo, useState} from "react";
+import React, {ComponentType, DragEventHandler, useCallback, useEffect, useMemo, useState} from "react";
 import {
     addEdge,
     applyEdgeChanges,
@@ -14,7 +14,7 @@ import {
     Edge, FinalConnectionState, NodeChange, NodeTypes, NodeProps
 } from "@xyflow/react";
 import {useLiveQuery} from "dexie-react-hooks";
-import {getScenesWithChoices, SceneFullData} from "@/lib/SceneRepository";
+import {createScene, getScenesWithChoices, SceneFullData} from "@/lib/SceneRepository";
 import {Grid} from "@mui/material";
 import NodeMenu from "@/app/components/rf/NodeMenu";
 import GraphSidebar from "@/app/components/sidebar/GraphSidebar";
@@ -28,6 +28,8 @@ import '@xyflow/react/dist/style.css';
 import {SmartBezierEdge} from "@tisoap/react-flow-smart-edge";
 import SearchNode from "@/app/components/rf/SearchNode";
 import MiniDrawer from "@/app/components/sidebar/GraphMenuSidebar";
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {db} from "@/lib/db";
 
 export type SceneNodeType = Node<SceneFullData>;
 export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: string };
@@ -52,6 +54,7 @@ const CONTAINER_STYLE = {width: '100vw', height: 'calc(100vh - 64px)'};
 const QuestPage = () => {
     const {questId} = useParams();
     const {screenToFlowPosition} = useReactFlow();
+    const {typeDraggable} = useSidebar();
 
     const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)));
     const {nodes: initialNodes, edges: initialEdges} = useMemo(() => {
@@ -72,7 +75,7 @@ const QuestPage = () => {
 
         const newNodes: SceneNodeType[] = scenes.map((scene, index) => ({
             id: scene.id.toString(),
-            position: {x: 0, y: 0},
+            position: scene.position,
             data: {...scene.data, id: Number(scene.data.id)},
             type: 'sceneNode',
         } as SceneNodeType));
@@ -87,9 +90,6 @@ const QuestPage = () => {
 
     const onNodesChange = useCallback(
         (changes: NodeChange<SceneNodeType>[]) => {
-            // if (changes.some(change => change.type === "position" && change.dragging)) {
-            //     return
-            // }
             setNodes(nodes => applyNodeChanges(changes, nodes))
         },
         []
@@ -166,6 +166,42 @@ const QuestPage = () => {
 
     const memoizedNodes = useMemo(() => nodes, [nodes]);
 
+
+    const onDrop = useCallback(
+        (event: React.DragEvent) => {
+            event.preventDefault();
+
+            const position = screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
+
+            //If I need another type, I should expand the logic here.
+            if (typeDraggable === 'sceneNode')
+                createScene({
+                    name: "Change name",
+                    questId: Number(questId),
+                    position: JSON.stringify(position),
+                    locPosition: true
+                });
+            if (typeDraggable === 'default') {
+                alert('WIP')
+            }
+        },
+        [screenToFlowPosition, typeDraggable],
+    );
+
+    const onDragStart: any = (event: any, nodeType: any) => {
+        event.dataTransfer.setData('text/plain', nodeType);
+        event.dataTransfer.effectAllowed = 'move';
+    };
+
+    const onDragOver = useCallback((event: any) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
+
+
     return (
         <Grid container spacing={1}>
             <div style={CONTAINER_STYLE}>
@@ -180,6 +216,10 @@ const QuestPage = () => {
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
                     onConnectEnd={onConnectEnd}
+                    onDrop={onDrop}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+
                     connectionLineType={CONNECTION_LINE_TYPE}
                     colorMode="dark"
                     edgeTypes={EDGE_TYPES}

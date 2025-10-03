@@ -1,10 +1,11 @@
-import {db, SceneText} from "@/lib/db";
-import {Button, Stack, TextField} from "@mui/material";
-import {Controller, useForm} from "react-hook-form";
 import React from "react";
+import DeleteIcon from '@mui/icons-material/Delete';
+import {db, SceneText} from "@/lib/db";
+import {Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, Stack, TextField} from "@mui/material";
+import {Controller, useForm} from "react-hook-form";
 import ChoiceAutocomplete from "@/app/components/choice/ChoiceAutocomplete";
 import {useLiveQuery} from "dexie-react-hooks";
-import updateScene, {SceneFullData} from "@/lib/SceneRepository";
+import updateScene, {deleteScene, SceneFullData} from "@/lib/SceneRepository";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 import {useParams} from "next/navigation";
@@ -23,19 +24,21 @@ interface ISceneFormData {
     choices: IChoice[];
     texts: SceneText[];
     questId: number;
+    locPosition: boolean;
 }
 
 interface SceneNodeEditProps {
-    questId?: number; //TODO WIP
+    questId?: number;
     data: {
         id: string;
         name: string;
         choices: IChoice[],
-        texts: SceneText[]
+        texts: SceneText[],
+        locPosition: boolean
     }
 }
 
-const SceneNodeEdit = ({data}: SceneNodeEditProps)=> {
+const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
     const {questId} = useParams();
     const {closeSidebar} = useSidebar();
     const {choices} = useLiveQuery(async () => {
@@ -49,7 +52,8 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps)=> {
             name: data?.name ?? '',
             texts: data?.texts ?? [],
             choices: data.choices ?? [],
-            questId: Number(2)
+            questId: Number(2),
+            locPosition: data?.locPosition ?? false
         }
     });
 
@@ -60,54 +64,89 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps)=> {
         closeSidebar();
     }
 
-    return <Stack
-        spacing={1}
-        component="form"
-        noValidate
-        autoComplete="off"
-        onSubmit={handleSubmit(onSubmit)}
+    const handleDelete = () => {
+        deleteScene(Number(data.id));
+        closeSidebar();
+    }
+
+    return <Box
         className="py-2 px-1"
-    >
+        sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start'
+        }}>
 
-        <Controller
-            name="name"
-            control={control}
-            rules={{
-                required: "Поле 'Scene' обязательно для заполнения"
-            }}
-            render={({field: {value, onChange}}) => (
-                <TextField
-                    required
-                    id={'scene'}
-                    key={'scene'}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={'Scene'}
-                    label={'Scene'}
-                    size="small"
-                    error={!!errors.name}          // Показываем состояние ошибки
-                    helperText={errors.name?.message} // Отображаем сообщение об ошибке
+        <Stack
+            spacing={1}
+            component="form"
+            noValidate
+            autoComplete="off"
+            onSubmit={handleSubmit(onSubmit)}
+        >
+
+            <Controller
+                name="name"
+                control={control}
+                rules={{
+                    required: "Поле 'Scene' обязательно для заполнения"
+                }}
+                render={({field: {value, onChange}}) => (
+                    <TextField
+                        required
+                        id={'scene'}
+                        key={'scene'}
+                        value={value}
+                        onChange={onChange}
+                        placeholder={'Scene'}
+                        label={'Scene'}
+                        size="small"
+                        error={!!errors.name}          // Показываем состояние ошибки
+                        helperText={errors.name?.message} // Отображаем сообщение об ошибке
+                    />
+                )}
+            />
+
+            <FormControl>
+                <Controller
+                    name="locPosition"
+                    control={control}
+                    defaultValue={false}
+                    render={({field: {value, onChange}}) => (
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={value}
+                                    onChange={(e) => onChange(e.target.checked)}
+                                />
+                            }
+                            label="Фиксировать позицию"
+                        />
+                    )}
                 />
-            )}
-        />
+            </FormControl>
 
-        <Controller
-            name="choices"
-            control={control}
-            render={({field: {value, onChange}}) => (
-                <ChoiceAutocomplete onChange={onChange} value={value} choices={choices}/>
-            )}
-        />
+            <Controller
+                name="choices"
+                control={control}
+                render={({field: {value, onChange}}) => (
+                    <ChoiceAutocomplete onChange={onChange} value={value} choices={choices}/>
+                )}
+            />
 
-        <SceneFormText methods={methods}/>
+            <SceneFormText methods={methods}/>
 
-        <Button size="small"
-                variant="contained"
-                type="submit"
-                fullWidth
-        >Save</Button>
+            <Button size="small"
+                    variant="contained"
+                    type="submit"
+                    fullWidth
+            >Save</Button>
 
-    </Stack>
+        </Stack>
+        <IconButton onClick={handleDelete}>
+            <DeleteIcon/>
+        </IconButton>
+    </Box>
 }
 
 export default React.memo(SceneNodeEdit);

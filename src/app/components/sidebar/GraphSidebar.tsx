@@ -13,7 +13,7 @@ const GraphSidebar = ()=> {
     const [width, setWidth] = React.useState(400);
     const isResizing = useRef(false);
     const startX = useRef(0);
-    const startWidth = useRef(400);
+    const startWidth = useRef(300);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         isResizing.current = true;

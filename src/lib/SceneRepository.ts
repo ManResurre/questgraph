@@ -60,8 +60,9 @@ export async function getScenesWithChoices(questId: number) {
         sceneWithChoices.push({
             id: String(scene.id),
             type: "sceneNode",
-            position: {x: 0, y: 0},
+            position: scene.position ? JSON.parse(scene.position) : {x: 0, y: 0},
             data: {
+                ...scene,
                 id: String(scene.id),
                 name: scene.name,
                 choices: await getChoices(scene.id!),
@@ -85,7 +86,7 @@ export default async function updateScene(scene: SceneFullData) {
         db.scene_texts,
         db.scene_choice,
         async () => {
-            db.scenes.update(Number(scene.id), {name: scene.name});
+            db.scenes.update(Number(scene.id), {name: scene.name, locPosition: scene.locPosition});
             updateSceneTexts(Number(scene.id), scene.texts as SceneText[])
             updateChoices(Number(scene.id), scene.choices as Choice[]);
         })
@@ -94,4 +95,20 @@ export default async function updateScene(scene: SceneFullData) {
 export async function updateSceneTexts(sceneId: number, texts: SceneText[]) {
     const preparedTexts = texts.map(text => ({...text, sceneId}));
     db.scene_texts.bulkPut(preparedTexts);
+}
+
+export async function createScene(scene: Scene) {
+    return db.scenes.add(scene);
+}
+
+export async function deleteScene(id: number) {
+    await db.transaction('rw',
+        db.scenes,
+        db.scene_texts,
+        db.scene_choice,
+        async () => {
+            await db.scene_texts.where('sceneId').equals(id).delete();
+            await db.scene_choice.where('sceneId').equals(id).delete();
+            await db.scenes.delete(id);
+        });
 }
