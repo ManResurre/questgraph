@@ -5,19 +5,20 @@ import {Scene} from "@/lib/db";
 export interface ScenesAutocompleteParams {
     scenes?: Scene[],
     onChange?: (...event: any[]) => void,
-    value?: Scene
+    value?: Scene | null
 }
 
 const SceneAutocomplete = ({scenes, onChange, value}: ScenesAutocompleteParams) => {
     const [open, setOpen] = useState(false);
 
     const handleClose = useCallback((event: React.SyntheticEvent, reason: string) => {
-        // Для события blur добавляем задержку, чтобы onClick успел сработать из-за disablePortal
-        if (reason === 'blur') {
-            setTimeout(() => setOpen(false), 100);
-        } else {
-            setOpen(false);
-        }
+        // if (reason === 'blur') {
+        //     setTimeout(() => setOpen(false), 300);
+        // } else {
+        //     setOpen(false);
+        // }
+
+        setOpen(false);
     }, []);
 
     const handleChange = useCallback((event: React.SyntheticEvent, scene: Scene | null) => {
@@ -37,7 +38,7 @@ const SceneAutocomplete = ({scenes, onChange, value}: ScenesAutocompleteParams) 
         options={scenes ?? []}
         value={value}
         autoHighlight
-        disablePortal
+        // disablePortal
         getOptionLabel={(option: Scene) => `${option.name}`}
         onChange={handleChange}
         renderOption={(props, option) => {

@@ -2,9 +2,10 @@ import {Box, Drawer, useMediaQuery, useTheme} from "@mui/material";
 import React, {useEffect, useRef} from "react";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneNodeEdit from "@/app/components/rf/SceneNodeEdit";
+import EdgeEdit from "@/app/components/rf/EdgeEdit";
 
 const GraphSidebar = ()=> {
-    const {isSidebarOpen, closeSidebar, selectedElementData} = useSidebar();
+    const {isSidebarOpen, closeSidebar, selectedElementData, selectedNodeId, selectedChoiceId} = useSidebar();
     // const isSidebarOpen = true;
     // const closeSidebar = ()=>{}
 
@@ -117,7 +118,8 @@ const GraphSidebar = ()=> {
                 height: '100%',
                 overflow: 'auto',
             }}>
-                {selectedElementData && <SceneNodeEdit data={selectedElementData.data}/>}
+                {selectedNodeId && <SceneNodeEdit data={selectedElementData.data}/>}
+                {selectedChoiceId && <EdgeEdit selectedChoiceId={selectedChoiceId}/>}
             </Box>
         </Drawer>
     );

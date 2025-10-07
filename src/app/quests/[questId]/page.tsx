@@ -13,7 +13,6 @@ import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
 import Status from "@/app/components/status/Status";
 import Link from "next/link";
 
-
 export default function QuestPage() {
     const {service} = useSceneContext();
     const {questId} = useParams();

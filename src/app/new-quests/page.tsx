@@ -4,12 +4,17 @@ import {NextPage} from "next";
 import {QuestList} from "@/app/components/quest_list/QuestList";
 import {db} from "@/lib/db";
 import {useLiveQuery} from "dexie-react-hooks";
+import {Container} from "@mui/material";
+import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
 
-const TestPage: NextPage = () => {
+const NewQuestsPage: NextPage = () => {
     const quests = useLiveQuery(() => db.quests.toArray());
 
 
-    return <QuestList quests={quests}/>
+    return <Container>
+        <QuestEditForm/>
+        <QuestList quests={quests}/>
+    </Container>
 }
 
-export default TestPage;
+export default NewQuestsPage;

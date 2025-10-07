@@ -25,6 +25,7 @@ interface ISceneFormData {
     texts: SceneText[];
     questId: number;
     locPosition: boolean;
+    samplyLink?: string;
 }
 
 interface SceneNodeEditProps {
@@ -34,7 +35,8 @@ interface SceneNodeEditProps {
         name: string;
         choices: IChoice[],
         texts: SceneText[],
-        locPosition: boolean
+        locPosition: boolean;
+        samplyLink?: string;
     }
 }
 
@@ -53,7 +55,8 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
             texts: data?.texts ?? [],
             choices: data.choices ?? [],
             questId: Number(2),
-            locPosition: data?.locPosition ?? false
+            locPosition: data?.locPosition ?? false,
+            samplyLink: data.samplyLink
         }
     });
 
@@ -101,8 +104,26 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
                         placeholder={'Scene'}
                         label={'Scene'}
                         size="small"
-                        error={!!errors.name}          // Показываем состояние ошибки
-                        helperText={errors.name?.message} // Отображаем сообщение об ошибке
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
+                    />
+                )}
+            />
+
+            <Controller
+                name="samplyLink"
+                control={control}
+                render={({field: {value, onChange}}) => (
+                    <TextField
+                        id={'samplyLink'}
+                        key={'samplyLink'}
+                        value={value}
+                        onChange={onChange}
+                        placeholder={'Samply Link'}
+                        label={'Samply Link'}
+                        size="small"
+                        error={!!errors.samplyLink}
+                        helperText={errors.samplyLink?.message}
                     />
                 )}
             />

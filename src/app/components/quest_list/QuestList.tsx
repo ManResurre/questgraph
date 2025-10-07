@@ -25,11 +25,10 @@ import {Quest} from "@/lib/db";
 import {usePathname} from "next/navigation";
 
 export function QuestList({quests}: { quests?: Quest[] }) {
-    const {service: questService} = useQuestContext();
     const pathname = usePathname()
 
     const handleEditClick = (quest: Quest) => {
-        questService?.edit(quest);
+        // questService?.edit(quest);
     }
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -41,7 +40,7 @@ export function QuestList({quests}: { quests?: Quest[] }) {
 
     const confirmDelete = () => {
         if (itemToDelete) {
-            questService?.delete(itemToDelete);
+            // questService?.delete(itemToDelete);
         }
         setDeleteDialogOpen(false);
         setItemToDelete(null);

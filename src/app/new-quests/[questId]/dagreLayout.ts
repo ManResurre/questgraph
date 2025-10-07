@@ -2,11 +2,13 @@ import {useCallback, useEffect} from 'react';
 import {applyNodeChanges, NodeChange, useNodesInitialized, useReactFlow} from '@xyflow/react';
 import dagre from 'dagre';
 import {CustomEdgeType, SceneNodeType} from "@/app/new-quests/[questId]/page";
+import {updatePositions, UpdatePositionsProps} from "@/lib/SceneRepository";
 
 const defaultNodeWidth = 200;
 const defaultNodeHeight = 70;
 
 const dagreGraph = new dagre.graphlib.Graph();
+let timeout;
 
 function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
     setNodes: (value: (((prevState: SceneNodeType[]) => SceneNodeType[]) | SceneNodeType[])) => void;
@@ -15,7 +17,7 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
     setEdges: (value: (((prevState: CustomEdgeType[]) => CustomEdgeType[]) | CustomEdgeType[])) => void
 }) {
     const nodesInitialized = useNodesInitialized(); // Проверяем, отмерились ли узлы
-    const {setCenter} = useReactFlow();
+    const {fitView} = useReactFlow();
 
     const setupPositions = useCallback((direction = 'LR') => {
         // const res =  getLayoutedElements(getNodes(), edges).then((data)=>{
@@ -80,16 +82,17 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
                 } as NodeChange<SceneNodeType>;
             });
 
-        setNodes(nodes => applyNodeChanges(newPositions, nodes))
+        updatePositions(newPositions as UpdatePositionsProps[])
+        // setNodes(nodes => applyNodeChanges(newPositions, nodes))
 
-        window.requestAnimationFrame(() => {
-            // Подгоняем viewport после обновления узлов
-            if (newPositions.length) {
-                const first = newPositions[0];
-                if (first.type == 'position' && first.position)
-                    setCenter(first.position.x, first.position.y, {zoom: 0.5})
-            }
+        fitView({
+            nodes: [{id: nodes[0].id}],
+            duration: 800,
+            padding: 0.5,
+            interpolate: 'smooth',
+            maxZoom: 0.7 // если хотите ограничить zoom
         });
+
     }, [nodesInitialized]); // Зависимости хука
 
 
@@ -98,8 +101,8 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
             console.log('Узлы еще не готовы для расчета компоновки.');
             return;
         }
+        // setupPositions();
 
-        setupPositions();
     }, [nodesInitialized])
 
     return {onLayout: setupPositions}

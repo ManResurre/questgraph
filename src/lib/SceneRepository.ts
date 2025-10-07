@@ -1,5 +1,12 @@
 import {Choice, db, Scene, SceneChoice, SceneText} from "@/lib/db";
 import {FinalConnectionState} from "@xyflow/react";
+import {parseLocations, parsePaths} from "@/lib/RepositoryHelper";
+
+export interface SceneFullData extends Scene, Record<string, unknown> {
+    choices?: Choice[];
+    texts?: SceneText[];
+    connectionState?: FinalConnectionState;
+}
 
 export async function getChoices(sceneId: number) {
     const sceneChoices = await db.scene_choice
@@ -58,12 +65,12 @@ export async function getScenesWithChoices(questId: number) {
     const sceneWithChoices = [];
     for (let scene of scenes) {
         sceneWithChoices.push({
-            id: String(scene.id),
+            id: scene.id,
             type: "sceneNode",
             position: scene.position ? JSON.parse(scene.position) : {x: 0, y: 0},
             data: {
                 ...scene,
-                id: String(scene.id),
+                id: scene.id,
                 name: scene.name,
                 choices: await getChoices(scene.id!),
                 texts: textsBySceneId.get(scene.id)
@@ -74,19 +81,17 @@ export async function getScenesWithChoices(questId: number) {
     return sceneWithChoices;
 }
 
-export interface SceneFullData extends Scene, Record<string, unknown> {
-    choices?: Choice[];
-    texts?: SceneText[];
-    connectionState?: FinalConnectionState;
-}
-
 export default async function updateScene(scene: SceneFullData) {
     await db.transaction('rw',
         db.scenes,
         db.scene_texts,
         db.scene_choice,
         async () => {
-            db.scenes.update(Number(scene.id), {name: scene.name, locPosition: scene.locPosition});
+            db.scenes.update(Number(scene.id), {
+                name: scene.name,
+                locPosition: scene.locPosition,
+                samplyLink: scene.samplyLink
+            });
             updateSceneTexts(Number(scene.id), scene.texts as SceneText[])
             updateChoices(Number(scene.id), scene.choices as Choice[]);
         })
@@ -111,4 +116,63 @@ export async function deleteScene(id: number) {
             await db.scene_choice.where('sceneId').equals(id).delete();
             await db.scenes.delete(id);
         });
+}
+
+export async function createFromFile(fileContent: string, questId: number) {
+    const locations = parseLocations(fileContent);
+    const paths = parsePaths(fileContent);
+
+    await db.transaction('rw',
+        db.scenes,
+        db.choices,
+        db.scene_texts,
+        async () => {
+
+            for (const loc of locations.keys()) {
+                const sceneId = await db.scenes.put({name: loc, questId} as Scene);
+
+                const texts = locations.get(loc).map((text: string) => {
+                    return {
+                        text,
+                        sceneId
+                    }
+                })
+                await db.scene_texts.bulkPut(texts as SceneText[]);
+            }
+            const pathsForDb: Choice[] = [];
+            for (const path of paths.keys()) {
+                pathsForDb.push({label: path, text: paths.get(path), questId});
+            }
+            await db.choices.bulkPut(pathsForDb);
+        })
+}
+
+export interface UpdatePositionsProps {
+    id: string;
+    position: { x: number, y: number };
+}
+
+export async function updatePositions(positions: UpdatePositionsProps[]) {
+    try {
+        // Обновляем только позиции без создания полных объектов Scene
+        const updatePromises = positions.map(pos =>
+            db.scenes.update(parseInt(pos.id), {
+                position: JSON.stringify(pos.position),
+                // locPosition: true
+            })
+        );
+
+        const results = await Promise.all(updatePromises);
+        const successfulUpdates = results.filter(result => result > 0).length;
+
+        console.log(`Successfully updated ${successfulUpdates} scene positions`);
+        return {success: true, updatedCount: successfulUpdates};
+    } catch (error) {
+        console.error('Error updating scene positions:', error);
+        throw new Error(`Failed to update scene positions: ${error}`);
+    }
+}
+
+export function clearScenes(questId: number) {
+    db.scenes.where('questId').equals(questId).delete();
 }

@@ -11,7 +11,7 @@ import {FinalConnectionState, useReactFlow} from "@xyflow/react";
 import {setNextSceneId} from "@/lib/ChoiceRepository";
 
 export interface ISearchNodeFormData {
-    scene?: Scene
+    scene?: Scene | null
 }
 
 export interface ISearchNodeProps {
@@ -27,7 +27,7 @@ const SearchNode = ({id, data}: ISearchNodeProps) => {
     const scenes = useLiveQuery(() => db.scenes.where('questId').equals(Number(questId)).toArray());
     const {handleSubmit, control, formState: {errors}} = useForm<ISearchNodeFormData>({
         defaultValues: {
-            scene: undefined,
+            scene: null,
         }
     });
 

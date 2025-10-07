@@ -16,13 +16,12 @@ import {
 import {useLiveQuery} from "dexie-react-hooks";
 import {createScene, getScenesWithChoices, SceneFullData} from "@/lib/SceneRepository";
 import {Grid} from "@mui/material";
-import NodeMenu from "@/app/components/rf/NodeMenu";
 import GraphSidebar from "@/app/components/sidebar/GraphSidebar";
 import SceneNode from "@/app/components/rf/SceneNode";
 import ButtonEdge from "@/app/components/rf/ButtonEdge";
 import {useParams} from "next/navigation";
 import {setNextSceneId} from "@/lib/ChoiceRepository";
-import useLayoutedElements from "@/app/new-quests/[questId]/helper";
+import useLayoutedElements from "@/app/new-quests/[questId]/dagreLayout";
 
 import '@xyflow/react/dist/style.css';
 import {SmartBezierEdge} from "@tisoap/react-flow-smart-edge";
@@ -30,6 +29,7 @@ import SearchNode from "@/app/components/rf/SearchNode";
 import MiniDrawer from "@/app/components/sidebar/GraphMenuSidebar";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import {db} from "@/lib/db";
+import PlayerModal from "@/app/components/sidebar/PlayerModal";
 
 export type SceneNodeType = Node<SceneFullData>;
 export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: string };
@@ -54,7 +54,7 @@ const CONTAINER_STYLE = {width: '100vw', height: 'calc(100vh - 64px)'};
 const QuestPage = () => {
     const {questId} = useParams();
     const {screenToFlowPosition} = useReactFlow();
-    const {typeDraggable} = useSidebar();
+    const {typeDraggable, openSidebar} = useSidebar();
 
     const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)));
     const {nodes: initialNodes, edges: initialEdges} = useMemo(() => {
@@ -74,7 +74,7 @@ const QuestPage = () => {
         );
 
         const newNodes: SceneNodeType[] = scenes.map((scene, index) => ({
-            id: scene.id.toString(),
+            id: scene.id!.toString(),
             position: scene.position,
             data: {...scene.data, id: Number(scene.data.id)},
             type: 'sceneNode',
@@ -140,6 +140,10 @@ const QuestPage = () => {
     const onConnectEnd = useCallback((
         event: MouseEvent | TouchEvent, connectionState: FinalConnectionState
     ) => {
+        if (connectionState.isValid) {
+            return;
+        }
+
         const {clientX, clientY} = getEventCoordinates(event);
 
         const pos = screenToFlowPosition({x: clientX, y: clientY})
@@ -201,6 +205,19 @@ const QuestPage = () => {
         event.dataTransfer.dropEffect = 'move';
     }, []);
 
+    const handleEdgeClick = useCallback((event: React.MouseEvent<Element, MouseEvent>, edge: CustomEdgeType) => {
+        event.preventDefault();
+
+        if (!edge.sourceHandle)
+            return;
+        const choiceId = parseInt(edge.sourceHandle.substring(1));
+
+        openSidebar({
+            edgeId: choiceId,
+            elementData: {type: 'edge', edge}
+        });
+    }, [])
+
 
     return (
         <Grid container spacing={1}>
@@ -219,6 +236,7 @@ const QuestPage = () => {
                     onDrop={onDrop}
                     onDragStart={onDragStart}
                     onDragOver={onDragOver}
+                    onEdgeClick={handleEdgeClick}
 
                     connectionLineType={CONNECTION_LINE_TYPE}
                     colorMode="dark"
@@ -232,6 +250,7 @@ const QuestPage = () => {
                 </ReactFlow>
                 <GraphSidebar/>
                 <MiniDrawer onLayout={onLayout}/>
+                <PlayerModal/>
             </div>
         </Grid>
     );

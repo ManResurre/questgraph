@@ -60,6 +60,7 @@ export interface Scene {
     questId: number;
     position?: string;
     locPosition?: boolean;
+    samplyLink?: string;
 }
 
 export interface Param {

@@ -4,6 +4,7 @@ import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import {
     Collapse,
     Drawer,
@@ -21,11 +22,16 @@ import {
     Settings as SettingsIcon,
     ViewQuilt as LayoutIcon
 } from "@mui/icons-material";
-import {ReactNode, useState} from "react";
+import {ReactNode, useCallback, useState} from "react";
 import {useReactFlow} from "@xyflow/react";
 import {SceneNodeData} from "@/app/components/rf/SceneNode";
 import {useDebounce} from "@uidotdev/usehooks";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import useFileLoader from "@/app/components/sidebar/fileLoader";
+import {useParams} from "next/navigation";
+import {usePlayer} from "@/app/components/sidebar/PlayerProvider";
+import {clearChoices} from "@/lib/ChoiceRepository";
+import {clearScenes} from "@/lib/SceneRepository";
 
 interface MiniDrawerProps {
     onLayout?: (direction?: string) => void
@@ -37,10 +43,17 @@ interface SubmenuProps {
     open: boolean;
     items: string[];
     component?: React.ElementType;
-    slotProps?: any;
+    itemProps?: {
+        // Статические пропсы (применяются ко всем элементам)
+        static?: any;
+        // Динамические обработчики (получают index)
+        handlers?: {
+            [key: string]: (event: React.SyntheticEvent, index: number) => void;
+        };
+    };
 }
 
-function Submenu({icon, label, open, items, component = ListItemButton, slotProps}: SubmenuProps) {
+function Submenu({icon, label, open, items, component = ListItemButton, itemProps}: SubmenuProps) {
     const [submenuOpen, setSubmenuOpen] = useState(false);
 
     const handleClick = () => {
@@ -61,16 +74,24 @@ function Submenu({icon, label, open, items, component = ListItemButton, slotProp
 
             <Collapse in={submenuOpen} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
-                    {items.map((item, index) => (
-                        <Component
+                    {items.map((item, index) => {
+                        // замыкаю index
+                        const dynamicHandlers =
+                            Object.keys(itemProps?.handlers || {})
+                                .reduce((acc, handlerName) => {
+                                    acc[handlerName] = (event: any) => itemProps!.handlers![handlerName](event, index);
+                                    return acc;
+                                }, {} as any);
+
+                        return <Component
                             key={index}
                             sx={{pl: 4}}
-                            {...slotProps}
-                            onDragStart={(event: React.DragEvent) => slotProps?.onDragStart(event, index)}
+                            {...itemProps?.static}
+                            {...dynamicHandlers}
                         >
                             <ListItemText primary={item}/>
                         </Component>
-                    ))}
+                    })}
                 </List>
             </Collapse>
         </>
@@ -78,10 +99,14 @@ function Submenu({icon, label, open, items, component = ListItemButton, slotProp
 }
 
 export default function MiniDrawer({onLayout}: MiniDrawerProps) {
+    const {questId} = useParams();
     const {setTypeDraggable} = useSidebar();
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = useState('');
     const debouncedSearchTerm = useDebounce(searchValue, 300);
+    const {setOpenModal} = usePlayer();
+
+    const {loadFile, isLoading} = useFileLoader();
 
     const toggleDrawer = () => {
         setOpen(!open);
@@ -110,8 +135,23 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
     ]
 
     const settings = [
-        {name:''}
+        {
+            name: 'loadFromFile',
+            click: () => loadFile(Number(questId))
+        },
+        {
+            name: 'Clear scenes',
+            click: () => clearScenes(Number(questId))
+        },
+        {
+            name: 'Clear choices',
+            click: () => clearChoices(Number(questId))
+        }
     ]
+
+    const handleSettingsClick = (index: number) => {
+        settings[index].click()
+    }
 
     const onDragStart = ({
                              event,
@@ -122,6 +162,11 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
         event.dataTransfer.effectAllowed = 'move';
         setTypeDraggable(nodeType);
     };
+
+    const handlePlay = useCallback(() => {
+        console.log(questId);
+        setOpenModal(true);
+    }, [setOpenModal])
 
     return <>
         <Drawer
@@ -172,11 +217,22 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
                 </Box>}
 
                 <MenuList sx={{p: 0, justifyContent: 'center'}}>
+                    <MenuItem onClick={handlePlay}>
+                        <ListItemIcon sx={{minWidth: 36, color: 'grey.400'}}>
+                            <PlayArrowIcon/>
+                        </ListItemIcon>
+                        {open && <ListItemText primary="Play"/>}
+                    </MenuItem>
                     <Submenu
                         icon={<SettingsIcon fontSize="small"/>}
                         label="Settings"
                         open={open}
-                        items={[" example1", "example 2", "example 3"]}
+                        items={settings.map(node => node.name)}
+                        itemProps={{
+                            handlers: {
+                                onClick: (event: React.SyntheticEvent, index) => handleSettingsClick(index)
+                            }
+                        }}
                     />
                     <Divider/>
                     <Submenu
@@ -185,12 +241,17 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
                         open={open}
                         items={nodeTemplates.map(node => node.name)}
                         component={ListItemButton}
-                        slotProps={{
-                            onDragStart: (event: React.DragEvent, index: number) => onDragStart({
-                                event,
-                                index
-                            }),
-                            draggable: true,
+                        itemProps={{
+                            static: {
+                                draggable: true,
+                                className: "draggable-node"
+                            },
+                            handlers: {
+                                onDragStart: (event: React.SyntheticEvent, index) => onDragStart({
+                                    event: event as React.DragEvent,
+                                    index
+                                }),
+                            }
                         }}
                     />
                 </MenuList>
