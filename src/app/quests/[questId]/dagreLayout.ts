@@ -82,18 +82,18 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
                 } as NodeChange<SceneNodeType>;
             });
 
-        updatePositions(newPositions as UpdatePositionsProps[])
-        // setNodes(nodes => applyNodeChanges(newPositions, nodes))
+        updatePositions(newPositions as UpdatePositionsProps[]).then(() => {
+            setNodes(nodes => applyNodeChanges(newPositions, nodes))
+            fitView({
+                nodes: [{id: nodes[0].id}],
+                duration: 800,
+                padding: 0.5,
+                interpolate: 'smooth',
+                maxZoom: 0.7
+            });
+        })
 
-        fitView({
-            nodes: [{id: nodes[0].id}],
-            duration: 800,
-            padding: 0.5,
-            interpolate: 'smooth',
-            maxZoom: 0.7 // если хотите ограничить zoom
-        });
-
-    }, [nodesInitialized]); // Зависимости хука
+    }, [nodesInitialized]);
 
 
     useEffect(() => {

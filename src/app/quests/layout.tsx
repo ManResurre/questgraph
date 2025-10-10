@@ -1,8 +1,8 @@
 'use client';
-import {ReactNode} from "react";
-import QuestsProvider from "@/app/components/quest_list/QuestsProvider";
-import SceneProvider from "@/app/components/scene_list/SceneProvider";
-import {Container} from "@mui/material";
+import React, {ReactNode} from "react";
+import {ReactFlowProvider} from "@xyflow/react";
+import {GraphSidebarProvider} from "@/app/components/sidebar/graphSidebarProvider";
+import '../globals.css';
 
 export default function QuestsLayout(
     {
@@ -11,11 +11,9 @@ export default function QuestsLayout(
         children: ReactNode;
     }) {
 
-    return <Container>
-        <QuestsProvider>
-            <SceneProvider>
+    return <ReactFlowProvider>
+        <GraphSidebarProvider>
                 {children}
-            </SceneProvider>
-        </QuestsProvider>
-    </Container>;
+        </GraphSidebarProvider>
+    </ReactFlowProvider>;
 }

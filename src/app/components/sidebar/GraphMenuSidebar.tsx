@@ -1,12 +1,10 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import {
-    Collapse,
     Drawer,
     IconButton,
     InputAdornment,
@@ -17,12 +15,13 @@ import {
 } from "@mui/material";
 import {ChevronLeftIcon, ChevronRightIcon} from "lucide-react";
 import {
-    AccountTree as NodeIcon, ExpandLess, ExpandMore,
+    AccountTree as NodeIcon, AltRoute,
     Search as SearchIcon,
     Settings as SettingsIcon,
     ViewQuilt as LayoutIcon
 } from "@mui/icons-material";
-import {ReactNode, useCallback, useState} from "react";
+import Submenu from "@/app/components/sidebar/Submenu";
+import {useCallback, useEffect, useState} from "react";
 import {useReactFlow} from "@xyflow/react";
 import {SceneNodeData} from "@/app/components/rf/SceneNode";
 import {useDebounce} from "@uidotdev/usehooks";
@@ -32,89 +31,37 @@ import {useParams} from "next/navigation";
 import {usePlayer} from "@/app/components/sidebar/PlayerProvider";
 import {clearChoices} from "@/lib/ChoiceRepository";
 import {clearScenes} from "@/lib/SceneRepository";
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
+import UploadIcon from '@mui/icons-material/Upload';
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 
 interface MiniDrawerProps {
     onLayout?: (direction?: string) => void
 }
 
-interface SubmenuProps {
-    icon: ReactNode;
-    label: string;
-    open: boolean;
-    items: string[];
-    component?: React.ElementType;
-    itemProps?: {
-        // Статические пропсы (применяются ко всем элементам)
-        static?: any;
-        // Динамические обработчики (получают index)
-        handlers?: {
-            [key: string]: (event: React.SyntheticEvent, index: number) => void;
-        };
-    };
-}
-
-function Submenu({icon, label, open, items, component = ListItemButton, itemProps}: SubmenuProps) {
-    const [submenuOpen, setSubmenuOpen] = useState(false);
-
-    const handleClick = () => {
-        setSubmenuOpen(!submenuOpen);
-    };
-
-    const Component = component;
-
-    return (
-        <>
-            <MenuItem onClick={handleClick} sx={{borderRadius: 1, mb: 0.5}}>
-                <ListItemIcon sx={{minWidth: 36, color: 'grey.400'}}>
-                    {icon}
-                </ListItemIcon>
-                {open && <ListItemText primary={label}/>}
-                {submenuOpen ? <ExpandLess/> : <ExpandMore/>}
-            </MenuItem>
-
-            <Collapse in={submenuOpen} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                    {items.map((item, index) => {
-                        // замыкаю index
-                        const dynamicHandlers =
-                            Object.keys(itemProps?.handlers || {})
-                                .reduce((acc, handlerName) => {
-                                    acc[handlerName] = (event: any) => itemProps!.handlers![handlerName](event, index);
-                                    return acc;
-                                }, {} as any);
-
-                        return <Component
-                            key={index}
-                            sx={{pl: 4}}
-                            {...itemProps?.static}
-                            {...dynamicHandlers}
-                        >
-                            <ListItemText primary={item}/>
-                        </Component>
-                    })}
-                </List>
-            </Collapse>
-        </>
-    );
-}
-
-export default function MiniDrawer({onLayout}: MiniDrawerProps) {
+const GraphMenuSidebar = ({onLayout}: MiniDrawerProps) => {
     const {questId} = useParams();
-    const {setTypeDraggable} = useSidebar();
+    const {setTypeDraggable, openSidebar} = useSidebar();
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = useState('');
     const debouncedSearchTerm = useDebounce(searchValue, 300);
     const {setOpenModal} = usePlayer();
 
     const {loadFile, isLoading} = useFileLoader();
+    const {setCenter, getNodes} = useReactFlow();
 
     const toggleDrawer = () => {
         setOpen(!open);
+        localStorage.setItem('GraphMenuSidebarOpen', String(!open))
     }
 
-    const {setCenter, getNodes} = useReactFlow();
+    useEffect(() => {
+        const open = JSON.parse(localStorage.getItem('GraphMenuSidebarOpen') ?? "false");
+        setOpen(open);
+    }, [])
 
-    React.useEffect(() => {
+
+    useEffect(() => {
         const nodes = getNodes() as SceneNodeData[];
         const filteredNodes = nodes.filter(({data}) => {
             return data.name.toLocaleUpperCase().indexOf(searchValue.toLocaleUpperCase()) !== -1;
@@ -136,21 +83,35 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
 
     const settings = [
         {
-            name: 'loadFromFile',
-            click: () => loadFile(Number(questId))
+            name: 'load from file',
+            click: () => loadFile(Number(questId)),
+            icon: <UploadIcon/>
         },
         {
-            name: 'Clear scenes',
-            click: () => clearScenes(Number(questId))
+            name: 'clear scenes',
+            click: () => clearScenes(Number(questId)),
+            icon: <CleaningServicesIcon/>
         },
         {
-            name: 'Clear choices',
-            click: () => clearChoices(Number(questId))
+            name: 'clear choices',
+            click: () => clearChoices(Number(questId)),
+            icon: <CleaningServicesIcon/>
         }
+    ]
+
+    const choices = [
+        {
+            name: 'manage',
+            click: () => openSidebar({newChoice: true}),
+            icon: <ManageSearchIcon/>
+        },
     ]
 
     const handleSettingsClick = (index: number) => {
         settings[index].click()
+    }
+    const handleChoicesClick = (index: number) => {
+        choices[index].click()
     }
 
     const onDragStart = ({
@@ -164,7 +125,6 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
     };
 
     const handlePlay = useCallback(() => {
-        console.log(questId);
         setOpenModal(true);
     }, [setOpenModal])
 
@@ -227,7 +187,7 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
                         icon={<SettingsIcon fontSize="small"/>}
                         label="Settings"
                         open={open}
-                        items={settings.map(node => node.name)}
+                        items={settings}
                         itemProps={{
                             handlers: {
                                 onClick: (event: React.SyntheticEvent, index) => handleSettingsClick(index)
@@ -239,7 +199,9 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
                         icon={<NodeIcon fontSize="small"/>}
                         label="Nodes"
                         open={open}
-                        items={nodeTemplates.map(node => node.name)}
+                        items={nodeTemplates.map(node => ({
+                            name: node.name
+                        }))}
                         component={ListItemButton}
                         itemProps={{
                             static: {
@@ -251,6 +213,17 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
                                     event: event as React.DragEvent,
                                     index
                                 }),
+                            }
+                        }}
+                    />
+                    <Submenu
+                        icon={<AltRoute fontSize="small"/>}
+                        label="Choices"
+                        open={open}
+                        items={choices}
+                        itemProps={{
+                            handlers: {
+                                onClick: (event: React.SyntheticEvent, index) => handleChoicesClick(index)
                             }
                         }}
                     />
@@ -275,3 +248,5 @@ export default function MiniDrawer({onLayout}: MiniDrawerProps) {
         </Drawer>
     </>
 }
+
+export default React.memo(GraphMenuSidebar);

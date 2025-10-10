@@ -1,18 +1,18 @@
 import React, {useCallback, useMemo} from "react";
-import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
-import LocationList from "@/app/components/choice/LocationList";
 import {Choice} from "@/lib/db";
-import {IconButton, ListItem, ListItemText, Stack, Typography} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import ScenesAutocomplete from "@/app/components/choice/ScenesAutocomplete";
+import {Box, IconButton, ListItem, ListItemText, Stack, Typography} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from '@mui/icons-material/Edit';
+import {deleteChoice} from "@/lib/ChoiceRepository";
 
-const ChoiceItem = React.memo(({choice, scenes, highlight}: any) => {
-    const {service} = useSceneContext();
-    const locationList = useMemo(() => (
-        <LocationList choiceId={choice.id}/>
-    ), [choice.id]);
+export interface ChoiceItemProps {
+    choice: Choice,
+    highlight?: string,
+    onEdit?: ((value: (((prevState: (Choice | undefined)) => (Choice | undefined)) | Choice | undefined)) => void) | undefined
+}
 
-    const highlightText = (text: string) => {
+const ChoiceItem = React.memo(({choice, highlight, onEdit}: ChoiceItemProps) => {
+    const highlightText = useCallback((text: string) => {
         if (!highlight || !text) return text;
 
         const regex = new RegExp(`(${highlight})`, "gi");
@@ -23,35 +23,41 @@ const ChoiceItem = React.memo(({choice, scenes, highlight}: any) => {
                 <mark key={i} style={{backgroundColor: "#ffeb3b"}}>{part}</mark> :
                 part
         );
-    };
+    }, [highlight]);
 
-    const handleSelectClick = useCallback((choice: Choice) => {
-        service?.addChoice(choice);
-    }, [service]);
+    const handleDelete = () => {
+        deleteChoice(Number(choice.id));
+    }
 
     return (
         <ListItem
             secondaryAction={
-                <IconButton
-                    edge="end"
-                    aria-label="edit"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectClick(choice);
-                    }}
-                    sx={{mr: 0.5}}
-                >
-                    <CheckIcon color={false ? "success" : "primary"} fontSize="small"/>
-                </IconButton>
+                <Box>
+                    <IconButton
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEdit)
+                                onEdit(choice);
+                        }}
+                        sx={{mr: 0.5}}
+                    >
+                        <EditIcon fontSize="small"/>
+                    </IconButton>
+                    <IconButton
+
+                        onClick={(e) => handleDelete()}
+                        sx={{mr: 0.5}}
+                    >
+                        <DeleteIcon fontSize="small"/>
+                    </IconButton>
+                </Box>
             }
         >
             <ListItemText
                 primary={highlightText(choice.label)}
-                secondary={<Stack alignItems="flex-start" spacing={1}>
-                    <Typography component={'div'}>{highlightText(choice.text)}</Typography>
-                    {locationList}
-                    <ScenesAutocomplete choice={choice} scenes={scenes}/>
-                </Stack>}
+                secondary={
+                    <span>{highlightText(choice.text)}</span>
+                }
                 slotProps={
                     {
                         secondary: {
@@ -59,11 +65,18 @@ const ChoiceItem = React.memo(({choice, scenes, highlight}: any) => {
                         }
                     }
                 }
+                sx={{
+                    pr: 8,
+                    minWidth: 0,
+                    '& .MuiTypography-root': {
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                        whiteSpace: 'normal'
+                    }
+                }}
             />
         </ListItem>
     )
 });
-
-ChoiceItem.displayName = 'ChoiceItem';
 
 export default React.memo(ChoiceItem);

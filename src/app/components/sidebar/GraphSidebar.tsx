@@ -1,13 +1,21 @@
-import {Box, Drawer, useMediaQuery, useTheme} from "@mui/material";
+import {Box, Divider, Drawer, Stack, useMediaQuery, useTheme} from "@mui/material";
 import React, {useEffect, useRef} from "react";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneNodeEdit from "@/app/components/rf/SceneNodeEdit";
 import EdgeEdit from "@/app/components/rf/EdgeEdit";
+import NewChoice from "@/app/components/choice/NewChoice";
+import ChoiceList from "@/app/components/choice/ChoiceList";
+import ChoiceManagement from "@/app/components/choice/ChoiceManagement";
 
-const GraphSidebar = ()=> {
-    const {isSidebarOpen, closeSidebar, selectedElementData, selectedNodeId, selectedChoiceId} = useSidebar();
-    // const isSidebarOpen = true;
-    // const closeSidebar = ()=>{}
+const GraphSidebar = () => {
+    const {
+        isSidebarOpen,
+        closeSidebar,
+        selectedElementData,
+        selectedNodeId,
+        selectedChoiceId,
+        newChoice
+    } = useSidebar();
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -120,6 +128,7 @@ const GraphSidebar = ()=> {
             }}>
                 {selectedNodeId && <SceneNodeEdit data={selectedElementData.data}/>}
                 {selectedChoiceId && <EdgeEdit selectedChoiceId={selectedChoiceId}/>}
+                {newChoice && <ChoiceManagement/>}
             </Box>
         </Drawer>
     );
