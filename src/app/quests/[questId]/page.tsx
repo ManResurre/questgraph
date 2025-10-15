@@ -28,7 +28,7 @@ import {SmartBezierEdge} from "@tisoap/react-flow-smart-edge";
 import SearchNode from "@/app/components/rf/SearchNode";
 import GraphMenuSidebar from "@/app/components/sidebar/GraphMenuSidebar";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
-import PlayerModal from "@/app/components/sidebar/PlayerModal";
+import PlayerModal from "@/app/components/quest_player/PlayerModal";
 
 export type SceneNodeType = Node<SceneFullData>;
 export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: string };
@@ -56,6 +56,7 @@ const QuestPage = () => {
     const {typeDraggable, openSidebar} = useSidebar();
 
     const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)));
+
     const {nodes: initialNodes, edges: initialEdges} = useMemo(() => {
         if (!scenes?.length) return {nodes: [], edges: []};
 
@@ -72,14 +73,7 @@ const QuestPage = () => {
                 }))
         );
 
-        const newNodes: SceneNodeType[] = scenes.map((scene, index) => ({
-            id: scene.id!.toString(),
-            position: scene.position,
-            data: {...scene.data, id: Number(scene.data.id)},
-            type: 'sceneNode',
-        } as SceneNodeType));
-
-        return {nodes: newNodes, edges: newEdges};
+        return {nodes: scenes as SceneNodeType[], edges: newEdges};
     }, [scenes]);
 
     const [nodes, setNodes] = useState<SceneNodeType[]>(initialNodes);

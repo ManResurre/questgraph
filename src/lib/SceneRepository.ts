@@ -65,8 +65,9 @@ export async function getScenesWithChoices(questId: number) {
     const sceneWithChoices = [];
     for (let scene of scenes) {
         sceneWithChoices.push({
-            id: scene.id,
+            id: scene.id?.toString(),
             type: "sceneNode",
+            dragHandle: '.drag-handle',
             position: scene.position ? JSON.parse(scene.position) : {x: 0, y: 0},
             data: {
                 ...scene,
@@ -98,6 +99,11 @@ export default async function updateScene(scene: SceneFullData) {
 }
 
 export async function updateSceneTexts(sceneId: number, texts: SceneText[]) {
+    db.scene_texts
+        .where('sceneId')
+        .equals(sceneId)
+        .delete();
+
     const preparedTexts = texts.map(text => ({...text, sceneId}));
     db.scene_texts.bulkPut(preparedTexts);
 }

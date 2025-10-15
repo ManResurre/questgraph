@@ -2,6 +2,7 @@ import React from "react";
 import {usePlayer} from "@/app/components/sidebar/PlayerProvider";
 import {Card, CardContent, Stack} from "@mui/material";
 import ChoiceButton from "@/app/components/choice/ChoiceButton";
+import PlayerText from "@/app/components/quest_player/PlayerText";
 
 const Player = () => {
     const {currentScene} = usePlayer();
@@ -14,7 +15,7 @@ const Player = () => {
                     <div
                         className="text-lg text-gray-300 font-sans whitespace-pre-wrap break-words leading-5">
                         {currentScene.texts.map((t) => {
-                            return <p key={t.id}>{t.text}</p>
+                            return <div key={t.id}><PlayerText text={t.text} /></div>
                         })}
                     </div>
                 </div>

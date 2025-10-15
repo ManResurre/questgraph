@@ -2,7 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import {usePlayer} from "@/app/components/sidebar/PlayerProvider";
-import Player from "@/app/components/sidebar/Player";
+import Player from "@/app/components/quest_player/Player";
 import Draggable from 'react-draggable';
 import {IconButton} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';

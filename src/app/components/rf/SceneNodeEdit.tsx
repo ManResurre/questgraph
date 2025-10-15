@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useCallback} from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
 import {db, SceneText} from "@/lib/db";
 import {Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, Stack, TextField} from "@mui/material";
@@ -9,6 +9,7 @@ import updateScene, {deleteScene, SceneFullData} from "@/lib/SceneRepository";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 import {useParams} from "next/navigation";
+import CheckIcon from '@mui/icons-material/Check';
 
 interface IChoice {
     id: string | number;
@@ -72,6 +73,10 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
         closeSidebar();
     }
 
+    const handleApply = useCallback(()=>{
+        updateScene(methods.getValues() as SceneFullData)
+    },[])
+
     return <Box
         className="py-2 px-1"
         sx={{
@@ -85,6 +90,7 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
             component="form"
             noValidate
             autoComplete="off"
+            sx={{ width: 1 }}
             onSubmit={handleSubmit(onSubmit)}
         >
 
@@ -92,7 +98,7 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
                 name="name"
                 control={control}
                 rules={{
-                    required: "Поле 'Scene' обязательно для заполнения"
+                    required: "Field is required"
                 }}
                 render={({field: {value, onChange}}) => (
                     <TextField
@@ -141,7 +147,7 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
                                     onChange={(e) => onChange(e.target.checked)}
                                 />
                             }
-                            label="Фиксировать позицию"
+                            label="Hold position"
                         />
                     )}
                 />
@@ -157,11 +163,16 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
 
             <SceneFormText methods={methods}/>
 
-            <Button size="small"
-                    variant="contained"
-                    type="submit"
-                    fullWidth
-            >Save</Button>
+
+            <Box display="flex" justifyContent="space-between" gap={1}>
+                <Button size="small"
+                        variant="contained"
+                        type="submit"
+                        fullWidth
+                >Save</Button>
+
+                <IconButton onClick={() => handleApply()}><CheckIcon/></IconButton>
+            </Box>
 
         </Stack>
         <IconButton onClick={handleDelete}>
