@@ -1,21 +1,20 @@
 'use client'
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {usePathname} from "next/navigation";
 import {AppBar, Button, Toolbar, Typography} from "@mui/material";
 import supabase from "@/supabaseClient";
 import Login from "./auth/login";
+import type {User as SupabaseUser} from "@supabase/supabase-js";
 
 const Navbar = () => {
     const pathname = usePathname();
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState<SupabaseUser | null>(null);
 
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error) {
-                // console.error("Ошибка получения пользователя:", error.message);
-            } else {
+            const {data: {user}, error} = await supabase.auth.getUser();
+            if (user) {
                 setUser(user);
             }
         };
@@ -23,7 +22,7 @@ const Navbar = () => {
         checkUser();
 
         // подписка на изменения сессии
-        const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+        const {data: subscription} = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null);
         });
 
@@ -35,7 +34,7 @@ const Navbar = () => {
     return (
         <AppBar position="static">
             <Toolbar>
-                <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" noWrap component="div" sx={{flexGrow: 1}}>
                     Quest Editor
                 </Typography>
 

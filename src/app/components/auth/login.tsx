@@ -21,13 +21,11 @@ const Login = ({user}: LoginProps) => {
         try {
             setLoading(true);
 
-            // 1. Получаем challenge
             const challengeRes = await supabase.functions.invoke("get-challenge", {
                 body: {user_id: local.id},
             });
             const {challenge} = challengeRes.data;
 
-            // 2. Подписываем challenge приватным ключом
             const privateKey = await CryptHelper.importPrivateKey(local.privateKey);
             const encoder = new TextEncoder();
             const signatureBuffer = await window.crypto.subtle.sign(
@@ -39,15 +37,12 @@ const Login = ({user}: LoginProps) => {
                 String.fromCharCode(...new Uint8Array(signatureBuffer))
             );
 
-            // 3. Отправляем подпись на проверку
             const verifyRes = await supabase.functions.invoke("verify-signature", {
                 body: {user_id: local.id, signature: signatureB64},
             });
 
-            // 4. Сервер возвращает access_token и refresh_token
             const {access_token, refresh_token} = verifyRes.data;
 
-            // 5. Устанавливаем сессию в Supabase SDK
             const {error} = await supabase.auth.setSession({
                 access_token,
                 refresh_token,
@@ -74,7 +69,7 @@ const Login = ({user}: LoginProps) => {
     return (
         <IconButton
             color={user ? "success" : "inherit"}
-            onClick={user ? handleLogout : () => handleLogin(localUser)}
+            onClick={user ? handleLogout : () => handleLogin(localUser!)}
         >
             {loading || !localUser ? (
                 <CircularProgress size={24} color="inherit"/>
