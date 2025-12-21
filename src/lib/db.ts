@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 
 export interface User {
     id: string;
-    name: string;
+    name?: string;
     privateKey: string;
     publicKey: string;
 }

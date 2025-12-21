@@ -1,18 +1,16 @@
 'use client'
 import "reflect-metadata";
-import {useEffect} from "react";
-import supabase from "@/supabaseClient";
+import Registration from "@/app/components/auth/registration";
+import {useLiveQuery} from "dexie-react-hooks";
+import {db} from "@/lib/db";
+import Login from "@/app/components/auth/login";
 
 export default function Home() {
-    useEffect(() => {
-        const load = async () => {
-            const data = await supabase.from('rooms').select('*');
-            console.log(data);
-        }
-        load();
-    }, [])
+    const user = useLiveQuery(() => db.user.orderBy("id").first());
 
-    return (
+    return <>
         <div>Hello</div>
-    );
+
+        {user ? null : <Registration/>}
+    </>
 }
