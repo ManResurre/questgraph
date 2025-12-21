@@ -23,8 +23,17 @@ import {useQuestContext} from "@/app/components/quest_list/QuestsProvider";
 import Link from "next/link";
 import {Quest} from "@/lib/db";
 import {usePathname} from "next/navigation";
+import {deleteQuest} from "@/lib/QuestRepository";
+import {QueryObserverResult, RefetchOptions} from "@tanstack/react-query";
 
-export function QuestList({quests}: { quests?: Quest[] }) {
+interface QuestListProps {
+    quests?: Quest[];
+    refetch?: (
+        options?: RefetchOptions
+    ) => Promise<QueryObserverResult<Quest[] | null, Error>>;
+}
+
+export function QuestList({quests, refetch}: QuestListProps) {
     const pathname = usePathname()
 
     const handleEditClick = (quest: Quest) => {
@@ -32,18 +41,21 @@ export function QuestList({quests}: { quests?: Quest[] }) {
     }
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState<Quest | null>(null);
     const handleDeleteClick = (item: any) => {
         setItemToDelete(item);
         setDeleteDialogOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (itemToDelete) {
-            // questService?.delete(itemToDelete);
+            await deleteQuest(itemToDelete.id!)
         }
         setDeleteDialogOpen(false);
         setItemToDelete(null);
+
+        if (refetch)
+            refetch();
     };
 
     const cancelDelete = () => {
