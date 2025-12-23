@@ -7,6 +7,9 @@ import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
 import {getQuests} from "@/lib/QuestRepository";
 import {useQuery} from "@tanstack/react-query";
 import React from "react";
+import {Quest} from "@/lib/db";
+import {useCurrentUser} from "@/app/hooks/useCurrentUser";
+import {User} from "@supabase/supabase-js";
 
 const QuestsPage: NextPage = () => {
     const {data: quests, isLoading, refetch} = useQuery({
@@ -17,9 +20,13 @@ const QuestsPage: NextPage = () => {
         refetchOnWindowFocus: false,
     });
 
+    const {user} = useCurrentUser();
+
     return <Container>
-        <QuestEditForm refetch={refetch}/>
-        {isLoading ? <CircularProgress size={24} color="inherit"/> : <QuestList refetch={refetch} quests={quests}/>}
+        <QuestEditForm user={user as User} refetch={refetch}/>
+        {isLoading ?
+            <CircularProgress size={24} color="inherit"/> :
+            <QuestList user={user} refetch={refetch} quests={quests as Quest[]}/>}
     </Container>
 }
 

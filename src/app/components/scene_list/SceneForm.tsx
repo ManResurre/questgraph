@@ -14,7 +14,6 @@ import SceneFormChoice from "@/app/components/scene_list/SceneFormChoice";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 // import { format } from '@codemirror/formatting';
 
-
 export interface ISceneFormProps {
     scene?: any;
 }

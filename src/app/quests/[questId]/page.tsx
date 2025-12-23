@@ -13,8 +13,7 @@ import {
     Node,
     Edge, FinalConnectionState, NodeChange, NodeTypes, NodeProps
 } from "@xyflow/react";
-import {useLiveQuery} from "dexie-react-hooks";
-import {createScene, getScenesWithChoices, SceneFullData} from "@/lib/SceneRepository";
+import {createScene, SceneFullData} from "@/lib/SceneRepository";
 import {Grid} from "@mui/material";
 import GraphSidebar from "@/app/components/sidebar/GraphSidebar";
 import SceneNode from "@/app/components/rf/SceneNode";
@@ -29,6 +28,7 @@ import SearchNode from "@/app/components/rf/SearchNode";
 import GraphMenuSidebar from "@/app/components/sidebar/GraphMenuSidebar";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import PlayerModal from "@/app/components/quest_player/PlayerModal";
+import {useScenesWithChoices} from "@/app/hooks/scene";
 
 export type SceneNodeType = Node<SceneFullData>;
 export type CustomEdgeType = Edge & { sourceHandle?: string; targetHandle?: string };
@@ -55,7 +55,7 @@ const QuestPage = () => {
     const {screenToFlowPosition} = useReactFlow();
     const {typeDraggable, openSidebar} = useSidebar();
 
-    const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)));
+    const {data: scenes} = useScenesWithChoices(Number(questId));
 
     const {nodes: initialNodes, edges: initialEdges} = useMemo(() => {
         if (!scenes?.length) return {nodes: [], edges: []};

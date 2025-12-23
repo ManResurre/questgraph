@@ -8,10 +8,10 @@ import React, {
     useEffect,
     useCallback
 } from 'react';
-import {useLiveQuery} from "dexie-react-hooks";
-import {getScenesWithChoices, SceneFullData} from "@/lib/SceneRepository";
+import {SceneFullData} from "@/lib/SceneRepository";
 import {useParams} from "next/navigation";
 import {useReactFlow} from "@xyflow/react";
+import {useScenesWithChoices} from "@/app/hooks/scene";
 
 interface PlayerContextType {
     openModal: boolean;
@@ -40,7 +40,8 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({children}) => {
     const {fitView} = useReactFlow();
     const {questId} = useParams();
     const [openModal, setOpenModal] = React.useState(false);
-    const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)), [questId]);
+    // const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)), [questId]);
+    const {data: scenes} = useScenesWithChoices(Number(questId));
     const [currentScene, setCurrentScene] = useState<SceneFullData>();
 
     useEffect(() => {

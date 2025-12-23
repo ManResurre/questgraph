@@ -1,4 +1,5 @@
 import {Choice, db} from "@/lib/db";
+import supabase from "@/supabaseClient";
 
 export function setNextSceneId(choiceId: number, sceneId?: number) {
     db.choices.update(choiceId, {nextSceneId: sceneId})
@@ -36,10 +37,39 @@ export async function saveChoice(data: Choice) {
     db.choices.put(data);
 }
 
-export async function getChoices(questId: number) {
-    return db.choices.where('questId').equals(questId).toArray();
-}
+// export async function getChoices(questId: number) {
+//     return db.choices.where('questId').equals(questId).toArray();
+// }
 
 export function deleteChoice(choiceId: number) {
     return db.choices.delete(choiceId);
 }
+
+export async function getChoices(questId: number) {
+    const {data} = await supabase.from('choice').select("*").eq('quest_id', questId);
+    return data;
+}
+
+export async function getChoicesByScene(sceneId: number) {
+    // связи сцены с выборами
+    const { data: sceneChoices, error: scErr } = await supabase
+        .from("scene_choice")
+        .select("choice_id")
+        .eq("scene_id", sceneId);
+
+    if (scErr) throw scErr;
+    if (!sceneChoices?.length) return [];
+
+    const choiceIds = sceneChoices.map(sc => sc.choice_id) as number[];
+
+    // сами выборы
+    const { data: choices, error: chErr } = await supabase
+        .from("choice")
+        .select("*")
+        .in("id", choiceIds);
+
+    if (chErr) throw chErr;
+
+    return choices || [];
+}
+

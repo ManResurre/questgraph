@@ -19,22 +19,23 @@ import {
     ListSubheader
 } from '@mui/material';
 import {Edit, Delete} from '@mui/icons-material';
-import {useQuestContext} from "@/app/components/quest_list/QuestsProvider";
 import Link from "next/link";
 import {Quest} from "@/lib/db";
 import {usePathname} from "next/navigation";
 import {deleteQuest} from "@/lib/QuestRepository";
 import {QueryObserverResult, RefetchOptions} from "@tanstack/react-query";
+import {User} from "@supabase/supabase-js";
 
 interface QuestListProps {
-    quests?: Quest[];
+    quests?: Quest[],
     refetch?: (
         options?: RefetchOptions
-    ) => Promise<QueryObserverResult<Quest[] | null, Error>>;
+    ) => Promise<QueryObserverResult<any, Error>>,
+    user?: User | null
 }
 
-export function QuestList({quests, refetch}: QuestListProps) {
-    const pathname = usePathname()
+export function QuestList({quests, refetch, user}: QuestListProps) {
+    const pathname = usePathname();
 
     const handleEditClick = (quest: Quest) => {
         // questService?.edit(quest);
@@ -112,8 +113,9 @@ export function QuestList({quests, refetch}: QuestListProps) {
 
                             <ListItemText
                                 primary={
-                                    <Typography fontWeight={600}>
-                                        {quest.name}
+                                    <Typography color={user?.id == quest.user_id ? "success" : "textPrimary"}
+                                                fontWeight={600}>
+                                        {quest.name} - {quest.user_id}
                                     </Typography>
                                 }
                                 // secondary={

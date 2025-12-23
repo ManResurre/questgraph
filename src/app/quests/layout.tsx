@@ -3,10 +3,10 @@ import React, {ReactNode, useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import {ReactFlowProvider} from "@xyflow/react";
 import {GraphSidebarProvider} from "@/app/components/sidebar/graphSidebarProvider";
-import supabase from "@/supabaseClient";
 import "../globals.css";
 import {CircularProgress} from "@mui/material";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {useCurrentUser} from "@/app/hooks/useCurrentUser";
 
 function ReactQueryProvider({children}: { children: ReactNode }) {
     // создаём QueryClient один раз
@@ -25,30 +25,14 @@ export default function QuestsLayout(
     }: {
         children: ReactNode;
     }) {
-    const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const {user, loading} = useCurrentUser();
 
     useEffect(() => {
-        const checkUser = async () => {
-            const {data: {user}} = await supabase.auth.getUser();
-            if (!user) {
-                router.replace("/");
-            }
-            setLoading(false);
-        };
-
-        checkUser();
-
-        const {data: subscription} = supabase.auth.onAuthStateChange((_event, session) => {
-            if (!session?.user) {
-                router.replace("/");
-            }
-        });
-
-        return () => {
-            subscription.subscription.unsubscribe();
-        };
-    }, [router]);
+        if (!loading && !user) {
+            router.replace("/");
+        }
+    }, [router, user, loading]);
 
     if (loading) {
         return <CircularProgress size={24} color="inherit"/>;

@@ -1,14 +1,14 @@
-import React, {memo} from "react";
+import React from "react";
 import {Button, Stack} from "@mui/material";
 import CustomHandle from "@/app/components/rf/CustomHandle";
 import {Position} from "@xyflow/system";
 import SceneAutocomplete from "@/app/components/scene_list/SceneAutocomplete";
-import {useLiveQuery} from "dexie-react-hooks";
 import {useParams} from "next/navigation";
 import {db, Scene} from "@/lib/db";
 import {Controller, useForm} from "react-hook-form";
 import {FinalConnectionState, useReactFlow} from "@xyflow/react";
 import {setNextSceneId} from "@/lib/ChoiceRepository";
+import {useScenesWithChoices} from "@/app/hooks/scene";
 
 export interface ISearchNodeFormData {
     scene?: Scene | null
@@ -24,7 +24,8 @@ export interface ISearchNodeProps {
 const SearchNode = ({id, data}: ISearchNodeProps) => {
     const {questId} = useParams();
     const {deleteElements} = useReactFlow();
-    const scenes = useLiveQuery(() => db.scenes.where('questId').equals(Number(questId)).toArray());
+    const {data:scenes} = useScenesWithChoices(Number(questId));
+
     const {handleSubmit, control, formState: {errors}} = useForm<ISearchNodeFormData>({
         defaultValues: {
             scene: null,

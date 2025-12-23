@@ -10,6 +10,7 @@ import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 import {useParams} from "next/navigation";
 import CheckIcon from '@mui/icons-material/Check';
+import {useChoices} from "@/app/hooks/choice";
 
 interface IChoice {
     id: string | number;
@@ -44,10 +45,7 @@ interface SceneNodeEditProps {
 const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
     const {questId} = useParams();
     const {closeSidebar} = useSidebar();
-    const {choices} = useLiveQuery(async () => {
-        const choices = await db.choices.where('questId').equals(Number(questId)).toArray();
-        return {choices}
-    }) ?? {choices: []};
+    const {data: choices} = useChoices(Number(questId));
 
     const methods = useForm<ISceneFormData>({
         defaultValues: {
@@ -73,9 +71,9 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
         closeSidebar();
     }
 
-    const handleApply = useCallback(()=>{
+    const handleApply = useCallback(() => {
         updateScene(methods.getValues() as SceneFullData)
-    },[])
+    }, [])
 
     return <Box
         className="py-2 px-1"
@@ -90,7 +88,7 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
             component="form"
             noValidate
             autoComplete="off"
-            sx={{ width: 1 }}
+            sx={{width: 1}}
             onSubmit={handleSubmit(onSubmit)}
         >
 

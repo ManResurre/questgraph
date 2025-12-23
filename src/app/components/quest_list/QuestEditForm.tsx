@@ -1,18 +1,17 @@
 import {Controller, useForm} from "react-hook-form";
 import {Button, FormControl, Paper, Stack, TextField} from "@mui/material";
 import React from "react";
-import {Quest} from "@/lib/db";
+import {db, Quest} from "@/lib/db";
 import {createQuest} from "@/lib/QuestRepository";
-import supabase from "@/supabaseClient";
 import {QueryObserverResult, RefetchOptions} from "@tanstack/react-query";
+import {User} from "@supabase/supabase-js";
 
 interface QuestEditFormProps {
-    refetch?: (
-        options?: RefetchOptions
-    ) => Promise<QueryObserverResult<Quest[] | null, Error>>;
+    refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<any, Error>>,
+    user: User
 }
 
-export function QuestEditForm({refetch}: QuestEditFormProps) {
+export function QuestEditForm({refetch, user}: QuestEditFormProps) {
     const {handleSubmit, control, reset} = useForm<Quest>({
         defaultValues: {
             name: ""
@@ -20,12 +19,7 @@ export function QuestEditForm({refetch}: QuestEditFormProps) {
     });
 
     const onSubmit = async (quest: Quest) => {
-        const {data: {user}} = await supabase.auth.getUser();
-        if (!user) {
-            return;
-        }
-
-        await createQuest({...quest, user_id: user?.id});
+        await createQuest({...quest, user_id: user.id});
         reset();
         if (refetch)
             refetch();

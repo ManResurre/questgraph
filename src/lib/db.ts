@@ -77,8 +77,6 @@ export interface Quest {
     id?: number;
     name: string;
     user_id:string;
-    authorKey: string;
-    masterKey: string;
 }
 
 export class QuestsDB extends Dexie {
