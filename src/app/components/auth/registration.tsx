@@ -1,21 +1,23 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import {CryptHelper} from "@/lib/CryptHelper";
 import supabase from "@/supabaseClient";
-import {db} from "@/lib/db";
-
-interface IKeys {
-    publicPem: string;
-    privatePem: string;
-}
+import {db, User} from "@/lib/db";
 
 const Registration = () => {
-
-    const [keys, setKeys] = useState<IKeys>();
+    const hasRun = useRef(false);
 
     const createKeys = useCallback(async () => {
+        const count = await db.user.count();
+        if (count) return;
+
         const keyPair = await CryptHelper.generateRSAKeys();
         const publicPem = await CryptHelper.exportKey(keyPair.publicKey, 'spki');
         const privatePem = await CryptHelper.exportKey(keyPair.privateKey, 'pkcs8');
+
+        await db.user.put({
+            privateKey: privatePem!,
+            publicKey: publicPem!,
+        })
 
         return {
             publicPem,
@@ -28,28 +30,27 @@ const Registration = () => {
             body: {public_key: key},
         })
 
+        const user = await db.user.orderBy("id").first() as User;
+        await db.user.put({
+            ...user,
+            auth_id: data.id
+        })
+
         return data.id;
     }, []);
 
-    useEffect(() => {
-        createKeys().then((keys) => {
-            setKeys(keys);
-        })
 
+    useEffect(() => {
+        if (hasRun.current) return;
+        hasRun.current = true;
+        createKeys().then((keys) => {
+            if (keys) savePublicKey(keys.publicPem).then((auth_id) => {
+                console.log(auth_id);
+
+            });
+        });
     }, []);
 
-    useEffect(() => {
-        if (!keys?.publicPem)
-            return;
-
-        savePublicKey(keys?.publicPem).then((userId) => {
-            db.user.put({
-                id: userId,
-                privateKey: keys?.privatePem,
-                publicKey: keys?.publicPem,
-            })
-        });
-    }, [keys])
 
     return <div>Registration</div>
 }

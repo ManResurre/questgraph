@@ -1,10 +1,11 @@
 import Dexie from 'dexie';
 
 export interface User {
-    id: string;
+    id?: number;
     name?: string;
     privateKey: string;
     publicKey: string;
+    auth_id?: string;
 }
 
 export interface Game {
@@ -76,7 +77,7 @@ export interface Param {
 export interface Quest {
     id?: number;
     name: string;
-    user_id:string;
+    user_id: string;
 }
 
 export class QuestsDB extends Dexie {
@@ -94,7 +95,7 @@ export class QuestsDB extends Dexie {
     constructor() {
         super('QuestsDB');
         this.version(1).stores({
-            user: 'id',
+            user: '++id',
             quests: '++id',
             choices: '++id, questId',
             scene_texts: '++id, sceneId',

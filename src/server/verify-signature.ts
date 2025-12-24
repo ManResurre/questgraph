@@ -1,9 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js";
+import {createClient} from "https://esm.sh/@supabase/supabase-js";
 
 const supabase = createClient(
     Deno.env.get("SUPABASE_URL"),
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+);
+
+const supabaseAnon = createClient(
+    Deno.env.get("SUPABASE_URL"),
+    Deno.env.get("SUPABASE_ANON_KEY")
 );
 
 const corsHeaders = {
@@ -21,7 +26,7 @@ async function verifySignature(publicKeyPem: string, challenge: string, signatur
     const publicKey = await crypto.subtle.importKey(
         "spki",
         binaryDer.buffer,
-        { name: "RSA-PSS", hash: "SHA-256" },
+        {name: "RSA-PSS", hash: "SHA-256"},
         false,
         ["verify"]
     );
@@ -30,7 +35,7 @@ async function verifySignature(publicKeyPem: string, challenge: string, signatur
     const encoder = new TextEncoder();
 
     return await crypto.subtle.verify(
-        { name: "RSA-PSS", saltLength: 32 },
+        {name: "RSA-PSS", saltLength: 32},
         publicKey,
         signature,
         encoder.encode(challenge)
@@ -39,20 +44,20 @@ async function verifySignature(publicKeyPem: string, challenge: string, signatur
 
 Deno.serve(async (req: Request) => {
     if (req.method === "OPTIONS") {
-        return new Response("ok", { headers: corsHeaders });
+        return new Response("ok", {headers: corsHeaders});
     }
 
     try {
-        const { user_id, signature } = await req.json();
+        const {user_id, signature} = await req.json();
 
-        const { data: userKey, error: keyErr } = await supabase
+        const {data: userKey, error: keyErr} = await supabase
             .from("user_keys")
             .select("public_key, challenge")
             .eq("id", user_id)
             .single();
 
         if (keyErr || !userKey) {
-            return new Response(JSON.stringify({ error: "Public key not found" }), {
+            return new Response(JSON.stringify({error: "Public key not found"}), {
                 status: 404,
                 headers: corsHeaders,
             });
@@ -60,7 +65,7 @@ Deno.serve(async (req: Request) => {
 
         const isValid = await verifySignature(userKey.public_key, userKey.challenge, signature);
         if (!isValid) {
-            return new Response(JSON.stringify({ error: "Invalid signature" }), {
+            return new Response(JSON.stringify({error: "Invalid signature"}), {
                 status: 401,
                 headers: corsHeaders,
             });
@@ -68,45 +73,45 @@ Deno.serve(async (req: Request) => {
 
         // Генерируем magic link для "фиктивного" email, привязанного к user_id
         const email = `${user_id}@example.com`;
-        const { data: link, error: genErr } = await supabase.auth.admin.generateLink({
+        const {data: link, error: genErr} = await supabase.auth.admin.generateLink({
             type: "magiclink",
             email,
         });
 
         if (genErr || !link?.properties?.hashed_token) {
-            return new Response(JSON.stringify({ error: genErr?.message || "Failed to generate link" }), {
+            return new Response(JSON.stringify({error: genErr?.message || "Failed to generate link"}), {
                 status: 500,
                 headers: corsHeaders,
             });
         }
 
         // Обмениваем hashed_token на реальную сессию
-        const { data: session, error: verifyErr } = await supabase.auth.verifyOtp({
+        const {data: session, error: verifyErr} = await supabaseAnon.auth.verifyOtp({
             type: "magiclink",
             token_hash: link.properties.hashed_token,
 
         });
 
         if (verifyErr || !session?.session) {
-            return new Response(JSON.stringify({ error: verifyErr?.message || "Failed to verify OTP" }), {
+            return new Response(JSON.stringify({error: verifyErr?.message || "Failed to verify OTP"}), {
                 status: 500,
                 headers: corsHeaders,
             });
         }
 
-        const { access_token, refresh_token } = session.session;
+        const {access_token, refresh_token, user} = session.session;
 
         // Можно тут же обнулить challenge, чтобы он стал одноразовым
         await supabase
             .from("user_keys")
-            .update({ challenge: null })
-            .eq("id", user_id);
+            .update({challenge: null, owner_id: user.id})
+            .eq("id", user_id).select();
 
-        return new Response(JSON.stringify({ access_token, refresh_token }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({access_token, refresh_token, userId: user.id}), {
+            headers: {...corsHeaders, "Content-Type": "application/json"},
         });
     } catch (err) {
-        return new Response(JSON.stringify({ error: String(err) }), {
+        return new Response(JSON.stringify({error: String(err)}), {
             status: 500,
             headers: corsHeaders,
         });

@@ -22,7 +22,7 @@ const Login = ({user}: LoginProps) => {
             setLoading(true);
 
             const challengeRes = await supabase.functions.invoke("get-challenge", {
-                body: {user_id: local.id},
+                body: {user_id: local.auth_id},
             });
             const {challenge} = challengeRes.data;
 
@@ -37,9 +37,16 @@ const Login = ({user}: LoginProps) => {
                 String.fromCharCode(...new Uint8Array(signatureBuffer))
             );
 
-            const verifyRes = await supabase.functions.invoke("verify-signature", {
-                body: {user_id: local.id, signature: signatureB64},
+           let verifyRes = await supabase.functions.invoke("verify-signature", {
+                body: {user_id: local.auth_id, signature: signatureB64},
             });
+
+           //first-time authorization feature
+            if(verifyRes.error){
+                verifyRes = await supabase.functions.invoke("verify-signature", {
+                    body: {user_id: local.auth_id, signature: signatureB64},
+                });
+            }
 
             const {access_token, refresh_token} = verifyRes.data;
 
