@@ -31,7 +31,7 @@ const SceneNode = ({data}: SceneNodeProps) => {
 
     return <div className={currentScene?.id == data.id ? 'neon-scene' : ''}>
         <div
-            className="hover:ring-1 ring-gray-600 relative border bg-card text-card-foreground dark:bg-neutral-800 rounded-[2px]">
+            className="max-w-[300px] hover:ring-1 ring-gray-600 relative border bg-card text-card-foreground dark:bg-neutral-800 rounded-[2px]">
             <div className="flex flex-col gap-y-2 font-normal text-gray-700 dark:text-gray-400 cursor-auto">
                 <CustomHandle id={`s${data.id}`}
                               type={'target'} position={Position.Left}/>

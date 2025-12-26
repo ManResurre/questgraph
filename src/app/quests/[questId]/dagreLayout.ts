@@ -1,8 +1,8 @@
 import {useCallback, useEffect} from 'react';
 import {applyNodeChanges, NodeChange, useNodesInitialized, useReactFlow} from '@xyflow/react';
 import dagre from 'dagre';
-import {CustomEdgeType, SceneNodeType} from "@/app/new-quests/[questId]/page";
 import {updatePositions, UpdatePositionsProps} from "@/lib/SceneRepository";
+import {CustomEdgeType, SceneNodeType} from "@/app/quests/[questId]/constants/graph";
 
 const defaultNodeWidth = 200;
 const defaultNodeHeight = 70;
@@ -10,12 +10,15 @@ const defaultNodeHeight = 70;
 const dagreGraph = new dagre.graphlib.Graph();
 let timeout;
 
-function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
+interface LayoutElementsProps {
     setNodes: (value: (((prevState: SceneNodeType[]) => SceneNodeType[]) | SceneNodeType[])) => void;
     nodes: SceneNodeType[];
     edges: CustomEdgeType[];
     setEdges: (value: (((prevState: CustomEdgeType[]) => CustomEdgeType[]) | CustomEdgeType[])) => void
-}) {
+    questId: number
+}
+
+export default function useLayoutElements({nodes, edges, setNodes, setEdges, questId}: LayoutElementsProps) {
     const nodesInitialized = useNodesInitialized(); // Проверяем, отмерились ли узлы
     const {fitView} = useReactFlow();
 
@@ -82,7 +85,7 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
                 } as NodeChange<SceneNodeType>;
             });
 
-        updatePositions(newPositions as UpdatePositionsProps[]).then(() => {
+        updatePositions(questId, newPositions as UpdatePositionsProps[]).then(() => {
             setNodes(nodes => applyNodeChanges(newPositions, nodes))
             fitView({
                 nodes: [{id: nodes[0].id}],
@@ -107,5 +110,3 @@ function useLayoutedElements({nodes, edges, setNodes, setEdges}: {
 
     return {onLayout: setupPositions}
 }
-
-export default useLayoutedElements;

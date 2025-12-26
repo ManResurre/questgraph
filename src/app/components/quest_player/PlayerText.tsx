@@ -7,8 +7,8 @@ import {createRoot} from "react-dom/client";
 import createCache from "@emotion/cache";
 import {CacheProvider} from "@emotion/react";
 import {ThemeProvider} from "@mui/material/styles";
-import {theme} from "@/theme";
-
+import {playerTheme, theme} from "@/theme";
+import CssBaseline from "@mui/material/CssBaseline";
 
 export interface TextProps {
     text: string;
@@ -128,7 +128,7 @@ function PlayerText({text}: TextProps) {
                     const props = {...node.attribs};
 
                     const p = parseStyleValues(props);
-                    console.log(p);
+                    // console.log(p);
                     // console.log(test);
                     // const children = node.children ? node.children?.map((child: any) => {
                     //         console.log('child', child);
@@ -159,10 +159,10 @@ function PlayerText({text}: TextProps) {
                 rootRef.current = createRoot(reactContainer);
 
                 // Инжектируем Tailwind CSS в Shadow DOM
-                const styleLink = document.createElement('link');
-                styleLink.rel = 'stylesheet';
-                styleLink.href = 'https://cdn.tailwindcss.com'; // или путь к вашему Tailwind
-                shadowRoot.appendChild(styleLink);
+                // const styleLink = document.createElement('link');
+                // styleLink.rel = 'stylesheet';
+                // styleLink.href = 'https://cdn.tailwindcss.com'; // или путь к вашему Tailwind
+                // shadowRoot.appendChild(styleLink);
             }
 
             // Рендерим контент
@@ -180,7 +180,8 @@ function PlayerText({text}: TextProps) {
 
             rootRef.current.render(
                 <CacheProvider value={cache}>
-                    <ThemeProvider theme={theme}>
+                    <ThemeProvider theme={playerTheme}>
+                        <CssBaseline/>
                         <Box>
                             {parsedContent}
                         </Box>

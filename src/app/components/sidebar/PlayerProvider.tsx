@@ -47,6 +47,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({children}) => {
     useEffect(() => {
         if (!scenes?.length)
             return;
+
         setCurrentScene(scenes[0].data)
         // if (setViewport)
         //     setViewport({...scenes[0].position, zoom: 0.7}, {duration: 800})

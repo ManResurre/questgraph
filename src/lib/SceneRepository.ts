@@ -1,8 +1,8 @@
-import {Choice, db, Scene, SceneChoice, SceneText} from "@/lib/db";
+import {Choice, db, Scene, SceneText} from "@/lib/db";
 import {FinalConnectionState} from "@xyflow/react";
 import {parseLocations, parsePaths} from "@/lib/RepositoryHelper";
 import supabase from "@/supabaseClient";
-import {getChoicesByScene} from "@/lib/ChoiceRepository";
+import {ISceneFormData} from "@/app/components/rf/SceneNodeEdit";
 
 export interface SceneFullData extends Scene, Record<string, unknown> {
     choices?: Choice[];
@@ -12,7 +12,7 @@ export interface SceneFullData extends Scene, Record<string, unknown> {
 
 export async function updateChoices(sceneId: number, choices: Choice[]) {
     // удаляем все старые связи для этой сцены
-    const { error: delErr } = await supabase
+    const {error: delErr} = await supabase
         .from("scene_choice")
         .delete()
         .eq("scene_id", sceneId);
@@ -26,7 +26,7 @@ export async function updateChoices(sceneId: number, choices: Choice[]) {
     }));
 
     // вставляем новые записи
-    const { error: insErr } = await supabase
+    const {error: insErr} = await supabase
         .from("scene_choice")
         .insert(sceneChoices);
 
@@ -34,7 +34,7 @@ export async function updateChoices(sceneId: number, choices: Choice[]) {
 }
 
 export async function getScenesWithChoices(questId: number) {
-    const { data: scenes, error } = await supabase
+    const {data: scenes, error} = await supabase
         .from("scene")
         .select(`
       id,
@@ -56,7 +56,8 @@ export async function getScenesWithChoices(questId: number) {
         )
       )
     `)
-        .eq("quest_id", questId);
+        .eq("quest_id", questId)
+        .order("id", {ascending: true});
 
     if (error) throw error;
     if (!scenes?.length) return [];
@@ -66,7 +67,7 @@ export async function getScenesWithChoices(questId: number) {
         id: scene.id?.toString(),
         type: "sceneNode",
         dragHandle: ".drag-handle",
-        position: scene.position ? JSON.parse(scene.position) : { x: 0, y: 0 },
+        position: scene.position ? JSON.parse(scene.position) : {x: 0, y: 0},
         data: {
             id: scene.id,
             name: scene.name,
@@ -76,9 +77,9 @@ export async function getScenesWithChoices(questId: number) {
     }));
 }
 
-export default async function updateScene(scene: SceneFullData) {
+export default async function updateScene(scene: ISceneFormData) {
     // обновляем саму сцену
-    const { error: sceneErr } = await supabase
+    const {error: sceneErr} = await supabase
         .from("scene")
         .update({
             name: scene.name,
@@ -98,7 +99,7 @@ export default async function updateScene(scene: SceneFullData) {
 
 export async function updateSceneTexts(sceneId: number, texts: SceneText[]) {
     // удаляем все старые тексты для этой сцены
-    const { error: delErr } = await supabase
+    const {data, error: delErr} = await supabase
         .from("scene_texts")
         .delete()
         .eq("scene_id", sceneId);
@@ -106,36 +107,61 @@ export async function updateSceneTexts(sceneId: number, texts: SceneText[]) {
     if (delErr) throw delErr;
 
     // готовим новые тексты
-    const preparedTexts = texts.map(text => ({
-        ...text,
+    const preparedTexts = texts.map(scene_text => ({
+        text: scene_text.text,
         scene_id: sceneId, // поле в таблице
     }));
 
     // вставляем новые записи
-    const { error: insErr } = await supabase
+    const {error: insErr} = await supabase
         .from("scene_texts")
         .insert(preparedTexts);
 
     if (insErr) throw insErr;
 }
 
-
-
-
 export async function createScene(scene: Scene) {
-    return db.scenes.add(scene);
+    console.log(scene);
+    // return ;
+    const {data, error} = await supabase
+        .from("scene")
+        .insert([scene]) // вставляем объект
+        .select();       // возвращаем вставленную строку
+
+    if (error) {
+        console.error("Error creating scene:", error);
+        throw error;
+    }
+
+    return data?.[0]; // возвращаем созданную сцену
 }
 
+// export async function createScene(scene: Scene) {
+//     return db.scenes.add(scene);
+// }
+
+// export async function deleteScene(id: number) {
+//     await db.transaction('rw',
+//         db.scenes,
+//         db.scene_texts,
+//         db.scene_choice,
+//         async () => {
+//             await db.scene_texts.where('sceneId').equals(id).delete();
+//             await db.scene_choice.where('sceneId').equals(id).delete();
+//             await db.scenes.delete(id);
+//         });
+// }
+
 export async function deleteScene(id: number) {
-    await db.transaction('rw',
-        db.scenes,
-        db.scene_texts,
-        db.scene_choice,
-        async () => {
-            await db.scene_texts.where('sceneId').equals(id).delete();
-            await db.scene_choice.where('sceneId').equals(id).delete();
-            await db.scenes.delete(id);
-        });
+    const { error } = await supabase
+        .from("scene")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        console.error("Error deleting scene:", error);
+        throw error;
+    }
 }
 
 export async function createFromFile(
@@ -200,7 +226,7 @@ export async function createFromFile(
     }
 
     if (choicesToInsert.length > 0) {
-        const { error: choicesError } = await supabase
+        const {error: choicesError} = await supabase
             .from("choice")
             .insert(choicesToInsert);
         if (choicesError) throw choicesError;
@@ -208,27 +234,34 @@ export async function createFromFile(
 }
 
 
-
 export interface UpdatePositionsProps {
     id: string;
     position: { x: number, y: number };
 }
 
-export async function updatePositions(positions: UpdatePositionsProps[]) {
+export async function updatePositions(questId: number, positions: UpdatePositionsProps[]) {
     try {
-        // Обновляем только позиции без создания полных объектов Scene
-        const updatePromises = positions.map(pos =>
-            db.scenes.update(parseInt(pos.id), {
-                position: JSON.stringify(pos.position),
-                // locPosition: true
-            })
-        );
+        // формируем массив для upsert
+        const updates = positions.map(pos => ({
+            id: parseInt(pos.id),
+            quest_id: questId,
+            position: JSON.stringify(pos.position),
+            // locPosition: true // если нужно фиксировать
+        }));
 
-        const results = await Promise.all(updatePromises);
-        const successfulUpdates = results.filter(result => result > 0).length;
+        const {data, error} = await supabase
+            .from('scene')
+            .upsert(updates, {onConflict: 'id'}); // обновление по PK
 
-        console.log(`Successfully updated ${successfulUpdates} scene positions`);
-        return {success: true, updatedCount: successfulUpdates};
+        if (error) {
+            console.error('Error updating scene positions:', error);
+            throw error;
+        }
+
+        const updatedCount = data?.length ?? 0;
+        console.log(`Successfully updated ${updatedCount} scene positions`);
+
+        return {success: true, updatedCount};
     } catch (error) {
         console.error('Error updating scene positions:', error);
         throw new Error(`Failed to update scene positions: ${error}`);

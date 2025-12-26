@@ -5,6 +5,7 @@ import {useParams} from "next/navigation";
 import {Box, Button, IconButton, Stack, TextField} from "@mui/material";
 import {saveChoice} from "@/lib/ChoiceRepository";
 import ClearIcon from '@mui/icons-material/Clear';
+import {useQueryClient} from "@tanstack/react-query";
 
 interface NewChoiceProps {
     editing?: Choice | undefined
@@ -12,13 +13,14 @@ interface NewChoiceProps {
 
 const NewChoice = ({editing}: NewChoiceProps) => {
     const {questId} = useParams();
+    const queryClient = useQueryClient();
 
     const initialValues = useMemo(() => ({
-        id: undefined,
-        questId: Number(questId!),
+        id: null,
+        quest_id: Number(questId!),
         label: '',
         text: '',
-        nextSceneId: undefined,
+        nextSceneId: null,
     }), [questId])
 
     const {control, formState: {errors}, handleSubmit, reset} = useForm<Choice>({
@@ -31,8 +33,9 @@ const NewChoice = ({editing}: NewChoiceProps) => {
         reset(editing);
     }, [editing])
 
-    const onSubmit = (data: Choice) => {
-        saveChoice(data);
+    const onSubmit = async (data: Choice) => {
+        await saveChoice(data);
+        await queryClient.invalidateQueries({queryKey: ["getChoices"]});
     }
 
     const handleClear = () => {
@@ -92,10 +95,10 @@ const NewChoice = ({editing}: NewChoiceProps) => {
 
         <Box display="flex" justifyContent="space-between" gap={1}>
             <Button size="small"
-                     variant="contained"
-                     type="submit"
-                     fullWidth
-        >Save</Button>
+                    variant="contained"
+                    type="submit"
+                    fullWidth
+            >Save</Button>
 
             <IconButton onClick={() => handleClear()}><ClearIcon/></IconButton>
         </Box>

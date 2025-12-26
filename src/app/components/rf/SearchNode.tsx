@@ -9,6 +9,7 @@ import {Controller, useForm} from "react-hook-form";
 import {FinalConnectionState, useReactFlow} from "@xyflow/react";
 import {setNextSceneId} from "@/lib/ChoiceRepository";
 import {useScenesWithChoices} from "@/app/hooks/scene";
+import {useQueryClient} from "@tanstack/react-query";
 
 export interface ISearchNodeFormData {
     scene?: Scene | null
@@ -24,7 +25,8 @@ export interface ISearchNodeProps {
 const SearchNode = ({id, data}: ISearchNodeProps) => {
     const {questId} = useParams();
     const {deleteElements} = useReactFlow();
-    const {data:scenes} = useScenesWithChoices(Number(questId));
+    const {data: scenes} = useScenesWithChoices(Number(questId));
+    const queryClient = useQueryClient();
 
     const {handleSubmit, control, formState: {errors}} = useForm<ISearchNodeFormData>({
         defaultValues: {
@@ -32,15 +34,16 @@ const SearchNode = ({id, data}: ISearchNodeProps) => {
         }
     });
 
-    const onSubmit = (search: ISearchNodeFormData) => {
+    const onSubmit = async (search: ISearchNodeFormData) => {
         if (!search || !search.scene)
             return;
         if (!data.connectionState.fromHandle || !data.connectionState.fromHandle.id)
             return;
 
         const choiceId = parseInt(data.connectionState.fromHandle.id.substring(1))
-        setNextSceneId(choiceId, search.scene.id);
-        deleteElements({nodes: [{id}]});
+        await setNextSceneId(choiceId, search.scene.id);
+        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
+        // await deleteElements({nodes: [{id}]});
     }
 
     return <div
@@ -61,7 +64,8 @@ const SearchNode = ({id, data}: ISearchNodeProps) => {
                     name="scene"
                     control={control}
                     render={({field: {value, onChange}}) => (
-                        <SceneAutocomplete onChange={onChange} value={value} scenes={scenes}/>
+                        <SceneAutocomplete onChange={onChange} value={value}
+                                           scenes={scenes?.map(scene => scene.data)}/>
                     )}
                 />
 

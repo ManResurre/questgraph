@@ -1,3 +1,31 @@
+// export function parseLocations(text: string) {
+//     const result = new Map();
+//     const blocks = text.split(/(?=Loc\d+-\d+\s)/);
+//
+//     for (const block of blocks) {
+//         if (!block.trim()) continue;
+//
+//         const [header, ...lines] = block.trim().split('\n');
+//         const locMatch = header.match(/^(Loc\d+-\d+)\s/);
+//         if (!locMatch) continue;
+//
+//         const locKey = locMatch[1];
+//         const mainText = header.substring(locMatch[0].length).trim();
+//         const descriptionLines = [mainText];
+//
+//         for (const line of lines) {
+//             const trimmedLine = line.trim();
+//             if (trimmedLine.startsWith('*')) {
+//                 const content = trimmedLine.substring(1).trim();
+//                 if (content) descriptionLines.push(content);
+//             }
+//         }
+//
+//         result.set(locKey, descriptionLines);
+//     }
+//
+//     return result;
+// }
 export function parseLocations(text: string) {
     const result = new Map();
     const blocks = text.split(/(?=Loc\d+-\d+\s)/);
@@ -5,23 +33,27 @@ export function parseLocations(text: string) {
     for (const block of blocks) {
         if (!block.trim()) continue;
 
-        const [header, ...lines] = block.trim().split('\n');
-        const locMatch = header.match(/^(Loc\d+-\d+)\s/);
+        const [header, ...lines] = block.trim().split("\n");
+        const locMatch = header.match(/^(Loc\d+)-\d+\s/); // теперь берём только LocXX
         if (!locMatch) continue;
 
-        const locKey = locMatch[1];
+        const locKey = locMatch[1]; // например "Loc15"
         const mainText = header.substring(locMatch[0].length).trim();
-        const descriptionLines = [mainText];
 
+        // собираем весь текст блока (основной + строки со звёздочками)
+        const descriptionParts = [mainText];
         for (const line of lines) {
             const trimmedLine = line.trim();
-            if (trimmedLine.startsWith('*')) {
-                const content = trimmedLine.substring(1).trim();
-                if (content) descriptionLines.push(content);
+            if (trimmedLine.startsWith("*")) {
+                descriptionParts.push(trimmedLine); // сохраняем со звёздочкой
             }
         }
 
-        result.set(locKey, descriptionLines);
+        const fullText = descriptionParts.join("\n");
+
+        const arr: string[] = result.get(locKey) ?? [];
+        arr.push(fullText);
+        result.set(locKey, arr);
     }
 
     return result;

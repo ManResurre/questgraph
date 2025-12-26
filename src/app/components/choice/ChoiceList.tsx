@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState, useTransition} from "react";
+import React, {useCallback, useMemo, useRef, useState, useTransition} from "react";
 import AvailableChoiceList from "@/app/components/choice/AvailableChoiceList";
 import {Box, CircularProgress, TextField} from "@mui/material";
 import {Virtuoso, VirtuosoHandle} from "react-virtuoso";
@@ -8,6 +8,8 @@ import {useLiveQuery} from "dexie-react-hooks";
 import {getChoices} from "@/lib/ChoiceRepository";
 import {useParams} from "next/navigation";
 import ChoiceItem from "@/app/components/choice/ChoiceItem";
+import {useChoices} from "@/app/hooks/choice";
+import {useQueryClient} from "@tanstack/react-query";
 
 interface ChoiceListProps {
     editing?: Choice | undefined,
@@ -19,15 +21,29 @@ const ChoiceList = ({editing, onEdit}: ChoiceListProps) => {
     const [searchTerm, setSearchTerm] = useState("");
     const virtuosoRef = useRef<VirtuosoHandle>(null);
     const [isPending, startTransition] = useTransition();
+    const {data: choices} = useChoices(Number(questId));
 
-    const choices = useLiveQuery(async () => {
-        const data = await getChoices(Number(questId));
-        if (!data)
-            return;
-        return data.sort((a: Choice, b: Choice) => {
-            return Number(b.id) - Number(a.id)
-        })
-    })
+    const filteredChoices = useMemo(() => {
+        if (!choices) return [];
+        if (!searchTerm) return choices;
+        const term = searchTerm.toLowerCase();
+        return choices
+            .filter(
+                (choice: Choice) =>
+                    choice.label.toLowerCase().includes(term) ||
+                    choice.text.toLowerCase().includes(term)
+            )
+            .sort((a: Choice, b: Choice) => {
+                const aLabel = a.label.toLowerCase();
+                const aText = a.text.toLowerCase();
+                const bLabel = b.label.toLowerCase();
+                const bText = b.text.toLowerCase();
+                const aExact = aLabel === term || aText === term ? 1 : 0;
+                const bExact = bLabel === term || bText === term ? 1 : 0;
+                // сначала те, где полное совпадение
+                return bExact - aExact;
+            });
+    }, [choices, searchTerm]);
 
     const handleSearch = useCallback((term: string) => {
         if (!choices || !choices.length) {
@@ -82,7 +98,7 @@ const ChoiceList = ({editing, onEdit}: ChoiceListProps) => {
                     scrollbarWidth: 'none'
                 }}
                 className="hide-scrollbar"
-                data={choices}
+                data={filteredChoices}
                 itemContent={(index: number, choice: Choice) =>
                     <ChoiceItem highlight={searchTerm} onEdit={onEdit} choice={choice}/>
                 }

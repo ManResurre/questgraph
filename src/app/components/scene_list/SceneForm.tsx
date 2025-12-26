@@ -23,7 +23,7 @@ export interface ISceneFormData extends Scene {
     name: string;
     texts: Partial<SceneText>[];
     choices: Partial<Choice>[];
-    questId: number;
+    quest_id: number;
 }
 
 function SceneForm({scene}: ISceneFormProps) {
@@ -38,7 +38,7 @@ function SceneForm({scene}: ISceneFormProps) {
             name: scene?.name ?? '',
             texts: scene?.texts ?? [],
             choices: scene?.choices ?? [],
-            questId: Number(questId)
+            quest_id: Number(questId)
         }
     });
 

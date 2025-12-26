@@ -21,11 +21,11 @@ export interface Status {
 }
 
 export interface Choice {
-    id?: number;
-    questId: number;
+    id?: number | null;
+    quest_id: number;
     label: string;
     text: string;
-    nextSceneId?: number;
+    nextSceneId?: number | null;
 }
 
 export interface SceneChoice {
@@ -58,7 +58,7 @@ export interface ChoiceParam {
 export interface Scene {
     id?: number;
     name: string;
-    questId: number;
+    quest_id: number;
     position?: string;
     locPosition?: boolean;
     samplyLink?: string;

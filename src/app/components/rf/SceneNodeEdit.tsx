@@ -1,16 +1,16 @@
 import React, {useCallback} from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
-import {db, SceneText} from "@/lib/db";
+import {SceneText} from "@/lib/db";
 import {Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, Stack, TextField} from "@mui/material";
 import {Controller, useForm} from "react-hook-form";
 import ChoiceAutocomplete from "@/app/components/choice/ChoiceAutocomplete";
-import {useLiveQuery} from "dexie-react-hooks";
 import updateScene, {deleteScene, SceneFullData} from "@/lib/SceneRepository";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 import {useParams} from "next/navigation";
 import CheckIcon from '@mui/icons-material/Check';
 import {useChoices} from "@/app/hooks/choice";
+import {useQueryClient} from "@tanstack/react-query";
 
 interface IChoice {
     id: string | number;
@@ -20,12 +20,12 @@ interface IChoice {
     nextSceneId: number;
 }
 
-interface ISceneFormData {
-    id?: string | number;
+export interface ISceneFormData {
+    id?: number;
     name: string;
     choices: IChoice[];
     texts: SceneText[];
-    questId: number;
+    quest_id: number;
     locPosition: boolean;
     samplyLink?: string;
 }
@@ -46,14 +46,15 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
     const {questId} = useParams();
     const {closeSidebar} = useSidebar();
     const {data: choices} = useChoices(Number(questId));
+    const queryClient = useQueryClient();
 
     const methods = useForm<ISceneFormData>({
         defaultValues: {
-            id: data?.id || undefined,
+            id: Number(data?.id) || undefined,
             name: data?.name ?? '',
             texts: data?.texts ?? [],
             choices: data.choices ?? [],
-            questId: Number(2),
+            quest_id: Number(questId),
             locPosition: data?.locPosition ?? false,
             samplyLink: data.samplyLink
         }
@@ -61,18 +62,21 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
 
     const {handleSubmit, control, formState: {errors}} = methods;
 
-    const onSubmit = (scene: ISceneFormData) => {
-        updateScene(scene as SceneFullData)
+    const onSubmit = useCallback(async (scene: ISceneFormData) => {
+        await updateScene(scene)
         closeSidebar();
-    }
+        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
+    }, []);
 
-    const handleDelete = () => {
-        deleteScene(Number(data.id));
+    const handleDelete = useCallback(async () => {
+        await deleteScene(Number(data.id));
+        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
         closeSidebar();
-    }
+    }, [])
 
-    const handleApply = useCallback(() => {
-        updateScene(methods.getValues() as SceneFullData)
+    const handleApply = useCallback(async () => {
+        await updateScene(methods.getValues());
+        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
     }, [])
 
     return <Box

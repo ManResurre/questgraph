@@ -4,6 +4,8 @@ import {getChoice, setNextSceneId} from "@/lib/ChoiceRepository";
 import {useLiveQuery} from "dexie-react-hooks";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {useChoice} from "@/app/hooks/choice";
+import {useQueryClient} from "@tanstack/react-query";
 
 interface EdgeEditProps {
     selectedChoiceId: number
@@ -11,10 +13,12 @@ interface EdgeEditProps {
 
 const EdgeEdit = ({selectedChoiceId}: EdgeEditProps) => {
     const {closeSidebar} = useSidebar();
-    const choice = useLiveQuery(() => getChoice(selectedChoiceId))
+    const {data: choice} = useChoice(selectedChoiceId);
+    const queryClient = useQueryClient();
 
-    const handleRemoveClick = () => {
-        setNextSceneId(selectedChoiceId);
+    const handleRemoveClick = async () => {
+        await setNextSceneId(selectedChoiceId);
+        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
         closeSidebar();
     }
 
