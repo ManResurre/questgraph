@@ -1,17 +1,19 @@
-import React, {useState} from "react";
-import NewChoice from "@/app/components/choice/NewChoice";
+import React from "react";
+import EditChoice from "@/app/components/choice/EditChoice";
 import {Divider, Stack} from "@mui/material";
 import ChoiceList from "@/app/components/choice/ChoiceList";
-import {Choice} from "@/lib/db";
+import "./style.scss";
 
 const ChoiceManagement = () => {
-    const [editingChoice,setEditingChoice] = useState<Choice>()
 
-    return <Stack p={1} spacing={1}>
-        <NewChoice editing={editingChoice}/>
+    return <Stack p={1}
+                  spacing={1}
+    >
+        <EditChoice/>
         <Divider/>
-        <ChoiceList onEdit={setEditingChoice} editing={editingChoice}/>
+        <ChoiceList/>
     </Stack>
+
 }
 
 export default React.memo(ChoiceManagement);

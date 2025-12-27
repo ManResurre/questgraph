@@ -4,14 +4,20 @@ import {Box, IconButton, ListItem, ListItemText, Stack, Typography} from "@mui/m
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from '@mui/icons-material/Edit';
 import {deleteChoice} from "@/lib/ChoiceRepository";
+import {useChoiceContext} from "@/app/components/choice/ChoiceProvider";
+import {useQueryClient} from "@tanstack/react-query";
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 
 export interface ChoiceItemProps {
     choice: Choice,
     highlight?: string,
-    onEdit?: ((value: (((prevState: (Choice | undefined)) => (Choice | undefined)) | Choice | undefined)) => void) | undefined
 }
 
-const ChoiceItem = React.memo(({choice, highlight, onEdit}: ChoiceItemProps) => {
+const ChoiceItem = React.memo(({choice, highlight}: ChoiceItemProps) => {
+    const queryClient = useQueryClient();
+    const {setEditingChoice} = useChoiceContext();
+    const {setLoading} = useSidebar();
+
     const highlightText = useCallback((text: string) => {
         if (!highlight || !text) return text;
 
@@ -25,8 +31,15 @@ const ChoiceItem = React.memo(({choice, highlight, onEdit}: ChoiceItemProps) => 
         );
     }, [highlight]);
 
-    const handleDelete = () => {
-        deleteChoice(Number(choice.id));
+    const handleDelete = useCallback(async () => {
+        setLoading(true);
+        await deleteChoice(Number(choice.id));
+        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
+        await queryClient.invalidateQueries({queryKey: ["getChoices"]});
+    }, [choice])
+
+    const handleEdit = () => {
+        setEditingChoice(choice)
     }
 
     return (
@@ -34,11 +47,7 @@ const ChoiceItem = React.memo(({choice, highlight, onEdit}: ChoiceItemProps) => 
             secondaryAction={
                 <Box>
                     <IconButton
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (onEdit)
-                                onEdit(choice);
-                        }}
+                        onClick={handleEdit}
                         sx={{mr: 0.5}}
                     >
                         <EditIcon fontSize="small"/>

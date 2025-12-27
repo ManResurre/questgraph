@@ -3,9 +3,10 @@ import React, {useEffect, useRef} from "react";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneNodeEdit from "@/app/components/rf/SceneNodeEdit";
 import EdgeEdit from "@/app/components/rf/EdgeEdit";
-import NewChoice from "@/app/components/choice/NewChoice";
+import NewChoice from "@/app/components/choice/EditChoice";
 import ChoiceList from "@/app/components/choice/ChoiceList";
 import ChoiceManagement from "@/app/components/choice/ChoiceManagement";
+import {ChoiceProvider} from "@/app/components/choice/ChoiceProvider";
 
 const GraphSidebar = () => {
     const {
@@ -14,7 +15,8 @@ const GraphSidebar = () => {
         selectedElementData,
         selectedNodeId,
         selectedChoiceId,
-        newChoice
+        newChoice,
+        loading,
     } = useSidebar();
 
     const theme = useTheme();
@@ -121,14 +123,21 @@ const GraphSidebar = () => {
                 }}
             />
 
-            <Box sx={{
-                width: '100%',
-                height: '100%',
-                overflow: 'auto',
-            }}>
+            <Box
+                sx={{
+                    width: '100%',
+                    height: '100%',
+                    overflow: 'auto',
+                }}
+                className={loading ? "noise-effect" : ""}
+            >
                 {selectedNodeId && <SceneNodeEdit data={selectedElementData.data}/>}
                 {selectedChoiceId && <EdgeEdit selectedChoiceId={selectedChoiceId}/>}
-                {newChoice && <ChoiceManagement/>}
+                {newChoice &&
+                    <ChoiceProvider>
+                        <ChoiceManagement/>
+                    </ChoiceProvider>
+                }
             </Box>
         </Drawer>
     );

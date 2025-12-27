@@ -6,9 +6,9 @@ import {SettingsIcon} from "lucide-react";
 import CustomHandle from "@/app/components/rf/CustomHandle";
 import {SceneFullData} from "@/lib/SceneRepository";
 import {NodeProps, XYPosition} from "@xyflow/react";
-import "./style.scss";
 import {usePlayer} from "@/app/components/sidebar/PlayerProvider";
 import PlayerText from "@/app/components/quest_player/PlayerText";
+import "./style.scss";
 
 export interface SceneNodeData extends Node {
     id: string;
@@ -20,7 +20,7 @@ type SceneNodeProps = NodeProps<SceneNodeData>;
 
 const SceneNode = ({data}: SceneNodeProps) => {
     const {openSidebar} = useSidebar();
-    const {currentScene} = usePlayer();
+    const {currentScene, setCurrentScene} = usePlayer();
 
     const handleClick = useCallback(() => {
         openSidebar({
@@ -29,7 +29,15 @@ const SceneNode = ({data}: SceneNodeProps) => {
         });
     }, [data])
 
-    return <div className={currentScene?.id == data.id ? 'neon-scene' : ''}>
+    const handleClickCard = () => {
+        localStorage.setItem('selectedNode', String(data.id));
+        setCurrentScene(data);
+    }
+
+    return <div
+        className={currentScene?.id == data.id ? 'neon-scene' : ''}
+        onClick={handleClickCard}
+    >
         <div
             className="max-w-[300px] hover:ring-1 ring-gray-600 relative border bg-card text-card-foreground dark:bg-neutral-800 rounded-[2px]">
             <div className="flex flex-col gap-y-2 font-normal text-gray-700 dark:text-gray-400 cursor-auto">
@@ -56,7 +64,7 @@ const SceneNode = ({data}: SceneNodeProps) => {
                     scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent">
                         <div
                             className="text-xs text-gray-600 dark:text-gray-300 font-sans whitespace-pre-wrap break-words leading-4">
-                            {data.texts && <PlayerText text={data.texts.map(t=>t.text).join('')}/>}
+                            {data.texts && <PlayerText text={data.texts.map(t => t.text).join('')}/>}
                         </div>
                     </div>
                 </div>

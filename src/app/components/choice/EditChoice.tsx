@@ -6,21 +6,21 @@ import {Box, Button, IconButton, Stack, TextField} from "@mui/material";
 import {saveChoice} from "@/lib/ChoiceRepository";
 import ClearIcon from '@mui/icons-material/Clear';
 import {useQueryClient} from "@tanstack/react-query";
+import {useChoiceContext} from "@/app/components/choice/ChoiceProvider";
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 
-interface NewChoiceProps {
-    editing?: Choice | undefined
-}
-
-const NewChoice = ({editing}: NewChoiceProps) => {
+const EditChoice = () => {
     const {questId} = useParams();
     const queryClient = useQueryClient();
+    const {editingChoice, setEditingChoice} = useChoiceContext();
+    const {setLoading} = useSidebar();
 
     const initialValues = useMemo(() => ({
-        id: null,
-        quest_id: Number(questId!),
+        id: undefined,
+        quest_id: Number(questId),
         label: '',
         text: '',
-        nextSceneId: null,
+        nextSceneId: undefined,
     }), [questId])
 
     const {control, formState: {errors}, handleSubmit, reset} = useForm<Choice>({
@@ -28,18 +28,20 @@ const NewChoice = ({editing}: NewChoiceProps) => {
     })
 
     useEffect(() => {
-        if (!editing)
-            return;
-        reset(editing);
-    }, [editing])
+        if (editingChoice)
+            reset(editingChoice);
+    }, [editingChoice])
 
     const onSubmit = async (data: Choice) => {
+        setLoading(true);
         await saveChoice(data);
         await queryClient.invalidateQueries({queryKey: ["getChoices"]});
+        handleClear();
     }
 
     const handleClear = () => {
         reset(initialValues);
+        setEditingChoice(undefined);
     }
 
     return <Stack
@@ -105,4 +107,4 @@ const NewChoice = ({editing}: NewChoiceProps) => {
     </Stack>
 }
 
-export default React.memo(NewChoice);
+export default React.memo(EditChoice);

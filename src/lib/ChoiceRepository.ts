@@ -1,5 +1,6 @@
 import {Choice, db} from "@/lib/db";
 import supabase from "@/supabaseClient";
+import {cleanUndefined} from "@/lib/RepositoryHelper";
 
 export async function setNextSceneId(choiceId: number, sceneId?: number) {
     const {error} = await supabase
@@ -9,6 +10,18 @@ export async function setNextSceneId(choiceId: number, sceneId?: number) {
 
     if (error) {
         console.error('Error updating nextSceneId:', error);
+        throw error;
+    }
+}
+
+export async function updateChoice(choice: Choice) {
+    const {error} = await supabase
+        .from('choice')
+        .update(choice)
+        .eq('id', Number(choice.id));
+
+    if (error) {
+        console.error('Error updating Choice:', error);
         throw error;
     }
 }
@@ -57,14 +70,13 @@ export function clearChoices(questId: number) {
 // }
 
 export async function saveChoice(choice: Choice) {
-    console.log(choice);
-    const {error} = await supabase.from("choice").insert([{
-        label: choice.label,
-        text: choice.text,
-        quest_id: choice.quest_id
-    }]);
+    const { error } = await supabase
+        .from("choice")
+        .upsert(cleanUndefined(choice));
+
     if (error) throw error;
 }
+
 
 // export async function saveChoice(data: Choice) {
 //     db.choices.put(data);
@@ -74,9 +86,20 @@ export async function saveChoice(choice: Choice) {
 //     return db.choices.where('questId').equals(questId).toArray();
 // }
 
-export function deleteChoice(choiceId: number) {
-    return db.choices.delete(choiceId);
+// export function deleteChoice(choiceId: number) {
+//     return db.choices.delete(choiceId);
+// }
+export async function deleteChoice(choiceId: number) {
+    const {error} = await supabase
+        .from("choice")
+        .delete()
+        .eq("id", choiceId);
+
+    if (error) {
+        throw error;
+    }
 }
+
 
 export async function getChoices(questId: number) {
     const {data} = await supabase

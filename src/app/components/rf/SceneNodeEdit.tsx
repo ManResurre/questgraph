@@ -4,7 +4,7 @@ import {SceneText} from "@/lib/db";
 import {Box, Button, Checkbox, FormControl, FormControlLabel, IconButton, Stack, TextField} from "@mui/material";
 import {Controller, useForm} from "react-hook-form";
 import ChoiceAutocomplete from "@/app/components/choice/ChoiceAutocomplete";
-import updateScene, {deleteScene, SceneFullData} from "@/lib/SceneRepository";
+import updateScene, {deleteScene} from "@/lib/SceneRepository";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 import {useParams} from "next/navigation";
@@ -44,7 +44,7 @@ interface SceneNodeEditProps {
 
 const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
     const {questId} = useParams();
-    const {closeSidebar} = useSidebar();
+    const {closeSidebar, setLoading, loading} = useSidebar();
     const {data: choices} = useChoices(Number(questId));
     const queryClient = useQueryClient();
 
@@ -63,9 +63,11 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
     const {handleSubmit, control, formState: {errors}} = methods;
 
     const onSubmit = useCallback(async (scene: ISceneFormData) => {
+        setLoading(true);
         await updateScene(scene)
-        closeSidebar();
         await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
+        setLoading(false);
+        closeSidebar();
     }, []);
 
     const handleDelete = useCallback(async () => {
@@ -164,7 +166,6 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
             />
 
             <SceneFormText methods={methods}/>
-
 
             <Box display="flex" justifyContent="space-between" gap={1}>
                 <Button size="small"

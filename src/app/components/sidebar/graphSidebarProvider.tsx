@@ -1,4 +1,5 @@
-import React, {createContext, useContext, useState, ReactNode} from 'react';
+import React, {createContext, useContext, useState, ReactNode, useEffect} from 'react';
+import {useIsFetching} from "@tanstack/react-query";
 
 interface OpenSidebarProps {
     nodeId?: number,
@@ -18,6 +19,8 @@ interface GraphSidebarContextType {
     selectedChoiceId: number | null;
     newChoice: boolean;
     setNewChoice: (type: boolean) => void;
+    loading: boolean,
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GraphSidebarContext = createContext<GraphSidebarContextType | undefined>(undefined);
@@ -42,6 +45,13 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({child
 
     const [selectedElementData, setSelectedElementData] = useState<any>(null);
     const [typeDraggable, setTypeDraggable] = useState<string | null>(null);
+
+    const [loading, setLoading] = useState<boolean>(false);
+    const fetching = useIsFetching({queryKey: ["getChoices", "scenesWithChoices"]});
+
+    useEffect(() => {
+        setLoading(() => fetching ? Boolean(fetching) : false);
+    }, [fetching])
 
     const openSidebar = ({
                              nodeId,
@@ -82,7 +92,9 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({child
                 setTypeDraggable,
                 selectedChoiceId,
                 setNewChoice,
-                newChoice
+                newChoice,
+                loading,
+                setLoading
             }}
         >
             {children}

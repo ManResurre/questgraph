@@ -11,12 +11,7 @@ import ChoiceItem from "@/app/components/choice/ChoiceItem";
 import {useChoices} from "@/app/hooks/choice";
 import {useQueryClient} from "@tanstack/react-query";
 
-interface ChoiceListProps {
-    editing?: Choice | undefined,
-    onEdit?: (value: (((prevState: (Choice | undefined)) => (Choice | undefined)) | Choice | undefined)) => void
-}
-
-const ChoiceList = ({editing, onEdit}: ChoiceListProps) => {
+const ChoiceList = () => {
     const {questId} = useParams();
     const [searchTerm, setSearchTerm] = useState("");
     const virtuosoRef = useRef<VirtuosoHandle>(null);
@@ -100,7 +95,7 @@ const ChoiceList = ({editing, onEdit}: ChoiceListProps) => {
                 className="hide-scrollbar"
                 data={filteredChoices}
                 itemContent={(index: number, choice: Choice) =>
-                    <ChoiceItem highlight={searchTerm} onEdit={onEdit} choice={choice}/>
+                    <ChoiceItem highlight={searchTerm} choice={choice}/>
                 }
             />
         </Box>

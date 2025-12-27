@@ -1,28 +1,27 @@
 import {Controller, useForm} from "react-hook-form";
 import {Button, FormControl, Paper, Stack, TextField} from "@mui/material";
 import React from "react";
-import {db, Quest} from "@/lib/db";
+import {Quest} from "@/lib/db";
 import {createQuest} from "@/lib/QuestRepository";
-import {QueryObserverResult, RefetchOptions} from "@tanstack/react-query";
+import {useQueryClient} from "@tanstack/react-query";
 import {User} from "@supabase/supabase-js";
 
 interface QuestEditFormProps {
-    refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<any, Error>>,
     user: User
 }
 
-export function QuestEditForm({refetch, user}: QuestEditFormProps) {
+export function QuestEditForm({user}: QuestEditFormProps) {
     const {handleSubmit, control, reset} = useForm<Quest>({
         defaultValues: {
             name: ""
         }
     });
+    const queryClient = useQueryClient();
 
     const onSubmit = async (quest: Quest) => {
-        await createQuest({...quest, user_id: user.id});
         reset();
-        if (refetch)
-            refetch();
+        await createQuest({...quest, user_id: user.id});
+        await queryClient.invalidateQueries({queryKey: ["quests"]});
     }
 
     return <Paper>

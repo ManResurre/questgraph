@@ -40,7 +40,6 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({children}) => {
     const {fitView} = useReactFlow();
     const {questId} = useParams();
     const [openModal, setOpenModal] = React.useState(false);
-    // const scenes = useLiveQuery(async () => getScenesWithChoices(Number(questId)), [questId]);
     const {data: scenes} = useScenesWithChoices(Number(questId));
     const [currentScene, setCurrentScene] = useState<SceneFullData>();
 
@@ -48,7 +47,12 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({children}) => {
         if (!scenes?.length)
             return;
 
-        setCurrentScene(scenes[0].data)
+        const selectedNodeId = localStorage.getItem('selectedNode');
+        const selectedScene = scenes.find(scene => scene.id == selectedNodeId)
+
+        setCurrentScene(selectedScene ?
+            selectedScene.data
+            : scenes[0].data)
         // if (setViewport)
         //     setViewport({...scenes[0].position, zoom: 0.7}, {duration: 800})
 

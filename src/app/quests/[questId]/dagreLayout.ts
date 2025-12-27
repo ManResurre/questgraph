@@ -8,7 +8,6 @@ const defaultNodeWidth = 200;
 const defaultNodeHeight = 70;
 
 const dagreGraph = new dagre.graphlib.Graph();
-let timeout;
 
 interface LayoutElementsProps {
     setNodes: (value: (((prevState: SceneNodeType[]) => SceneNodeType[]) | SceneNodeType[])) => void;
@@ -86,9 +85,10 @@ export default function useLayoutElements({nodes, edges, setNodes, setEdges, que
             });
 
         updatePositions(questId, newPositions as UpdatePositionsProps[]).then(() => {
+            const selectedNode = localStorage.getItem('selectedNode');
             setNodes(nodes => applyNodeChanges(newPositions, nodes))
             fitView({
-                nodes: [{id: nodes[0].id}],
+                nodes: [{id: selectedNode ? selectedNode : nodes[0].id}],
                 duration: 800,
                 padding: 0.5,
                 interpolate: 'smooth',

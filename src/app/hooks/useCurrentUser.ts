@@ -1,33 +1,38 @@
 import {useEffect, useState} from "react";
 import supabase from "@/supabaseClient";
-import {User} from "@supabase/supabase-js";
+import {User, Session} from "@supabase/supabase-js";
 
 export const useCurrentUser = () => {
     const [user, setUser] = useState<User | null>(null);
+    const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchSession = async () => {
             setLoading(true);
-            const {data: {user}, error} = await supabase.auth.getUser();
+            const {data, error} = await supabase.auth.getSession();
             if (error) {
-                console.error("Error fetching user:", error.message);
+                console.error("Error fetching session:", error.message);
             }
-            setUser(user);
+            setSession(data.session);
+            setUser(data.session?.user ?? null);
             setLoading(false);
         };
 
-        fetchUser();
+        fetchSession();
 
         // Подписка на изменения состояния аутентификации
-        const {data: subscription} = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
+        const {data: subscription} = supabase.auth.onAuthStateChange(
+            (_, session) => {
+                setSession(session);
+                setUser(session?.user ?? null);
+            }
+        );
 
         return () => {
             subscription?.subscription.unsubscribe();
         };
     }, []);
 
-    return {user, loading};
+    return {user, session, loading};
 };

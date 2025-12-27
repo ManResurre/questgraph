@@ -12,7 +12,7 @@ import {useCurrentUser} from "@/app/hooks/useCurrentUser";
 import {User} from "@supabase/supabase-js";
 
 const QuestsPage: NextPage = () => {
-    const {data: quests, isLoading, refetch} = useQuery({
+    const {data: quests, isLoading} = useQuery({
         queryKey: ["quests"],
         queryFn: getQuests,
         staleTime: 1000 * 60 * 5,   // 5 минут данные считаются свежими
@@ -23,10 +23,10 @@ const QuestsPage: NextPage = () => {
     const {user} = useCurrentUser();
 
     return <Container>
-        <QuestEditForm user={user as User} refetch={refetch}/>
+        <QuestEditForm user={user as User}/>
         {isLoading ?
             <CircularProgress size={24} color="inherit"/> :
-            <QuestList user={user} refetch={refetch} quests={quests as Quest[]}/>}
+            <QuestList user={user} quests={quests as Quest[]}/>}
     </Container>
 }
 

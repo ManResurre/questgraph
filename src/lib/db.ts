@@ -21,11 +21,12 @@ export interface Status {
 }
 
 export interface Choice {
-    id?: number | null;
+    id?: number;
     quest_id: number;
     label: string;
     text: string;
-    nextSceneId?: number | null;
+    nextSceneId?: number;
+    transition_text?: string;
 }
 
 export interface SceneChoice {

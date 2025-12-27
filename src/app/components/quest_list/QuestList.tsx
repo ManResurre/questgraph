@@ -23,19 +23,17 @@ import Link from "next/link";
 import {Quest} from "@/lib/db";
 import {usePathname} from "next/navigation";
 import {deleteQuest} from "@/lib/QuestRepository";
-import {QueryObserverResult, RefetchOptions} from "@tanstack/react-query";
 import {User} from "@supabase/supabase-js";
+import {useQueryClient} from "@tanstack/react-query";
 
 interface QuestListProps {
     quests?: Quest[],
-    refetch?: (
-        options?: RefetchOptions
-    ) => Promise<QueryObserverResult<any, Error>>,
     user?: User | null
 }
 
-export function QuestList({quests, refetch, user}: QuestListProps) {
+export function QuestList({quests, user}: QuestListProps) {
     const pathname = usePathname();
+    const queryClient = useQueryClient();
 
     const handleEditClick = (quest: Quest) => {
         // questService?.edit(quest);
@@ -52,11 +50,9 @@ export function QuestList({quests, refetch, user}: QuestListProps) {
         if (itemToDelete) {
             await deleteQuest(itemToDelete.id!)
         }
+        await queryClient.invalidateQueries({queryKey: ["quests"]});
         setDeleteDialogOpen(false);
         setItemToDelete(null);
-
-        if (refetch)
-            refetch();
     };
 
     const cancelDelete = () => {
