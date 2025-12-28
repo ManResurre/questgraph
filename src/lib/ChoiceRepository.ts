@@ -1,6 +1,8 @@
-import {Choice, db} from "@/lib/db";
 import supabase from "@/supabaseClient";
 import {cleanUndefined} from "@/lib/RepositoryHelper";
+import {Database} from "@/supabase";
+
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
 export async function setNextSceneId(choiceId: number, sceneId?: number) {
     const {error} = await supabase
@@ -36,6 +38,7 @@ export async function getChoice(id: number) {
 
     return data;
 }
+export function clearChoices(questId: number) {}
 
 // export function setNextSceneId(choiceId: number, sceneId?: number) {
 //     db.choices.update(choiceId, {nextSceneId: sceneId})
@@ -45,9 +48,9 @@ export async function getChoice(id: number) {
 //     return db.choices.get(id);
 // }
 
-export function clearChoices(questId: number) {
-    db.choices.where('questId').equals(questId).delete();
-}
+// export function clearChoices(questId: number) {
+//     db.choices.where('questId').equals(questId).delete();
+// }
 
 // export async function getScenesByChoice(choiceId: number) {
 //     // 1. Получаем связи scene_choice для choiceId = 1

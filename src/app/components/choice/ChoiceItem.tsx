@@ -1,12 +1,14 @@
-import React, {useCallback, useMemo} from "react";
-import {Choice} from "@/lib/db";
-import {Box, IconButton, ListItem, ListItemText, Stack, Typography} from "@mui/material";
+import React, {useCallback} from "react";
+import {Box, IconButton, ListItem, ListItemText} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from '@mui/icons-material/Edit';
 import {deleteChoice} from "@/lib/ChoiceRepository";
 import {useChoiceContext} from "@/app/components/choice/ChoiceProvider";
 import {useQueryClient} from "@tanstack/react-query";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {Database} from "@/supabase";
+
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
 export interface ChoiceItemProps {
     choice: Choice,
@@ -63,9 +65,9 @@ const ChoiceItem = React.memo(({choice, highlight}: ChoiceItemProps) => {
             }
         >
             <ListItemText
-                primary={highlightText(choice.label)}
+                primary={highlightText(choice.label!)}
                 secondary={
-                    <span>{highlightText(choice.text)}</span>
+                    <span>{highlightText(choice.text!)}</span>
                 }
                 slotProps={
                     {

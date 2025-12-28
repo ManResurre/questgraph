@@ -7,6 +7,8 @@ import NewChoice from "@/app/components/choice/EditChoice";
 import ChoiceList from "@/app/components/choice/ChoiceList";
 import ChoiceManagement from "@/app/components/choice/ChoiceManagement";
 import {ChoiceProvider} from "@/app/components/choice/ChoiceProvider";
+import ParametersManagement from "@/app/components/parameters/ParametersManagement";
+import {ParametersProvider} from "@/app/components/parameters/ParametersProvider";
 
 const GraphSidebar = () => {
     const {
@@ -15,7 +17,7 @@ const GraphSidebar = () => {
         selectedElementData,
         selectedNodeId,
         selectedChoiceId,
-        newChoice,
+        flags,
         loading,
     } = useSidebar();
 
@@ -133,10 +135,15 @@ const GraphSidebar = () => {
             >
                 {selectedNodeId && <SceneNodeEdit data={selectedElementData.data}/>}
                 {selectedChoiceId && <EdgeEdit selectedChoiceId={selectedChoiceId}/>}
-                {newChoice &&
+                {flags.newChoice &&
                     <ChoiceProvider>
                         <ChoiceManagement/>
                     </ChoiceProvider>
+                }
+                {flags.parameters &&
+                    <ParametersProvider>
+                        <ParametersManagement/>
+                    </ParametersProvider>
                 }
             </Box>
         </Drawer>

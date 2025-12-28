@@ -1,11 +1,17 @@
-import React, {createContext, useContext, useState, ReactNode, useEffect} from 'react';
+import React, {
+    createContext,
+    useContext,
+    useState,
+    ReactNode,
+    useEffect,
+} from "react";
 import {useIsFetching} from "@tanstack/react-query";
 
 interface OpenSidebarProps {
-    nodeId?: number,
-    edgeId?: number,
-    elementData?: any,
-    newChoice?: boolean
+    nodeId?: number;
+    edgeId?: number;
+    elementData?: any;
+    flags?: Partial<Record<"newChoice" | "parameters", boolean>>;
 }
 
 interface GraphSidebarContextType {
@@ -17,18 +23,20 @@ interface GraphSidebarContextType {
     typeDraggable: string | null;
     setTypeDraggable: (type: string | null) => void;
     selectedChoiceId: number | null;
-    newChoice: boolean;
-    setNewChoice: (type: boolean) => void;
-    loading: boolean,
+    flags: Record<string, boolean>;
+    setFlag: (key: string, value: boolean) => void;
+    loading: boolean;
     setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const GraphSidebarContext = createContext<GraphSidebarContextType | undefined>(undefined);
+const GraphSidebarContext = createContext<GraphSidebarContextType | undefined>(
+    undefined
+);
 
 export const useSidebar = () => {
     const context = useContext(GraphSidebarContext);
     if (context === undefined) {
-        throw new Error('useSidebar must be used within a SidebarProvider');
+        throw new Error("useSidebar must be used within a SidebarProvider");
     }
     return context;
 };
@@ -37,37 +45,45 @@ interface GraphSidebarProviderProps {
     children: ReactNode;
 }
 
-export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({children}) => {
+export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = (
+    {
+        children,
+    }) => {
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
     const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
-    const [newChoice, setNewChoice] = useState<boolean>(false);
-
     const [selectedElementData, setSelectedElementData] = useState<any>(null);
     const [typeDraggable, setTypeDraggable] = useState<string | null>(null);
 
+    const [flags, setFlags] = useState<Record<string, boolean>>({
+        newChoice: false,
+        parameters: false,
+    });
+
+    const setFlag = (key: string, value: boolean) =>
+        setFlags((prev) => ({...prev, [key]: value}));
+
     const [loading, setLoading] = useState<boolean>(false);
-    const fetching = useIsFetching({queryKey: ["getChoices", "scenesWithChoices"]});
+    const fetching = useIsFetching({
+        queryKey: ["getChoices", "scenesWithChoices"],
+    });
 
     useEffect(() => {
-        setLoading(() => fetching ? Boolean(fetching) : false);
-    }, [fetching])
+        setLoading(fetching > 0);
+    }, [fetching]);
 
     const openSidebar = ({
                              nodeId,
                              elementData,
                              edgeId,
-                             newChoice
+                             flags: newFlags,
                          }: OpenSidebarProps) => {
-        if (nodeId)
-            setSelectedNodeId(nodeId);
-
-        if (edgeId)
-            setSelectedChoiceId(edgeId)
-
-        if(newChoice)
-            setNewChoice(true)
-
+        if (nodeId) setSelectedNodeId(nodeId);
+        if (edgeId) setSelectedChoiceId(edgeId);
+        if (newFlags) {
+            setFlags((prev) => ({...prev, ...newFlags}));
+        }
         setSelectedElementData(elementData);
         setIsSidebarOpen(true);
     };
@@ -77,7 +93,7 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({child
         setSelectedNodeId(null);
         setSelectedChoiceId(null);
         setSelectedElementData(null);
-        setNewChoice(false);
+        setFlags({newChoice: false, parameters: false});
     };
 
     return (
@@ -91,10 +107,10 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({child
                 typeDraggable,
                 setTypeDraggable,
                 selectedChoiceId,
-                setNewChoice,
-                newChoice,
+                flags,
+                setFlag,
                 loading,
-                setLoading
+                setLoading,
             }}
         >
             {children}

@@ -34,6 +34,8 @@ import {clearScenes} from "@/lib/SceneRepository";
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import UploadIcon from '@mui/icons-material/Upload';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import TuneIcon from "@mui/icons-material/Tune";
+import BuildIcon from "@mui/icons-material/Build";
 
 interface MiniDrawerProps {
     onLayout?: (direction?: string) => void
@@ -102,8 +104,16 @@ const GraphMenuSidebar = ({onLayout}: MiniDrawerProps) => {
     const choices = [
         {
             name: 'manage',
-            click: () => openSidebar({newChoice: true}),
-            icon: <ManageSearchIcon/>
+            click: () => openSidebar({flags: {newChoice: true}}),
+            icon: <ManageSearchIcon fontSize="small"/>
+        },
+    ]
+
+    const parameters = [
+        {
+            name: 'manage',
+            click: () => openSidebar({flags: {parameters: true}}),
+            icon: <BuildIcon fontSize="small"/>
         },
     ]
 
@@ -112,6 +122,10 @@ const GraphMenuSidebar = ({onLayout}: MiniDrawerProps) => {
     }
     const handleChoicesClick = (index: number) => {
         choices[index].click()
+    }
+
+    const handleParametersClick = (index: number) => {
+        parameters[index].click()
     }
 
     const onDragStart = ({
@@ -224,6 +238,17 @@ const GraphMenuSidebar = ({onLayout}: MiniDrawerProps) => {
                         itemProps={{
                             handlers: {
                                 onClick: (event: React.SyntheticEvent, index) => handleChoicesClick(index)
+                            }
+                        }}
+                    />
+                    <Submenu
+                        icon={<TuneIcon fontSize="small"/>}
+                        label="Parameters"
+                        open={open}
+                        items={parameters}
+                        itemProps={{
+                            handlers: {
+                                onClick: (event: React.SyntheticEvent, index) => handleParametersClick(index)
                             }
                         }}
                     />

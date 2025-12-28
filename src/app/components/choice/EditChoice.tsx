@@ -1,6 +1,5 @@
 import React, {useEffect, useMemo} from "react";
 import {Controller, useForm} from "react-hook-form";
-import {Choice} from "@/lib/db";
 import {useParams} from "next/navigation";
 import {Box, Button, IconButton, Stack, TextField} from "@mui/material";
 import {saveChoice} from "@/lib/ChoiceRepository";
@@ -8,6 +7,9 @@ import ClearIcon from '@mui/icons-material/Clear';
 import {useQueryClient} from "@tanstack/react-query";
 import {useChoiceContext} from "@/app/components/choice/ChoiceProvider";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {Database} from "@/supabase";
+
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
 const EditChoice = () => {
     const {questId} = useParams();

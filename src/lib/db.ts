@@ -8,6 +8,13 @@ export interface User {
     auth_id?: string;
 }
 
+export interface Parameters {
+    id?: number;
+    quest_id: number;
+    label: string;
+    value: string;
+}
+
 export interface Game {
     id?: number;
     questId: number;

@@ -6,7 +6,6 @@ import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import {useChoice} from "@/app/hooks/choice";
 import {useQueryClient} from "@tanstack/react-query";
 import {Controller, useForm} from "react-hook-form";
-import {Choice} from "@/lib/db";
 import CodeMirror, {EditorView} from "@uiw/react-codemirror";
 import {darcula} from "@uiw/codemirror-theme-darcula";
 import {langs} from "@uiw/codemirror-extensions-langs";
@@ -14,6 +13,10 @@ import {abbreviationTracker, expandAbbreviation} from "@emmetio/codemirror6-plug
 import {Prec} from "@codemirror/state";
 import {keymap} from "@codemirror/view";
 import CheckIcon from "@mui/icons-material/Check";
+import {Database} from "@/supabase";
+import {formatCode} from "@/lib/CodeMirrorHelper";
+
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
 const customTheme = EditorView.theme({
     '&': {
@@ -120,6 +123,13 @@ const EdgeEdit = ({selectedChoiceId}: EdgeEditProps) => {
                                     keymap.of([
                                         {
                                             key: "Tab", run: expandAbbreviation
+                                        },
+                                        {
+                                            key: "Ctrl-Alt-l",
+                                            run: (view) => {
+                                                formatCode(view, 'html');
+                                                return true;
+                                            }
                                         }
                                     ])
                                 )

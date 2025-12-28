@@ -1,6 +1,7 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
-import {Choice} from "@/lib/db";
-import {useIsFetching} from "@tanstack/react-query";
+import React, {createContext, useContext, useState} from "react";
+import {Database} from "@/supabase";
+
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
 interface ChoiceContextValue {
     editingChoice?: Choice;
