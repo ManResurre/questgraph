@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import { Autocomplete, Box, TextField } from "@mui/material";
-import { Choice } from "@/lib/db";
+import {Database} from "@/supabase";
+
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
 export interface ScenesAutocompleteParams {
     choices: Choice[];
@@ -19,10 +21,10 @@ const ChoiceAutocomplete = ({ choices, onChange, value }: ScenesAutocompletePara
         const term = searchTerm.toLowerCase();
 
         return [...choices].sort((a: Choice, b: Choice) => {
-            const aLabel = a.label.toLowerCase();
-            const aText = a.text.toLowerCase();
-            const bLabel = b.label.toLowerCase();
-            const bText = b.text.toLowerCase();
+            const aLabel = a.label?.toLowerCase();
+            const aText = a.text?.toLowerCase();
+            const bLabel = b.label?.toLowerCase();
+            const bText = b.text?.toLowerCase();
 
             const aExact = aLabel === term || aText === term ? 1 : 0;
             const bExact = bLabel === term || bText === term ? 1 : 0;

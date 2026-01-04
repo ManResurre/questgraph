@@ -1,6 +1,19 @@
 import supabase from "@/supabaseClient";
 import {Database} from "@/supabase";
 
+export async function deleteParameterChoice(selectedId: number) {
+}
+export async function getParameterChoice(id: number) {
+}
+export async function updateParameterChoice(p0: {
+    choice_id: number | null;
+    id: number;
+    param_id: number | null;
+    value: string | null;
+}) {
+}
+
+
 type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
 
 export async function getParameters(questId: number) {

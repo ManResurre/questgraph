@@ -11,19 +11,22 @@ import {useParams} from "next/navigation";
 import CheckIcon from '@mui/icons-material/Check';
 import {useChoices} from "@/app/hooks/choice";
 import {useQueryClient} from "@tanstack/react-query";
+import {Database} from "@/supabase";
 
-interface IChoice {
-    id: string | number;
-    label: string;
-    text: string;
-    questId: number;
-    nextSceneId: number;
-}
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
+
+// interface IChoice {
+//     id: string | number;
+//     label: string;
+//     text: string;
+//     questId: number;
+//     nextSceneId: number;
+// }
 
 export interface ISceneFormData {
     id?: number;
     name: string;
-    choices: IChoice[];
+    choices: Choice[];
     texts: SceneText[];
     quest_id: number;
     locPosition: boolean;
@@ -35,7 +38,7 @@ interface SceneNodeEditProps {
     data: {
         id: string;
         name: string;
-        choices: IChoice[],
+        choices: Choice[],
         texts: SceneText[],
         locPosition: boolean;
         samplyLink?: string;
@@ -161,7 +164,7 @@ const SceneNodeEdit = ({data}: SceneNodeEditProps) => {
                 name="choices"
                 control={control}
                 render={({field: {value, onChange}}) => (
-                    <ChoiceAutocomplete onChange={onChange} value={value} choices={choices}/>
+                    <ChoiceAutocomplete onChange={onChange} value={value} choices={choices as Choice[]}/>
                 )}
             />
 

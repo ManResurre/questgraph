@@ -1,160 +1,117 @@
-import React, {useCallback, useEffect} from "react";
-import {Box, Button, IconButton, List, ListItemButton, ListItemText, Paper, Stack, TextField} from "@mui/material";
-import {setNextSceneId, updateChoice} from "@/lib/ChoiceRepository";
+import React, { useEffect, useCallback } from "react";
+import {
+    Box,
+    Button,
+    IconButton,
+    Stack,
+    TextField,
+    Paper
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
-import {useChoice} from "@/app/hooks/choice";
-import {useQueryClient} from "@tanstack/react-query";
-import {Controller, useForm} from "react-hook-form";
-import CodeMirror, {EditorView} from "@uiw/react-codemirror";
-import {darcula} from "@uiw/codemirror-theme-darcula";
-import {langs} from "@uiw/codemirror-extensions-langs";
-import {abbreviationTracker, expandAbbreviation} from "@emmetio/codemirror6-plugin";
-import {Prec} from "@codemirror/state";
-import {keymap} from "@codemirror/view";
 import CheckIcon from "@mui/icons-material/Check";
-import {Database} from "@/supabase";
-import {formatCode} from "@/lib/CodeMirrorHelper";
+import { useForm, Controller } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSidebar } from "@/app/components/sidebar/graphSidebarProvider";
+import { Database } from "@/supabase";
+import {
+    updateParameterChoice,
+    deleteParameterChoice
+} from "@/lib/ParametersRepository";
+import {useParameterChoice} from "@/app/hooks/parameters";
 
-type Choice = Database["public"]["Tables"]["choice"]["Row"];
+type ParameterChoice = Database["public"]["Tables"]["parameter_choice"]["Row"];
 
-const customTheme = EditorView.theme({
-    '&': {
-        fontSize: '18px'
-    }
-})
-
-interface EdgeEditProps {
-    selectedChoiceId: number
+interface ParameterChoiceEditProps {
+    selectedId: number;
 }
 
-const EdgeEdit = ({selectedChoiceId}: EdgeEditProps) => {
-    const {closeSidebar, setLoading} = useSidebar();
-    const {data: choice} = useChoice(selectedChoiceId);
+const ParameterChoiceEdit = ({ selectedId }: ParameterChoiceEditProps) => {
+    const { closeSidebar, setLoading } = useSidebar();
+    const { data: paramChoice } = useParameterChoice(selectedId);
     const queryClient = useQueryClient();
 
-    const {handleSubmit, control, formState: {errors}, reset, getValues} = useForm<Choice>({
+    const {
+        handleSubmit,
+        control,
+        reset,
+        getValues
+    } = useForm<ParameterChoice>({
         defaultValues: {
-            transition_text: choice?.transition_text ?? ""
+            value: paramChoice?.value ?? ""
         }
     });
 
     useEffect(() => {
-        if (choice?.transition_text)
-            reset({transition_text: choice.transition_text})
-    }, [choice])
+        if (paramChoice?.value) {
+            reset({ value: paramChoice.value });
+        }
+    }, [paramChoice]);
 
     const handleRemove = useCallback(async () => {
-        await setNextSceneId(selectedChoiceId);
-        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
+        await deleteParameterChoice(selectedId);
+        await queryClient.invalidateQueries({ queryKey: ["parameter_choices"] });
         closeSidebar();
-    }, [])
-
-    const onSubmit = useCallback(async (choiceForm: Choice) => {
-        await handleApply();
-        closeSidebar();
-    }, [choice]);
+    }, [selectedId]);
 
     const handleApply = useCallback(async () => {
         setLoading(true);
-        await updateChoice({
-            ...choice,
-            ...getValues(),
-        } as Choice)
+        await updateParameterChoice({
+            ...paramChoice,
+            ...getValues()
+        } as ParameterChoice);
         setLoading(false);
-    }, [choice])
+    }, [paramChoice]);
 
-    return <Box
-        className="py-2 px-1"
-        sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start'
-        }}>
-        <Box p={1} sx={{width: 1}}>
-            {choice && <Paper className="p-1 mb-1">
-                {choice.text}
-            </Paper>}
+    const onSubmit = useCallback(async () => {
+        await handleApply();
+        closeSidebar();
+    }, [handleApply]);
+
+    return (
+        <Box p={2}>
+            {paramChoice && (
+                <Paper className="p-1 mb-1">
+                    <strong>Choice ID:</strong> {paramChoice.choice_id} <br />
+                    <strong>Param ID:</strong> {paramChoice.param_id}
+                </Paper>
+            )}
 
             <Stack
-                spacing={1}
+                spacing={2}
                 component="form"
+                onSubmit={handleSubmit(onSubmit)}
                 noValidate
                 autoComplete="off"
-                sx={{width: 1}}
-                onSubmit={handleSubmit(onSubmit)}
             >
-                {/*<Controller*/}
-                {/*    name="transition_text"*/}
-                {/*    control={control}*/}
-                {/*    rules={{*/}
-                {/*        required: "Field is required"*/}
-                {/*    }}*/}
-                {/*    render={({field: {value, onChange}}) => (*/}
-                {/*        <TextField*/}
-                {/*            required*/}
-                {/*            id={'choice'}*/}
-                {/*            key={'choice'}*/}
-                {/*            value={value}*/}
-                {/*            onChange={onChange}*/}
-                {/*            placeholder={'Choice'}*/}
-                {/*            label={'Choice'}*/}
-                {/*            size="small"*/}
-                {/*            error={!!errors.transition_text}*/}
-                {/*            helperText={errors.transition_text?.message}*/}
-                {/*        />*/}
-                {/*    )}*/}
-                {/*/>*/}
-
                 <Controller
-                    name="transition_text"
+                    name="value"
                     control={control}
-                    render={({field: {value, onChange}}) => (
-                        <CodeMirror
-                            value={value}
-                            theme={darcula}
-                            minHeight="100px"
-                            extensions={[
-                                langs.html(),
-                                abbreviationTracker(),
-                                customTheme,
-                                EditorView.lineWrapping,
-                                Prec.highest(
-                                    keymap.of([
-                                        {
-                                            key: "Tab", run: expandAbbreviation
-                                        },
-                                        {
-                                            key: "Ctrl-Alt-l",
-                                            run: (view) => {
-                                                formatCode(view, 'html');
-                                                return true;
-                                            }
-                                        }
-                                    ])
-                                )
-                            ]}
-                            onChange={onChange}
+                    render={({ field }) => (
+                        <TextField
+                            label="Value"
+                            fullWidth
+                            multiline
+                            minRows={3}
+                            {...field}
                         />
                     )}
                 />
 
                 <Box display="flex" justifyContent="space-between" gap={1}>
-                    <Button size="small"
-                            variant="contained"
-                            type="submit"
-                            fullWidth
-                    >Save</Button>
-
-                    <IconButton onClick={handleApply}><CheckIcon/></IconButton>
+                    <Button type="submit" variant="contained" fullWidth>
+                        Save
+                    </Button>
+                    <IconButton onClick={handleApply}>
+                        <CheckIcon />
+                    </IconButton>
                 </Box>
             </Stack>
+
+            <IconButton onClick={handleRemove}>
+                <DeleteIcon />
+            </IconButton>
         </Box>
+    );
+};
 
-        <IconButton onClick={handleRemove}>
-            <DeleteIcon/>
-        </IconButton>
-    </Box>
-}
-
-export default React.memo(EdgeEdit);
+export default React.memo(ParameterChoiceEdit);
