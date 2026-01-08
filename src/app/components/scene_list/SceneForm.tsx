@@ -14,7 +14,6 @@ import SceneFormChoice from "@/app/components/scene_list/SceneFormChoice";
 import SceneFormText from "@/app/components/scene_list/SceneFormText";
 // import { format } from '@codemirror/formatting';
 
-
 export interface ISceneFormProps {
     scene?: any;
 }
@@ -24,7 +23,7 @@ export interface ISceneFormData extends Scene {
     name: string;
     texts: Partial<SceneText>[];
     choices: Partial<Choice>[];
-    questId: number;
+    quest_id: number;
 }
 
 function SceneForm({scene}: ISceneFormProps) {
@@ -39,7 +38,7 @@ function SceneForm({scene}: ISceneFormProps) {
             name: scene?.name ?? '',
             texts: scene?.texts ?? [],
             choices: scene?.choices ?? [],
-            questId: Number(questId)
+            quest_id: Number(questId)
         }
     });
 

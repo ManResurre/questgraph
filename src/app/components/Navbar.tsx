@@ -1,32 +1,76 @@
 'use client'
-import Link from 'next/link'
-import {usePathname} from 'next/navigation'
-import {AppBar, Button, Toolbar, Typography} from '@mui/material'
+import {useEffect, useState} from "react";
+import Link from "next/link";
+import {usePathname} from "next/navigation";
+import {AppBar, Button, Toolbar, Typography} from "@mui/material";
+import supabase from "@/supabaseClient";
+import Login from "./auth/login";
+import type {User as SupabaseUser} from "@supabase/supabase-js";
 
 const Navbar = () => {
-    const pathname = usePathname()
+    const pathname = usePathname();
+    const [user, setUser] = useState<SupabaseUser | null>(null);
+
+    useEffect(() => {
+        const checkUser = async () => {
+            const {data: {user}, error} = await supabase.auth.getUser();
+            if (user) {
+                setUser(user);
+            }
+        };
+
+        checkUser();
+
+        // подписка на изменения сессии
+        const {data: subscription} = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => {
+            subscription.subscription.unsubscribe();
+        };
+    }, []);
 
     return (
-        <div>
-            <AppBar position="static">
-                <Toolbar>
-                    <Typography variant="h6" noWrap component="div" sx={{flexGrow: 1}}>
-                        Quest Editor
-                    </Typography>
+        <AppBar position="static">
+            <Toolbar>
+                <Typography variant="h6" noWrap component="div" sx={{flexGrow: 1}}>
+                    Quest Editor
+                </Typography>
 
-                    <Button href="/" variant={pathname === '/' ? 'contained' : 'text'} component={Link}
-                            color="inherit">Home</Button>
-                    <Button href="/new-quests" variant={pathname === '/new-quests' ? 'contained' : 'text'}
-                            component={Link}
-                            color="inherit">New Quests</Button>
-                    <Button href="/quests" variant={pathname === '/quests' ? 'contained' : 'text'} component={Link}
-                            color="inherit">Quests</Button>
-                    <Button href="/about" variant={pathname === '/about' ? 'contained' : 'text'} component={Link}
-                            color="inherit">About</Button>
-                </Toolbar>
-            </AppBar>
-        </div>
-    )
-}
+                <Button
+                    href="/"
+                    variant={pathname === "/" ? "contained" : "text"}
+                    component={Link}
+                    color="inherit"
+                >
+                    Home
+                </Button>
 
-export default Navbar
+                {user && (
+                    <Button
+                        href="/quests"
+                        variant={pathname === "/quests" ? "contained" : "text"}
+                        component={Link}
+                        color="inherit"
+                    >
+                        Quests
+                    </Button>
+                )}
+
+                <Button
+                    href="/about"
+                    variant={pathname === "/about" ? "contained" : "text"}
+                    component={Link}
+                    color="inherit"
+                >
+                    About
+                </Button>
+
+                <Login user={user}/>
+            </Toolbar>
+        </AppBar>
+    );
+};
+
+export default Navbar;

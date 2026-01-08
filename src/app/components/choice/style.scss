@@ -1,0 +1,21 @@
+.noise-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.noise-effect::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/loader.jpg");
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  animation: staticNoise 0.5s steps(8) infinite;
+  pointer-events: none;
+}
+
+@keyframes staticNoise {
+  to {
+    background-position: 100% 100%;
+  }
+}

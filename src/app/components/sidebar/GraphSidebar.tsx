@@ -1,16 +1,32 @@
-import {Box, Drawer, useMediaQuery, useTheme} from "@mui/material";
-import React, {useCallback, useEffect, useRef} from "react";
+import {Box, Divider, Drawer, Stack, useMediaQuery, useTheme} from "@mui/material";
+import React, {useEffect, useRef} from "react";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneNodeEdit from "@/app/components/rf/SceneNodeEdit";
+import EdgeEdit from "@/app/components/rf/EdgeEdit";
+import NewChoice from "@/app/components/choice/EditChoice";
+import ChoiceList from "@/app/components/choice/ChoiceList";
+import ChoiceManagement from "@/app/components/choice/ChoiceManagement";
+import {ChoiceProvider} from "@/app/components/choice/ChoiceProvider";
+import ParametersManagement from "@/app/components/parameters/ParametersManagement";
+import {ParametersProvider} from "@/app/components/parameters/ParametersProvider";
+import SceneParams from "@/app/components/scene_list/SceneParams";
+import SceneParameterList from "@/app/components/scene_list/SceneParametrList";
 
-export default function GraphSidebar() {
-    const {isSidebarOpen, closeSidebar, selectedElementData} = useSidebar();
+const GraphSidebar = () => {
+    const {
+        isSidebarOpen,
+        closeSidebar,
+        selectedElementData,
+        flags,
+        loading,
+    } = useSidebar();
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [width, setWidth] = React.useState(400);
     const isResizing = useRef(false);
     const startX = useRef(0);
-    const startWidth = useRef(400);
+    const startWidth = useRef(300);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         isResizing.current = true;
@@ -25,7 +41,7 @@ export default function GraphSidebar() {
         document.body.style.userSelect = 'none';
     };
 
-    const handleMouseMove = useCallback((e: MouseEvent) => {
+    const handleMouseMove = React.useCallback((e: MouseEvent) => {
         if (!isResizing.current) return;
         const updateWidth = () => {
             const diff = e.clientX - startX.current;
@@ -36,7 +52,7 @@ export default function GraphSidebar() {
         requestAnimationFrame(updateWidth);
     }, []);
 
-    const handleMouseUp = useCallback(() => {
+    const handleMouseUp = React.useCallback(() => {
         if (!isResizing.current) return;
 
         isResizing.current = false;
@@ -109,15 +125,32 @@ export default function GraphSidebar() {
                 }}
             />
 
-            <Box sx={{
-                width: '100%',
-                height: '100%',
-                overflow: 'auto',
-            }}
-                 className="scrollbar-thin scrollbar-thumb-neutral-800/70 scrollbar-track-transparent"
+            <Box
+                sx={{
+                    width: '100%',
+                    height: '100%',
+                    overflow: 'auto',
+                }}
+                className={loading ? "noise-effect" : ""}
             >
-                {selectedElementData && <SceneNodeEdit data={selectedElementData.data}/>}
+                {flags.editScene && <SceneNodeEdit data={selectedElementData.data}/>}
+                {flags.editChoice && <EdgeEdit data={selectedElementData.edge}/>}
+                {flags.newChoice &&
+                    <ChoiceProvider>
+                        <ChoiceManagement/>
+                    </ChoiceProvider>
+                }
+                {flags.parameters &&
+                    <ParametersProvider>
+                        <ParametersManagement/>
+                    </ParametersProvider>
+                }
+                {flags.editSceneParams &&
+                    <SceneParameterList/>
+                }
             </Box>
         </Drawer>
     );
 }
+
+export default React.memo(GraphSidebar);

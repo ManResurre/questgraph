@@ -1,8 +1,8 @@
-import {db, Param, Scene, SceneParam} from "@/lib/db";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {
     Button,
-    Card, Checkbox,
+    Card,
+    Checkbox,
     FormControl,
     FormControlLabel,
     List,
@@ -11,24 +11,24 @@ import {
     Stack,
     TextField
 } from "@mui/material";
-import {useLiveQuery} from "dexie-react-hooks";
 import {Controller, useForm} from "react-hook-form";
 import {useParams} from "next/navigation";
+import {getSceneParameters} from "@/lib/ParametersRepository";
+import supabase from "@/supabaseClient";
 
 interface SceneParamsProps {
-    scene?: Scene
+    sceneId: number;
 }
 
 interface ISceneParamsFormData {
     paramId: string;
-    value: "";
+    value: string;
     hide: boolean;
 }
 
-const SceneParams = ({scene}: SceneParamsProps) => {
+const SceneParams = ({sceneId}: SceneParamsProps) => {
     const {questId} = useParams();
-
-    const {handleSubmit, control} = useForm<ISceneParamsFormData>({
+    const {handleSubmit, control, reset} = useForm<ISceneParamsFormData>({
         defaultValues: {
             paramId: "",
             value: "",
@@ -36,104 +36,129 @@ const SceneParams = ({scene}: SceneParamsProps) => {
         }
     });
 
-    const {sceneParams, allParams} = useLiveQuery(async () => {
-        const paramsIds = (await db.scene_param.where('sceneId').equals(scene?.id!).toArray())
-            .map((sp: SceneParam) => sp.paramId);
+    const [sceneParams, setSceneParams] = useState<any[]>([]);
+    const [allParams, setAllParams] = useState<any[]>([]);
 
-        const allParams = await db.params
-            .where('questId')
-            .equals(Number(questId))
-            .toArray();
+    // загрузка параметров сцены
+    useEffect(() => {
+        (async () => {
+            const data = await getSceneParameters(sceneId);
+            setSceneParams(data ?? []);
+        })();
+    }, [sceneId]);
 
-        const sceneParams = await db.params
-            .where('id')
-            .anyOf(paramsIds!)
-            .toArray();
+    // загрузка всех параметров для квеста
+    useEffect(() => {
+        (async () => {
+            const {data, error} = await supabase
+                .from("parameters")
+                .select("*")
+                .eq("quest_id", questId);
 
-        return {sceneParams, allParams}
-    }) ?? {sceneParams: [], allParams: []};
+            if (error) throw error;
+            setAllParams(data ?? []);
+        })();
+    }, [questId]);
 
-    const onSubmit = (data: ISceneParamsFormData) => {
-        db.scene_param.put({...data, sceneId: scene?.id!})
-    }
+    const onSubmit = async (formData: ISceneParamsFormData) => {
+        const {error} = await supabase.from("parameter_scene").insert({
+            scene_id: sceneId,
+            param_id: Number(formData.paramId),
+            value: formData.value
+            // поле hide можно хранить отдельно, если оно есть в схеме
+        });
 
-    return <Card variant="outlined">
-        <Stack p={1} spacing={1}
-               component="form"
-               noValidate
-               autoComplete="off"
-               onSubmit={handleSubmit(onSubmit)}>
-            <Controller
-                name="paramId"
-                control={control}
-                render={({field: {value, onChange}}) => (
-                    <TextField
-                        required
-                        select
-                        id={'scene'}
-                        key={'scene'}
-                        value={value}
-                        onChange={onChange}
-                        placeholder={'Scene'}
-                        label={'Scene'}
-                        size="small"
-                    >
-                        {allParams.map((option) => (
-                            <MenuItem key={option.id} value={option.id}>
-                                {option.key} {option.label}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                )}
-            />
+        if (error) {
+            console.error(error);
+            return;
+        }
 
-            <FormControl fullWidth>
+        reset();
+        const data = await getSceneParameters(sceneId);
+        setSceneParams(data ?? []);
+    };
+
+    return (
+        <Card variant="outlined">
+            <Stack
+                p={1}
+                spacing={1}
+                component="form"
+                noValidate
+                autoComplete="off"
+                onSubmit={handleSubmit(onSubmit)}
+            >
                 <Controller
-                    name={`value`}
+                    name="paramId"
                     control={control}
                     render={({field: {value, onChange}}) => (
                         <TextField
-                            variant="outlined"
+                            required
+                            select
+                            id="paramId"
                             value={value}
                             onChange={onChange}
-                            placeholder={'Value'}
-                            label={'Value'}
+                            label="Parameter"
                             size="small"
-                        />
+                        >
+                            {allParams.map((option) => (
+                                <MenuItem key={option.id} value={option.id}>
+                                    {option.key} {option.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
                     )}
                 />
-            </FormControl>
 
-            <FormControl>
-                <Controller
-                    name="hide"
-                    control={control}
-                    render={({field: {value, onChange}}) => (
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={value}
-                                    onChange={(e) => onChange(e.target.checked)}
-                                />
-                            }
-                            label="Скрыть"
-                        />
-                    )}
-                />
-            </FormControl>
+                <FormControl fullWidth>
+                    <Controller
+                        name="value"
+                        control={control}
+                        render={({field: {value, onChange}}) => (
+                            <TextField
+                                variant="outlined"
+                                value={value}
+                                onChange={onChange}
+                                placeholder="Value"
+                                label="Value"
+                                size="small"
+                            />
+                        )}
+                    />
+                </FormControl>
 
-            <Button size="small"
-                    variant="contained"
-                    type="submit"
-                    fullWidth
-            >Save</Button>
-        </Stack>
-        <List>
-            {sceneParams && sceneParams.map((param: Param) =>
-                <ListItem key={param.id}>{param.key} | {param.label} | {param.value}</ListItem>
-            )}
-        </List>
-    </Card>
-}
+                <FormControl>
+                    <Controller
+                        name="hide"
+                        control={control}
+                        render={({field: {value, onChange}}) => (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={value}
+                                        onChange={(e) => onChange(e.target.checked)}
+                                    />
+                                }
+                                label="Скрыть"
+                            />
+                        )}
+                    />
+                </FormControl>
+
+                <Button size="small" variant="contained" type="submit" fullWidth>
+                    Save
+                </Button>
+            </Stack>
+
+            <List>
+                {sceneParams.map((param) => (
+                    <ListItem key={param.id}>
+                        param_id: {param.param_id} | value: {param.value}
+                    </ListItem>
+                ))}
+            </List>
+        </Card>
+    );
+};
 
 export default React.memo(SceneParams);

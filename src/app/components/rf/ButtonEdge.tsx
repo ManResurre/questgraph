@@ -7,9 +7,34 @@ import {
     type EdgeProps, useNodes,
 } from '@xyflow/react';
 import {setNextSceneId} from "@/lib/ChoiceRepository";
-import {getSmartEdge} from "@tisoap/react-flow-smart-edge";
+import {getSmartEdge, PathFindingFunction} from '@tisoap/react-flow-smart-edge';
+import {createAStarFinder} from "@/app/components/rf/aStar/aStar";
 
-export default function CustomEdge(
+export const pathfindingAStarNoDiagonal: PathFindingFunction = (
+    grid,
+    start,
+    end,
+) => {
+    try {
+        const finder = createAStarFinder({
+            diagonalMovement: "Always",
+        });
+        const fullPath = finder.findPath(start.x, start.y, end.x, end.y, grid);
+
+        if (fullPath.length === 0) {
+            throw new Error("No path found");
+        }
+        return fullPath;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error(`Unknown error: ${String(error)}`);
+    }
+};
+
+
+const CustomEdge = (
     {
         id,
         sourceX,
@@ -20,7 +45,7 @@ export default function CustomEdge(
         targetPosition,
         style = {},
         markerEnd,
-    }: EdgeProps) {
+    }: EdgeProps) => {
 
     const [edgePath, labelX, labelY] = getBezierPath({
         sourceX,
@@ -34,7 +59,12 @@ export default function CustomEdge(
     const nodes = useNodes();
 
     const smartPath = getSmartEdge({
-        sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, nodes
+        sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, nodes,
+        options: {
+            gridRatio: 35,
+            nodePadding: 15,
+            generatePath: pathfindingAStarNoDiagonal,
+        },
     });
 
     const {setEdges} = useReactFlow();
@@ -56,10 +86,15 @@ export default function CustomEdge(
         ...style, // Переопределяется переданным style
     };
 
-    // @ts-ignore
-    const {svgPathString} = smartPath;
+    const getPath = () => {
+        if (smartPath instanceof Error) {
+            return edgePath
+        }
+        return smartPath.svgPathString;
+    }
+
     return <>
-        <BaseEdge path={svgPathString}
+        <BaseEdge path={getPath()}
                   markerEnd={markerEnd}
                   style={edgeStyle}
         />
@@ -74,11 +109,13 @@ export default function CustomEdge(
                     }
                 }
             >
-                <button className="nodrag nopan"
-                        onClick={onEdgeClick}>
-                    ×
-                </button>
+                {/*<button className="nodrag nopan"*/}
+                {/*        onClick={onEdgeClick}>*/}
+                {/*    ×*/}
+                {/*</button>*/}
             </div>
         </EdgeLabelRenderer>
     </>
 }
+
+export default React.memo(CustomEdge);

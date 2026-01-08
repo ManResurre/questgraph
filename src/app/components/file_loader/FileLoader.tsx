@@ -77,7 +77,6 @@ const FileLoader = () => {
         if (!fileContent)
             return;
 
-
         service?.createFromFile(fileContent, Number(questId!))
     }, [fileContent])
 

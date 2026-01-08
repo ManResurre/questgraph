@@ -1,18 +1,26 @@
-import React, {useCallback, useMemo} from "react";
-import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
-import LocationList from "@/app/components/choice/LocationList";
-import {Choice} from "@/lib/db";
-import {IconButton, ListItem, ListItemText, Stack, Typography} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import ScenesAutocomplete from "@/app/components/choice/ScenesAutocomplete";
+import React, {useCallback} from "react";
+import {Box, IconButton, ListItem, ListItemText} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from '@mui/icons-material/Edit';
+import {deleteChoice} from "@/lib/ChoiceRepository";
+import {useChoiceContext} from "@/app/components/choice/ChoiceProvider";
+import {useQueryClient} from "@tanstack/react-query";
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {Database} from "@/supabase";
 
-const ChoiceItem = React.memo(({choice, scenes, highlight}: any) => {
-    const {service} = useSceneContext();
-    const locationList = useMemo(() => (
-        <LocationList choiceId={choice.id}/>
-    ), [choice.id]);
+type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
-    const highlightText = (text: string) => {
+export interface ChoiceItemProps {
+    choice: Choice,
+    highlight?: string,
+}
+
+const ChoiceItem = React.memo(({choice, highlight}: ChoiceItemProps) => {
+    const queryClient = useQueryClient();
+    const {setEditingChoice} = useChoiceContext();
+    const {setLoading} = useSidebar();
+
+    const highlightText = useCallback((text: string) => {
         if (!highlight || !text) return text;
 
         const regex = new RegExp(`(${highlight})`, "gi");
@@ -23,35 +31,44 @@ const ChoiceItem = React.memo(({choice, scenes, highlight}: any) => {
                 <mark key={i} style={{backgroundColor: "#ffeb3b"}}>{part}</mark> :
                 part
         );
-    };
+    }, [highlight]);
 
-    const handleSelectClick = useCallback((choice: Choice) => {
-        service?.addChoice(choice);
-    }, [service]);
+    const handleDelete = useCallback(async () => {
+        setLoading(true);
+        await deleteChoice(Number(choice.id));
+        await queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
+        await queryClient.invalidateQueries({queryKey: ["getChoices"]});
+    }, [choice])
+
+    const handleEdit = () => {
+        setEditingChoice(choice)
+    }
 
     return (
         <ListItem
             secondaryAction={
-                <IconButton
-                    edge="end"
-                    aria-label="edit"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectClick(choice);
-                    }}
-                    sx={{mr: 0.5}}
-                >
-                    <CheckIcon color={false ? "success" : "primary"} fontSize="small"/>
-                </IconButton>
+                <Box>
+                    <IconButton
+                        onClick={handleEdit}
+                        sx={{mr: 0.5}}
+                    >
+                        <EditIcon fontSize="small"/>
+                    </IconButton>
+                    <IconButton
+
+                        onClick={(e) => handleDelete()}
+                        sx={{mr: 0.5}}
+                    >
+                        <DeleteIcon fontSize="small"/>
+                    </IconButton>
+                </Box>
             }
         >
             <ListItemText
-                primary={highlightText(choice.label)}
-                secondary={<Stack alignItems="flex-start" spacing={1}>
-                    <Typography component={'div'}>{highlightText(choice.text)}</Typography>
-                    {locationList}
-                    <ScenesAutocomplete choice={choice} scenes={scenes}/>
-                </Stack>}
+                primary={highlightText(choice.label!)}
+                secondary={
+                    <span>{highlightText(choice.text!)}</span>
+                }
                 slotProps={
                     {
                         secondary: {
@@ -59,6 +76,15 @@ const ChoiceItem = React.memo(({choice, scenes, highlight}: any) => {
                         }
                     }
                 }
+                sx={{
+                    pr: 8,
+                    minWidth: 0,
+                    '& .MuiTypography-root': {
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                        whiteSpace: 'normal'
+                    }
+                }}
             />
         </ListItem>
     )

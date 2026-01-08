@@ -8,6 +8,7 @@ import {langs} from "@uiw/codemirror-extensions-langs";
 import {abbreviationTracker, expandAbbreviation} from "@emmetio/codemirror6-plugin";
 import {Prec} from "@codemirror/state";
 import {keymap} from "@codemirror/view";
+import {formatCode} from "@/lib/CodeMirrorHelper";
 
 const customTheme = EditorView.theme({
     '&': {
@@ -58,6 +59,13 @@ function ChoiceForm({index, prefix}: ChoiceFormProps) {
                             keymap.of([
                                 {
                                     key: "Tab", run: expandAbbreviation
+                                },
+                                {
+                                    key: "Ctrl-Alt-l",
+                                    run: (view) => {
+                                        formatCode(view, 'html');
+                                        return true;
+                                    }
                                 }
                             ])
                         )

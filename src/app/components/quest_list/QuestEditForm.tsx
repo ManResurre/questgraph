@@ -1,30 +1,28 @@
 import {Controller, useForm} from "react-hook-form";
 import {Button, FormControl, Paper, Stack, TextField} from "@mui/material";
-import React, {useEffect} from "react";
-import {useQuestContext} from "@/app/components/quest_list/QuestsProvider";
+import React from "react";
 import {Quest} from "@/lib/db";
+import {createQuest} from "@/lib/QuestRepository";
+import {useQueryClient} from "@tanstack/react-query";
+import {User} from "@supabase/supabase-js";
 
-interface IQuestEditForm extends Quest {
+interface QuestEditFormProps {
+    user: User
 }
 
-export function QuestEditForm() {
-    const {service: questService, update} = useQuestContext();
-
-    const {handleSubmit, control, reset} = useForm<IQuestEditForm>({
+export function QuestEditForm({user}: QuestEditFormProps) {
+    const {handleSubmit, control, reset} = useForm<Quest>({
         defaultValues: {
             name: ""
         }
     });
+    const queryClient = useQueryClient();
 
-    const onSubmit = (data: IQuestEditForm) => {
-        questService?.create<IQuestEditForm>(data);
-        reset({name: ""})
+    const onSubmit = async (quest: Quest) => {
+        reset();
+        await createQuest({...quest, user_id: user.id});
+        await queryClient.invalidateQueries({queryKey: ["quests"]});
     }
-
-    useEffect(() => {
-        if (questService?.editing)
-            reset({name: questService?.editing?.name})
-    }, [update]);
 
     return <Paper>
         <Stack

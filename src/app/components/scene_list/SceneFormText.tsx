@@ -8,6 +8,7 @@ import {Prec} from "@codemirror/state";
 import {keymap} from "@codemirror/view";
 import {Button, Box, Select, MenuItem, IconButton, Typography, FormControl, InputLabel} from "@mui/material";
 import {Add, Delete, NavigateBefore, NavigateNext} from "@mui/icons-material";
+import {formatCode} from "@/lib/CodeMirrorHelper";
 
 const customTheme = EditorView.theme({
     '&': {
@@ -104,7 +105,7 @@ export default function SceneFormText({methods}: any) {
                         <NavigateBefore/>
                     </IconButton>
 
-                    <FormControl variant="outlined" size="small" sx={{minWidth: 120}}>
+                    <FormControl variant="outlined" size="small" sx={{minWidth: 100}}>
                         <InputLabel>Page</InputLabel>
                         <Select
                             value={currentPage}
@@ -148,6 +149,13 @@ export default function SceneFormText({methods}: any) {
                                         keymap.of([
                                             {
                                                 key: "Tab", run: expandAbbreviation
+                                            },
+                                            {
+                                                key: "Ctrl-Alt-l",
+                                                run: (view) => {
+                                                    formatCode(view, 'html');
+                                                    return true;
+                                                }
                                             }
                                         ])
                                     )

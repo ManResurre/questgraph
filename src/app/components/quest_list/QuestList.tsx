@@ -19,30 +19,38 @@ import {
     ListSubheader
 } from '@mui/material';
 import {Edit, Delete} from '@mui/icons-material';
-import {useQuestContext} from "@/app/components/quest_list/QuestsProvider";
 import Link from "next/link";
 import {Quest} from "@/lib/db";
 import {usePathname} from "next/navigation";
+import {deleteQuest} from "@/lib/QuestRepository";
+import {User} from "@supabase/supabase-js";
+import {useQueryClient} from "@tanstack/react-query";
 
-export function QuestList({quests}: { quests?: Quest[] }) {
-    const {service: questService} = useQuestContext();
-    const pathname = usePathname()
+interface QuestListProps {
+    quests?: Quest[],
+    user?: User | null
+}
+
+export function QuestList({quests, user}: QuestListProps) {
+    const pathname = usePathname();
+    const queryClient = useQueryClient();
 
     const handleEditClick = (quest: Quest) => {
-        questService?.edit(quest);
+        // questService?.edit(quest);
     }
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState<Quest | null>(null);
     const handleDeleteClick = (item: any) => {
         setItemToDelete(item);
         setDeleteDialogOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (itemToDelete) {
-            questService?.delete(itemToDelete);
+            await deleteQuest(itemToDelete.id!)
         }
+        await queryClient.invalidateQueries({queryKey: ["quests"]});
         setDeleteDialogOpen(false);
         setItemToDelete(null);
     };
@@ -101,8 +109,9 @@ export function QuestList({quests}: { quests?: Quest[] }) {
 
                             <ListItemText
                                 primary={
-                                    <Typography fontWeight={600}>
-                                        {quest.name}
+                                    <Typography color={user?.id == quest.user_id ? "success" : "textPrimary"}
+                                                fontWeight={600}>
+                                        {quest.name} - {quest.user_id}
                                     </Typography>
                                 }
                                 // secondary={

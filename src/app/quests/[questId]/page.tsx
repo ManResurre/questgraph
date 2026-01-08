@@ -1,54 +1,96 @@
-'use client';
-import {Box, Button, Divider, Grid, Typography} from "@mui/material";
-import SceneList from "@/app/components/scene_list/SceneList";
-import {db} from "@/lib/db";
-import {useLiveQuery} from "dexie-react-hooks";
+'use client'
+import React, {useEffect, useMemo, useState} from "react";
+import {
+    ReactFlow,
+    Background,
+    Controls,
+} from "@xyflow/react";
+
 import {useParams} from "next/navigation";
-import FileLoader from "@/app/components/file_loader/FileLoader";
-import React from "react";
-import AvailableChoiceList from "@/app/components/choice/AvailableChoiceList";
-import SimpleParamForm from "@/app/components/params_list/SimpleParamForm";
-import SimpleParamsList from "@/app/components/params_list/SimpleParamsList";
-import {useSceneContext} from "@/app/components/scene_list/SceneProvider";
-import Status from "@/app/components/status/Status";
-import Link from "next/link";
+import useLayoutElements from "@/app/quests/[questId]/dagreLayout";
 
+import '@xyflow/react/dist/style.css';
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {useScenesWithChoices} from "@/app/hooks/scene";
+import {Grid} from "@mui/material";
+import GraphSidebar from "@/app/components/sidebar/GraphSidebar";
+import PlayerModal from "@/app/components/quest_player/PlayerModal";
+import GraphMenuSidebar from "@/app/components/sidebar/GraphMenuSidebar";
+import {useQuestGraph} from "@/app/quests/[questId]/hooks/graph";
+import {
+    CONNECTION_LINE_TYPE,
+    CONTAINER_STYLE,
+    CustomEdgeType, EDGE_TYPES, NODE_TYPES,
+    SceneNodeType
+} from "@/app/quests/[questId]/constants/graph";
+import {buildGraphFromScenes} from "@/app/quests/[questId]/utils/graphUtils";
 
-export default function QuestPage() {
-    const {service} = useSceneContext();
+const QuestPage = () => {
     const {questId} = useParams();
-    const questIdNum = Number(questId!);
+    const {typeDraggable} = useSidebar();
 
-    const {quest, scenes, choices} = useLiveQuery(async () => {
-        const quest = await db.quests.get(questIdNum);
-        const scenes = await db.scenes.where('questId').equals(questIdNum).toArray();
-        const choices = await db.choices.where('questId').equals(questIdNum).toArray()
+    const {data: scenes} = useScenesWithChoices(Number(questId));
 
-        return {quest, scenes, choices}
-    }) ?? {quest: null, scenes: [], choices: []}
+    const {nodes: initialNodes, edges: initialEdges} = useMemo(
+        () => buildGraphFromScenes(scenes ?? []),
+        [scenes]
+    );
 
-    if (!quest) {
-        return <Typography>Quest not found :(</Typography>
-    }
+    const [nodes, setNodes] = useState<SceneNodeType[]>(initialNodes);
+    const [edges, setEdges] = useState<CustomEdgeType[]>(initialEdges);
 
-    return <Box mt={1}>
-        <Typography>{quest?.name}</Typography>
-        <Button href={`${questId}/player`} variant="contained" component={Link}
-                color="inherit">Play</Button>
-        <Divider/>
-        <Grid container spacing={1} mt={1}>
-            <Grid size={6}>
-                {scenes && <SceneList scenes={scenes}/>}
-            </Grid>
-            <Grid size={6}>
-                <SimpleParamForm editedParam={service?.editedParam} questId={questIdNum}/>
-                <SimpleParamsList questId={questIdNum}/>
-                <FileLoader/>
-                <Status questId={questIdNum}/>
-                <AvailableChoiceList scenes={scenes} choices={choices}/>
-            </Grid>
+    const {onLayout} = useLayoutElements({nodes, edges, setNodes, setEdges, questId: Number(questId)});
+
+    const {
+        onNodesChange,
+        onEdgesChange,
+        onConnect,
+        onConnectEnd,
+        onDrop,
+        onDragStart,
+        onDragOver,
+        handleEdgeClick
+    } = useQuestGraph(Number(questId), nodes, setNodes, setEdges, typeDraggable);
+
+    useEffect(() => {
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+    }, [initialNodes, initialEdges]);
+
+    const memoizedNodes = useMemo(() => nodes, [nodes]);
+
+    return (
+        <Grid container spacing={1}>
+            <div style={CONTAINER_STYLE}>
+                <ReactFlow
+                    nodes={memoizedNodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    selectNodesOnDrag={true}
+                    elevateNodesOnSelect={true}
+                    nodesDraggable={true}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onConnectEnd={onConnectEnd}
+                    onDrop={onDrop}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onEdgeClick={handleEdgeClick}
+                    connectionLineType={CONNECTION_LINE_TYPE}
+                    colorMode="dark"
+                    edgeTypes={EDGE_TYPES}
+                    nodeTypes={NODE_TYPES}
+                    fitView
+                >
+                    <Background/>
+                    <Controls/>
+                </ReactFlow>
+                <GraphSidebar/>
+                <GraphMenuSidebar onLayout={onLayout}/>
+                <PlayerModal/>
+            </div>
         </Grid>
-    </Box>
-}
+    );
+};
 
-
+export default React.memo(QuestPage);

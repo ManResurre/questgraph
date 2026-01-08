@@ -1,19 +1,38 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+    createContext,
+    useContext,
+    useState,
+    ReactNode,
+    useEffect,
+} from "react";
+import {useIsFetching} from "@tanstack/react-query";
+
+interface OpenSidebarProps {
+    elementData?: any;
+    flags?: Partial<Record<"newChoice" | "parameters" | "editSceneParams" | "editScene" | "editChoice", boolean>>;
+}
 
 interface GraphSidebarContextType {
     isSidebarOpen: boolean;
-    selectedNodeId: number | null;
     selectedElementData: any;
-    openSidebar: (nodeId: number, elementData?: any) => void;
+    openSidebar: (props: OpenSidebarProps) => void;
     closeSidebar: () => void;
+    typeDraggable: string | null;
+    setTypeDraggable: (type: string | null) => void;
+    flags: Record<string, boolean>;
+    setFlag: (key: string, value: boolean) => void;
+    loading: boolean;
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const GraphSidebarContext = createContext<GraphSidebarContextType | undefined>(undefined);
+const GraphSidebarContext = createContext<GraphSidebarContextType | undefined>(
+    undefined
+);
 
 export const useSidebar = () => {
     const context = useContext(GraphSidebarContext);
     if (context === undefined) {
-        throw new Error('useSidebar must be used within a SidebarProvider');
+        throw new Error("useSidebar must be used within a SidebarProvider");
     }
     return context;
 };
@@ -22,31 +41,69 @@ interface GraphSidebarProviderProps {
     children: ReactNode;
 }
 
-export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = ({ children }) => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
-    const [selectedElementData, setSelectedElementData] = useState<any>(null);
+export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = (
+    {
+        children,
+    }) => {
 
-    const openSidebar = (nodeId: number, elementData?: any) => {
-        setSelectedNodeId(nodeId);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [selectedElementData, setSelectedElementData] = useState<any>(null);
+    const [typeDraggable, setTypeDraggable] = useState<string | null>(null);
+
+    const [flags, setFlags] = useState<Record<string, boolean>>({
+        newChoice: false,
+        parameters: false,
+        editSceneParams: false,
+        editScene: false
+    });
+
+    const setFlag = (key: string, value: boolean) =>
+        setFlags((prev) => ({...prev, [key]: value}));
+
+    const [loading, setLoading] = useState<boolean>(false);
+    const fetching = useIsFetching({
+        queryKey: ["getChoices", "scenesWithChoices"],
+    });
+
+    useEffect(() => {
+        setLoading(fetching > 0);
+    }, [fetching]);
+
+    const openSidebar = ({
+                             elementData,
+                             flags: newFlags,
+                         }: OpenSidebarProps) => {
+        if (newFlags) {
+            setFlags((prev) => ({...prev, ...newFlags}));
+        }
         setSelectedElementData(elementData);
         setIsSidebarOpen(true);
     };
 
     const closeSidebar = () => {
         setIsSidebarOpen(false);
-        setSelectedNodeId(null);
         setSelectedElementData(null);
+        setFlags({
+            newChoice: false,
+            parameters: false,
+            editSceneParams: false,
+            editScene: false
+        });
     };
 
     return (
         <GraphSidebarContext.Provider
             value={{
                 isSidebarOpen,
-                selectedNodeId,
                 selectedElementData,
                 openSidebar,
                 closeSidebar,
+                typeDraggable,
+                setTypeDraggable,
+                flags,
+                setFlag,
+                loading,
+                setLoading,
             }}
         >
             {children}
