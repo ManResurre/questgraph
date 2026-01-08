@@ -3,8 +3,10 @@ import {Database} from "@/supabase";
 
 export async function deleteParameterChoice(selectedId: number) {
 }
+
 export async function getParameterChoice(id: number) {
 }
+
 export async function updateParameterChoice(p0: {
     choice_id: number | null;
     id: number;
@@ -48,4 +50,29 @@ export async function deleteParameter(parameterId: number) {
     if (error) {
         throw error;
     }
+}
+
+export async function getSceneParameters(sceneId: number) {
+    console.log('getSceneParameters');
+    const {data, error} = await supabase
+        .from('parameter_scene')
+        .select("*")
+        .eq('scene_id', sceneId)
+        .order("id", {ascending: true});
+
+    if (error) throw error;
+
+    return data;
+}
+
+export async function getParametersChoice(choiceId: number) {
+    const {data, error} = await supabase
+        .from('parameter_choice')
+        .select("*")
+        .eq('choice_id', choiceId)
+        .order("id", {ascending: true});
+
+    if (error) throw error;
+
+    return data;
 }

@@ -8,6 +8,7 @@ import {SceneFullData} from "@/lib/SceneRepository";
 import {NodeProps, XYPosition} from "@xyflow/react";
 import {usePlayer} from "@/app/components/sidebar/PlayerProvider";
 import PlayerText from "@/app/components/quest_player/PlayerText";
+import FormatListBulletedAddIcon from '@mui/icons-material/FormatListBulletedAdd';
 import "./style.scss";
 
 export interface SceneNodeData extends Node {
@@ -22,14 +23,25 @@ const SceneNode = ({data}: SceneNodeProps) => {
     const {openSidebar} = useSidebar();
     const {currentScene, setCurrentScene} = usePlayer();
 
-    const handleClick = useCallback(() => {
+    const handleEditNode = useCallback((e) => {
+        e.stopPropagation();
         openSidebar({
-            nodeId: Number(data.id),
+            flags: {"editScene": true},
+            elementData: {type: 'node', data}
+        });
+    }, [data])
+
+    const handleEditParams = useCallback((e) => {
+        e.stopPropagation();
+        console.log('editSceneParams');
+        openSidebar({
+            flags: {"editSceneParams": true},
             elementData: {type: 'node', data}
         });
     }, [data])
 
     const handleClickCard = () => {
+        console.log('handleClickCard');
         localStorage.setItem('selectedNode', String(data.id));
         setCurrentScene(data);
     }
@@ -43,15 +55,28 @@ const SceneNode = ({data}: SceneNodeProps) => {
             <div className="flex flex-col gap-y-2 font-normal text-gray-700 dark:text-gray-400 cursor-auto">
                 <CustomHandle id={`s${data.id}`}
                               type={'target'} position={Position.Left}/>
-                <div className="drag-handle p-1 flex justify-between cursor-grab">
+                <div className="drag-handle p-1 flex items-center cursor-grab">
                     {data.name}
-                    <IconButton sx={{
-                        minWidth: 'auto',
-                        height: 24,
-                        width: 24
-                    }} onClick={() => handleClick()} size="small">
-                        <SettingsIcon/>
-                    </IconButton>
+
+                    <div className="flex ml-auto space-x-1">
+                        <IconButton
+                            sx={{minWidth: 'auto', height: 24, width: 24}}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={handleEditParams}
+                            size="small"
+                        >
+                            <FormatListBulletedAddIcon sx={{fontSize: 16}}/>
+                        </IconButton>
+
+                        <IconButton
+                            sx={{minWidth: 'auto', height: 24, width: 24}}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={handleEditNode}
+                            size="small"
+                        >
+                            <SettingsIcon/>
+                        </IconButton>
+                    </div>
                 </div>
 
                 <div className="px-2">

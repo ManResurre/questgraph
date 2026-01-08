@@ -22,12 +22,14 @@ import {useParameterChoice} from "@/app/hooks/parameters";
 type ParameterChoice = Database["public"]["Tables"]["parameter_choice"]["Row"];
 
 interface ParameterChoiceEditProps {
-    selectedId: number;
+    data: any;
 }
 
-const ParameterChoiceEdit = ({ selectedId }: ParameterChoiceEditProps) => {
+const ParameterChoiceEdit = ({ data }: ParameterChoiceEditProps) => {
+    const choiceId = parseInt(data.source);
+
     const { closeSidebar, setLoading } = useSidebar();
-    const { data: paramChoice } = useParameterChoice(selectedId);
+    const { data: paramChoice } = useParameterChoice(choiceId);
     const queryClient = useQueryClient();
 
     const {
@@ -48,10 +50,10 @@ const ParameterChoiceEdit = ({ selectedId }: ParameterChoiceEditProps) => {
     }, [paramChoice]);
 
     const handleRemove = useCallback(async () => {
-        await deleteParameterChoice(selectedId);
+        await deleteParameterChoice(choiceId);
         await queryClient.invalidateQueries({ queryKey: ["parameter_choices"] });
         closeSidebar();
-    }, [selectedId]);
+    }, [choiceId]);
 
     const handleApply = useCallback(async () => {
         setLoading(true);

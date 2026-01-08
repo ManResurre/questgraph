@@ -9,14 +9,14 @@ import ChoiceManagement from "@/app/components/choice/ChoiceManagement";
 import {ChoiceProvider} from "@/app/components/choice/ChoiceProvider";
 import ParametersManagement from "@/app/components/parameters/ParametersManagement";
 import {ParametersProvider} from "@/app/components/parameters/ParametersProvider";
+import SceneParams from "@/app/components/scene_list/SceneParams";
+import SceneParameterList from "@/app/components/scene_list/SceneParametrList";
 
 const GraphSidebar = () => {
     const {
         isSidebarOpen,
         closeSidebar,
         selectedElementData,
-        selectedNodeId,
-        selectedChoiceId,
         flags,
         loading,
     } = useSidebar();
@@ -133,8 +133,8 @@ const GraphSidebar = () => {
                 }}
                 className={loading ? "noise-effect" : ""}
             >
-                {selectedNodeId && <SceneNodeEdit data={selectedElementData.data}/>}
-                {selectedChoiceId && <EdgeEdit selectedChoiceId={selectedChoiceId}/>}
+                {flags.editScene && <SceneNodeEdit data={selectedElementData.data}/>}
+                {flags.editChoice && <EdgeEdit data={selectedElementData.edge}/>}
                 {flags.newChoice &&
                     <ChoiceProvider>
                         <ChoiceManagement/>
@@ -144,6 +144,9 @@ const GraphSidebar = () => {
                     <ParametersProvider>
                         <ParametersManagement/>
                     </ParametersProvider>
+                }
+                {flags.editSceneParams &&
+                    <SceneParameterList/>
                 }
             </Box>
         </Drawer>

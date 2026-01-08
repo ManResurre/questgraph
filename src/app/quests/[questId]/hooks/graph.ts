@@ -119,7 +119,7 @@ export const useQuestGraph = (
                     position: JSON.stringify(position),
                     locPosition: true
                 });
-                queryClient.invalidateQueries({ queryKey: ["scenesWithChoices"] });
+                queryClient.invalidateQueries({queryKey: ["scenesWithChoices"]});
             }
             if (typeDraggable === "default") {
                 alert("WIP");
@@ -148,9 +148,8 @@ export const useQuestGraph = (
             event.preventDefault();
             if (!edge.sourceHandle) return;
 
-            const choiceId = parseInt(edge.sourceHandle.substring(1));
             openSidebar({
-                edgeId: choiceId,
+                flags: {"editChoice": true},
                 elementData: {type: "edge", edge}
             });
         },

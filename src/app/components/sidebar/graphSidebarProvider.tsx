@@ -8,21 +8,17 @@ import React, {
 import {useIsFetching} from "@tanstack/react-query";
 
 interface OpenSidebarProps {
-    nodeId?: number;
-    edgeId?: number;
     elementData?: any;
-    flags?: Partial<Record<"newChoice" | "parameters", boolean>>;
+    flags?: Partial<Record<"newChoice" | "parameters" | "editSceneParams" | "editScene" | "editChoice", boolean>>;
 }
 
 interface GraphSidebarContextType {
     isSidebarOpen: boolean;
-    selectedNodeId: number | null;
     selectedElementData: any;
     openSidebar: (props: OpenSidebarProps) => void;
     closeSidebar: () => void;
     typeDraggable: string | null;
     setTypeDraggable: (type: string | null) => void;
-    selectedChoiceId: number | null;
     flags: Record<string, boolean>;
     setFlag: (key: string, value: boolean) => void;
     loading: boolean;
@@ -51,14 +47,14 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = (
     }) => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
-    const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
     const [selectedElementData, setSelectedElementData] = useState<any>(null);
     const [typeDraggable, setTypeDraggable] = useState<string | null>(null);
 
     const [flags, setFlags] = useState<Record<string, boolean>>({
         newChoice: false,
         parameters: false,
+        editSceneParams: false,
+        editScene: false
     });
 
     const setFlag = (key: string, value: boolean) =>
@@ -74,13 +70,9 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = (
     }, [fetching]);
 
     const openSidebar = ({
-                             nodeId,
                              elementData,
-                             edgeId,
                              flags: newFlags,
                          }: OpenSidebarProps) => {
-        if (nodeId) setSelectedNodeId(nodeId);
-        if (edgeId) setSelectedChoiceId(edgeId);
         if (newFlags) {
             setFlags((prev) => ({...prev, ...newFlags}));
         }
@@ -90,23 +82,24 @@ export const GraphSidebarProvider: React.FC<GraphSidebarProviderProps> = (
 
     const closeSidebar = () => {
         setIsSidebarOpen(false);
-        setSelectedNodeId(null);
-        setSelectedChoiceId(null);
         setSelectedElementData(null);
-        setFlags({newChoice: false, parameters: false});
+        setFlags({
+            newChoice: false,
+            parameters: false,
+            editSceneParams: false,
+            editScene: false
+        });
     };
 
     return (
         <GraphSidebarContext.Provider
             value={{
                 isSidebarOpen,
-                selectedNodeId,
                 selectedElementData,
                 openSidebar,
                 closeSidebar,
                 typeDraggable,
                 setTypeDraggable,
-                selectedChoiceId,
                 flags,
                 setFlag,
                 loading,
