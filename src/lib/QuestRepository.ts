@@ -1,16 +1,18 @@
-import {db, Quest} from "@/lib/db";
 import supabase from "@/supabaseClient";
+import {Database} from "@/supabase";
 
-export async function createQuest(quest: Quest) {
-    await supabase
+export type Quest = Database["public"]["Tables"]["quests"]["Row"];
+export type QuestInsert = Database["public"]["Tables"]["quests"]["Insert"];
+
+export async function upsertQuest(quest: Quest | QuestInsert) {
+    const {error} = await supabase
         .from("quests")
-        .insert(quest);
+        .upsert(quest as QuestInsert);
 
-    // await db.quests.put({
-    //     ...quest,
-    //     masterKey: "",
-    //     authorKey: ""
-    // })
+    if (error) {
+        console.error('Error updating Quest:', error);
+        throw error;
+    }
 }
 
 export async function getQuests() {

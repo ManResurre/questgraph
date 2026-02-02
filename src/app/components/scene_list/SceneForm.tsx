@@ -102,8 +102,8 @@ function SceneForm({scene}: ISceneFormProps) {
                         placeholder={'Scene'}
                         label={'Scene'}
                         size="small"
-                        error={!!errors.name}          // Показываем состояние ошибки
-                        helperText={errors.name?.message} // Отображаем сообщение об ошибке
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
                     />
                 )}
             />

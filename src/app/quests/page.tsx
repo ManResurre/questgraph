@@ -4,29 +4,21 @@ import {NextPage} from "next";
 import {QuestList} from "@/app/components/quest_list/QuestList";
 import {CircularProgress, Container} from "@mui/material";
 import {QuestEditForm} from "@/app/components/quest_list/QuestEditForm";
-import {getQuests} from "@/lib/QuestRepository";
-import {useQuery} from "@tanstack/react-query";
 import React from "react";
-import {Quest} from "@/lib/db";
 import {useCurrentUser} from "@/app/hooks/useCurrentUser";
 import {User} from "@supabase/supabase-js";
+import {useQuests} from "@/app/components/quest/QuestContext";
 
 const QuestsPage: NextPage = () => {
-    const {data: quests, isLoading} = useQuery({
-        queryKey: ["quests"],
-        queryFn: getQuests,
-        staleTime: 1000 * 60 * 5,   // 5 минут данные считаются свежими
-        gcTime: 1000 * 60 * 30,  // 30 минут хранятся в кэше
-        refetchOnWindowFocus: false,
-    });
-
     const {user} = useCurrentUser();
+
+    const {isLoading} = useQuests();
 
     return <Container>
         <QuestEditForm user={user as User}/>
         {isLoading ?
             <CircularProgress size={24} color="inherit"/> :
-            <QuestList user={user} quests={quests as Quest[]}/>}
+            <QuestList user={user}/>}
     </Container>
 }
 

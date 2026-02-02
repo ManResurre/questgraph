@@ -7,6 +7,7 @@ import "../globals.css";
 import {CircularProgress} from "@mui/material";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {useCurrentUser} from "@/app/hooks/useCurrentUser";
+import {QuestProvider} from "@/app/components/quest/QuestContext";
 
 function ReactQueryProvider({children}: { children: ReactNode }) {
     // создаём QueryClient один раз
@@ -41,7 +42,9 @@ export default function QuestsLayout(
     return <ReactQueryProvider>
         <ReactFlowProvider>
             <GraphSidebarProvider>
-                {children}
+                <QuestProvider>
+                    {children}
+                </QuestProvider>
             </GraphSidebarProvider>
         </ReactFlowProvider>
     </ReactQueryProvider>

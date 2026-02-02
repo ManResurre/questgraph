@@ -1,16 +1,13 @@
-import {Box, Divider, Drawer, Stack, useMediaQuery, useTheme} from "@mui/material";
+import {Box, Drawer, useMediaQuery, useTheme} from "@mui/material";
 import React, {useEffect, useRef} from "react";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 import SceneNodeEdit from "@/app/components/rf/SceneNodeEdit";
 import EdgeEdit from "@/app/components/rf/EdgeEdit";
-import NewChoice from "@/app/components/choice/EditChoice";
-import ChoiceList from "@/app/components/choice/ChoiceList";
 import ChoiceManagement from "@/app/components/choice/ChoiceManagement";
 import {ChoiceProvider} from "@/app/components/choice/ChoiceProvider";
 import ParametersManagement from "@/app/components/parameters/ParametersManagement";
 import {ParametersProvider} from "@/app/components/parameters/ParametersProvider";
-import SceneParams from "@/app/components/scene_list/SceneParams";
-import SceneParameterList from "@/app/components/scene_list/SceneParametrList";
+import SceneParametersManagement from "@/app/components/scene_list/SceneParametersManagement";
 
 const GraphSidebar = () => {
     const {
@@ -126,6 +123,7 @@ const GraphSidebar = () => {
             />
 
             <Box
+                p={1}
                 sx={{
                     width: '100%',
                     height: '100%',
@@ -146,7 +144,9 @@ const GraphSidebar = () => {
                     </ParametersProvider>
                 }
                 {flags.editSceneParams &&
-                    <SceneParameterList/>
+                    <ParametersProvider>
+                        <SceneParametersManagement/>
+                    </ParametersProvider>
                 }
             </Box>
         </Drawer>

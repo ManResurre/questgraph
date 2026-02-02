@@ -9,11 +9,3 @@ export function useScenesWithChoices(questId: number) {
         enabled: !!questId, // чтобы не запускать без questId
     });
 }
-
-export function useSceneParameters(sceneId: number) {
-    return useQuery({
-        queryKey: ["getSceneParameters", sceneId],
-        queryFn: () => getSceneParameters(sceneId),
-        enabled: !!sceneId,
-    });
-}

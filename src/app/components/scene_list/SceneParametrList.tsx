@@ -2,10 +2,9 @@ import React, {useMemo, useRef, useState, useTransition} from "react";
 import {Box, CircularProgress, Paper, TextField} from "@mui/material";
 import {Virtuoso, VirtuosoHandle} from "react-virtuoso";
 import {Database} from "@/supabase";
-import {useParams} from "next/navigation";
-import {useSceneParameters} from "@/app/hooks/scene";
 import SceneParameterItem from "@/app/components/scene_list/SceneParameterItem";
-import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider"; // компонент для строки
+import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {useParametersSceneQuery} from "@/app/hooks/parameters";
 
 type ParameterScene = Database["public"]["Tables"]["parameter_scene"]["Row"];
 
@@ -16,8 +15,7 @@ const SceneParameterList = () => {
 
     const {selectedElementData: {data: scene}} = useSidebar();
 
-    // кастомный хук для выборки параметров сцены
-    const {data: parametersScene} = useSceneParameters(Number(scene.id));
+    const {data: parametersScene} = useParametersSceneQuery(Number(scene.id));
 
     const filteredParameters = useMemo(() => {
         if (!parametersScene) return [];
@@ -65,7 +63,7 @@ const SceneParameterList = () => {
                         className="hide-scrollbar"
                         data={filteredParameters}
                         itemContent={(index: number, parameter: ParameterScene) => (
-                            <SceneParameterItem parameter={parameter}/>
+                            <SceneParameterItem parameterScene={parameter}/>
                         )}
                     />
                 </Box>

@@ -19,22 +19,28 @@ import {darcula} from "@uiw/codemirror-theme-darcula";
 import {abbreviationTracker, expandAbbreviation} from "@emmetio/codemirror6-plugin";
 import {Prec} from "@codemirror/state";
 import {keymap} from "@codemirror/view";
-import {useParametersContext} from "@/app/components/parameters/ParametersProvider";
+import {useParameters} from "@/app/components/parameters/ParametersProvider";
 import {formatCode} from "@/lib/CodeMirrorHelper";
-import {updateParameters} from "@/lib/ParametersRepository";
-import {useQueryClient} from "@tanstack/react-query";
+import {ParameterInsert, ParameterScene} from "@/lib/ParametersRepository";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 
-type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
-
-type ParameterForm = Database["public"]["Tables"]["parameters"]["Insert"];
 type ParameterType = Database["public"]["Enums"]["ParameterType"];
 const parameterTypes: ParameterType[] = ["value", "calculation", "percent"];
 
-const EditParameter = () => {
+interface EditParameterProps {
+    onSubmit?: (p: ParameterInsert, ps: ParameterScene | null) => void,
+    patch?: ParameterScene | null
+}
+
+const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
     const {questId} = useParams();
-    const {editingParameter, setEditingParameter} = useParametersContext();
-    const queryClient = useQueryClient();
+    const {
+        editingParameter,
+        editingParameterScene,
+        setEditingParameter,
+        upsertParameter
+    } = useParameters();
+
     const {setLoading} = useSidebar();
 
     const initialValues = useMemo(() => ({
@@ -45,29 +51,41 @@ const EditParameter = () => {
         text: "",
         hide: false,
         type: "value",
-        desc: ""
+        desc: "",
+        ...editingParameter
     }), [questId]);
 
-    const {control, handleSubmit, formState: {errors}, reset} = useForm<ParameterForm>({
-        defaultValues: initialValues as ParameterForm
+    const {control, handleSubmit, formState: {errors}, reset} = useForm<ParameterInsert>({
+        defaultValues: initialValues as ParameterInsert
     });
 
     useEffect(() => {
         if (editingParameter)
             reset(editingParameter)
+
+        if (patch && patch.value) {
+            console.log(patch);
+            reset(JSON.parse(patch.value))
+        }
+
     }, [editingParameter])
 
-    const onSubmit = useCallback(async (data: ParameterForm) => {
+    const submit = useCallback(async (data: ParameterInsert) => {
         setLoading(true)
-        await updateParameters(data as Parameter);
-        await queryClient.invalidateQueries({queryKey: ["getParameters"]});
+
+        if (onSubmit) {
+            onSubmit(data, editingParameterScene)
+        } else {
+            await upsertParameter(data as ParameterInsert);
+        }
+
         setLoading(false)
         clear();
-    }, []);
+    }, [editingParameterScene]);
 
     const clear = () => {
-        reset(initialValues as ParameterForm);
-        setEditingParameter(undefined);
+        reset(initialValues as ParameterInsert);
+        setEditingParameter(null);
     }
 
     return (
@@ -77,7 +95,7 @@ const EditParameter = () => {
             noValidate
             autoComplete="off"
             sx={{width: 1}}
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(submit)}
         >
             {/* Label */}
             <Controller

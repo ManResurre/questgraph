@@ -1,11 +1,19 @@
 import {useQuery} from "@tanstack/react-query";
-import {getParameterChoice, getParameters} from "@/lib/ParametersRepository";
+import {getParameterChoice, getParameters, getSceneParameters} from "@/lib/ParametersRepository";
 
-export function useParameters(questId: number) {
+export function useParametersQuery(questId: number) {
     return useQuery({
-        queryKey: ["getParameters", questId],
+        queryKey: ["parameters", questId],
         queryFn: () => getParameters(questId),
         enabled: !!questId,
+    });
+}
+
+export function useParametersSceneQuery(sceneId: number) {
+    return useQuery({
+        queryKey: ["parameter_scene", sceneId],
+        queryFn: () => getSceneParameters(sceneId),
+        enabled: !!sceneId,
     });
 }
 

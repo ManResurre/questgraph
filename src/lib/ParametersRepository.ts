@@ -16,7 +16,10 @@ export async function updateParameterChoice(p0: {
 }
 
 
-type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
+export type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
+export type ParameterInsert = Database["public"]["Tables"]["parameters"]["Insert"];
+export type ParameterScene = Database["public"]["Tables"]["parameter_scene"]["Row"];
+export type ParameterSceneInsert = Database["public"]["Tables"]["parameter_scene"]["Insert"];
 
 export async function getParameters(questId: number) {
     const {data, error} = await supabase
@@ -30,19 +33,19 @@ export async function getParameters(questId: number) {
     return data;
 }
 
-export async function updateParameters(parameter: Parameter) {
+export async function upsertParameter(parameter: Parameter | ParameterInsert) {
     const {error} = await supabase
         .from('parameters')
         .upsert(parameter);
 
     if (error) {
-        console.error('Error updating Choice:', error);
+        console.error('Error updating Parameter:', error);
         throw error;
     }
 }
 
 export async function deleteParameter(parameterId: number) {
-    const {error} = await supabase
+    const {data, error} = await supabase
         .from("parameters")
         .delete()
         .eq("id", parameterId);
@@ -50,10 +53,11 @@ export async function deleteParameter(parameterId: number) {
     if (error) {
         throw error;
     }
+
+    return data;
 }
 
 export async function getSceneParameters(sceneId: number) {
-    console.log('getSceneParameters');
     const {data, error} = await supabase
         .from('parameter_scene')
         .select("*")
@@ -63,6 +67,18 @@ export async function getSceneParameters(sceneId: number) {
     if (error) throw error;
 
     return data;
+}
+
+export async function upsertSceneParameter(value: ParameterScene | ParameterSceneInsert) {
+    console.log('upsertSceneParameter');
+    const {error} = await supabase
+        .from('parameter_scene')
+        .upsert(value);
+
+    if (error) {
+        console.error('Error updating Parameter Scene:', error);
+        throw error;
+    }
 }
 
 export async function getParametersChoice(choiceId: number) {

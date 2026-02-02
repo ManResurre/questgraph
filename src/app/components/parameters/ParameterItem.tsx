@@ -1,24 +1,20 @@
 import {Box, IconButton, ListItem, ListItemText} from "@mui/material";
 import {Edit as EditIcon} from "@mui/icons-material";
 import {Database} from "@/supabase";
-import {useParametersContext} from "@/app/components/parameters/ParametersProvider";
+import {useParameters} from "@/app/components/parameters/ParametersProvider";
 import DeleteIcon from "@mui/icons-material/Delete";
 import React from "react";
-import {deleteParameter} from "@/lib/ParametersRepository";
-import {useQueryClient} from "@tanstack/react-query";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
 
 type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
 
 const ParameterItem = ({parameter}: { parameter: Parameter }) => {
-    const {setEditingParameter} = useParametersContext();
-    const queryClient = useQueryClient();
+    const {setEditingParameter, deleteParameter} = useParameters();
     const {setLoading} = useSidebar()
 
     const handleDelete = async () => {
         setLoading(true);
         await deleteParameter(Number(parameter.id));
-        await queryClient.invalidateQueries({queryKey: ["getParameters"]});
         setLoading(false);
     }
 

@@ -95,3 +95,44 @@ export function cleanUndefined<T extends Record<string, any>>(obj: T): T {
         Object.entries(obj).filter(([_, v]) => v !== undefined)
     ) as T;
 }
+
+export type DiffValue<T> =
+    | { old: T; new: T }
+    | DiffObject<T>;
+
+export type DiffObject<T> = {
+    [K in keyof T]?: DiffValue<T[K]>;
+};
+
+export function diff<T extends object>(a: T, b: Partial<T>): DiffObject<T> {
+    const result: DiffObject<T> = {};
+
+    const keys = new Set<keyof T>([
+        ...Object.keys(a),
+        ...Object.keys(b),
+    ] as (keyof T)[]);
+
+    for (const key of keys) {
+        const aVal = a[key];
+        const bVal = b[key];
+
+        if (aVal === bVal) continue;
+
+        const bothObjects =
+            typeof aVal === "object" &&
+            typeof bVal === "object" &&
+            aVal !== null &&
+            bVal !== null;
+
+        if (bothObjects) {
+            const nested = diff(aVal as any, bVal as any);
+            if (Object.keys(nested).length > 0) {
+                result[key] = nested as DiffValue<T[typeof key]>;
+            }
+        } else {
+            result[key] = bVal as T[typeof key];
+        }
+    }
+
+    return result;
+}

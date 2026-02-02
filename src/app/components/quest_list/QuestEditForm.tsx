@@ -1,28 +1,37 @@
 import {Controller, useForm} from "react-hook-form";
 import {Button, FormControl, Paper, Stack, TextField} from "@mui/material";
-import React from "react";
-import {Quest} from "@/lib/db";
-import {createQuest} from "@/lib/QuestRepository";
-import {useQueryClient} from "@tanstack/react-query";
+import React, {useEffect} from "react";
+import {Quest} from "@/lib/QuestRepository";
 import {User} from "@supabase/supabase-js";
+import {useQuests} from "@/app/components/quest/QuestContext";
 
 interface QuestEditFormProps {
     user: User
 }
 
 export function QuestEditForm({user}: QuestEditFormProps) {
-    const {handleSubmit, control, reset} = useForm<Quest>({
+    const {editingQuest, upsertQuest, editQuest} = useQuests();
+
+    const {handleSubmit, control, reset, formState: {errors}} = useForm<Quest>({
         defaultValues: {
-            name: ""
+            name: '',
+            ...editingQuest
         }
     });
-    const queryClient = useQueryClient();
 
     const onSubmit = async (quest: Quest) => {
-        reset();
-        await createQuest({...quest, user_id: user.id});
-        await queryClient.invalidateQueries({queryKey: ["quests"]});
+        await upsertQuest({...quest, user_id: user.id});
+        editQuest(null);
     }
+
+    useEffect(() => {
+        if (editingQuest) {
+            reset(editingQuest);
+            return;
+        }
+
+        reset({name:""});
+    }, [editingQuest])
 
     return <Paper>
         <Stack
@@ -36,14 +45,20 @@ export function QuestEditForm({user}: QuestEditFormProps) {
                 <Controller
                     name={`name`}
                     control={control}
+                    rules={{
+                        required: "Название Квеста обязательно"
+                    }}
                     render={({field: {value, onChange}}) => (
                         <TextField
+                            required
                             variant="standard"
                             value={value}
                             onChange={onChange}
                             placeholder={'Name'}
                             label={'Name'}
                             size="small"
+                            error={!!errors.name}
+                            helperText={errors.name?.message}
                         />
                     )}
                 />

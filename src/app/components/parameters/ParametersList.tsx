@@ -1,19 +1,17 @@
 import React, {useMemo, useRef, useState, useTransition} from "react";
-import {Box, CircularProgress, IconButton, Paper, TextField} from "@mui/material";
+import {Box, CircularProgress, Paper, TextField} from "@mui/material";
 import {Virtuoso, VirtuosoHandle} from "react-virtuoso";
-import {useParams} from "next/navigation";
 import {Database} from "@/supabase";
-import {useParameters} from "@/app/hooks/parameters";
 import ParameterItem from "@/app/components/parameters/ParameterItem";
+import {useParameters} from "@/app/components/parameters/ParametersProvider";
 
 type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
 
 const ParametersList = () => {
-    const {questId} = useParams();
     const [searchTerm, setSearchTerm] = useState("");
     const virtuosoRef = useRef<VirtuosoHandle>(null);
     const [isPending, startTransition] = useTransition();
-    const {data: parameters} = useParameters(Number(questId));
+    const {parameters} = useParameters();
 
     const filteredParameters = useMemo(() => {
         if (!parameters) return [];

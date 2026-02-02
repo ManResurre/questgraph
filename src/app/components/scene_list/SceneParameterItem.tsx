@@ -1,39 +1,47 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {Box, IconButton, ListItem, ListItemText} from "@mui/material";
 import {Edit as EditIcon} from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {Database} from "@/supabase";
-import {useQueryClient} from "@tanstack/react-query";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
+import {useParameters} from "@/app/components/parameters/ParametersProvider";
+import {ParameterScene} from "@/lib/ParametersRepository";
+import {diff} from "@/lib/RepositoryHelper";
 
-type ParameterScene = Database["public"]["Tables"]["parameter_scene"]["Row"];
-
-const useSceneParametersContext = () => {
-    return {
-        setEditingSceneParameter: (a:any) => {
-            console.log(a);
-        }
-    }
+interface SceneParameterItemProps {
+    parameterScene: ParameterScene
 }
 
-const SceneParameterItem = ({parameter}: { parameter: ParameterScene }) => {
-    const {setEditingSceneParameter} = useSceneParametersContext();
-    const queryClient = useQueryClient();
+const SceneParameterItem = ({parameterScene}: SceneParameterItemProps) => {
+    const {setEditingParameter, parameters, setEditingParameterScene} = useParameters();
     const {setLoading} = useSidebar();
 
     const handleDelete = async () => {
         setLoading(true);
         // await deleteSceneParameter(Number(parameter.id));
-        await queryClient.invalidateQueries({queryKey: ["getSceneParameters", parameter.scene_id]});
+        // await queryClient.invalidateQueries({queryKey: ["getSceneParameters", parameterScene.scene_id]});
         setLoading(false);
     };
+
+    const parameter = useMemo(() => parameters.find(p => p.id == parameterScene.param_id), [parameters])
+
+    const handleEditParameterScene = () => {
+        setEditingParameter(parameter ?? null)
+        setEditingParameterScene(parameterScene ?? null)
+    }
+
+    const getValue = () => {
+        if (!parameterScene.value || !parameter)
+            return "";
+
+        return JSON.stringify(diff(parameter, JSON.parse(parameterScene.value)))
+    }
 
     return (
         <ListItem
             secondaryAction={
                 <Box>
                     <IconButton
-                        onClick={() => setEditingSceneParameter(parameter)}
+                        onClick={handleEditParameterScene}
                         sx={{mr: 0.5}}
                     >
                         <EditIcon fontSize="small"/>
@@ -48,7 +56,7 @@ const SceneParameterItem = ({parameter}: { parameter: ParameterScene }) => {
             }
         >
             <ListItemText
-                primary={`param_id: ${parameter.param_id} := ${parameter.value ?? ""}`}
+                primary={`${parameter?.label} := ${getValue()}`}
                 slotProps={{
                     secondary: {
                         component: "div"
