@@ -2,7 +2,7 @@ import supabase from "@/supabaseClient";
 import {cleanUndefined} from "@/lib/RepositoryHelper";
 import {Database} from "@/supabase";
 
-type Choice = Database["public"]["Tables"]["choice"]["Row"];
+export type Choice = Database["public"]["Tables"]["choice"]["Row"];
 
 export async function setNextSceneId(choiceId: number, sceneId?: number) {
     const {error} = await supabase

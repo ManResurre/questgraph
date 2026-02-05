@@ -1,25 +1,14 @@
-import type {Config} from "tailwindcss";
-import tailwindScrollbar from 'tailwind-scrollbar';
+import type { Config } from "tailwindcss";
+import tailwindScrollbar from "tailwind-scrollbar";
+import tailwindAnimate from "tailwindcss-animate";
 
-const config: Config = {
-    important: true,
-    content: [
-        "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-        "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-        "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-    ],
+export default {
+    content: ["./index.html", "./src/**/*.{ts,tsx}"],
     theme: {
-        extend: {
-            backgroundImage: {
-                "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-                "gradient-conic":
-                    "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-            },
-        },
+        extend: {},
     },
     plugins: [
-        require("tailwindcss-animate"),
-        tailwindScrollbar
+        tailwindAnimate,
+        tailwindScrollbar,
     ],
-};
-export default config;
+} satisfies Config;

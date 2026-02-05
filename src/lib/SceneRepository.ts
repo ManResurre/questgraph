@@ -1,8 +1,11 @@
-import {Choice, db, Scene, SceneText} from "@/lib/db";
 import {FinalConnectionState} from "@xyflow/react";
 import {parseLocations, parsePaths} from "@/lib/RepositoryHelper";
 import supabase from "@/supabaseClient";
-import {ISceneFormData} from "@/app/components/rf/SceneNodeEdit";
+import {Database} from "@/supabase";
+import {Choice} from "@/lib/ChoiceRepository";
+
+export type Scene = Database["public"]["Tables"]["scene"]["Row"];
+export type SceneText = Database["public"]["Tables"]["scene_texts"]["Row"];
 
 export interface SceneFullData extends Scene, Record<string, unknown> {
     choices?: Choice[];
@@ -79,7 +82,7 @@ export async function getScenesWithChoices(questId: number) {
     }));
 }
 
-export default async function updateScene(scene: ISceneFormData) {
+export default async function updateScene(scene: SceneFullData) {
     // обновляем саму сцену
     const {error: sceneErr} = await supabase
         .from("scene")
@@ -242,8 +245,6 @@ export interface UpdatePositionsProps {
 }
 
 export async function updatePositions(questId: number, positions: UpdatePositionsProps[]) {
-    console.log(positions);
-
     try {
         // формируем массив для upsert
         const updates = positions.map(pos => ({
@@ -272,9 +273,9 @@ export async function updatePositions(questId: number, positions: UpdatePosition
     }
 }
 
-export function clearScenes(questId: number) {
-    db.scenes.where('questId').equals(questId).delete();
-}
+// export function clearScenes(questId: number) {
+//     db.scenes.where('questId').equals(questId).delete();
+// }
 
 // export async function createFromFile(fileContent: string, questId: number) {
 //     const locations = parseLocations(fileContent);

@@ -15,6 +15,7 @@ export async function updateParameterChoice(p0: {
 }) {
 }
 
+export type ParameterType = Database["public"]["Enums"]["ParameterType"];
 
 export type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
 export type ParameterInsert = Database["public"]["Tables"]["parameters"]["Insert"];

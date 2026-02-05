@@ -1,0 +1,9 @@
+/* Tailwind v4 core */
+@import "tailwindcss";
+
+/* Animation utilities */
+@import "tw-animate-css";
+
+/*.bg-red-500{*/
+/*  background: #ccc;*/
+/*}*/
