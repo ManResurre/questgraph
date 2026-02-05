@@ -6,6 +6,10 @@
   text-overflow: ellipsis;
 }
 
+.scene {
+  //width: 300px;
+}
+
 .neon-scene {
   position: relative;
   padding: 4px;
@@ -33,10 +37,18 @@
 }
 
 @keyframes color-change {
-  0% { box-shadow: 4px 4px 50px 50px rgba(215, 54, 162, 1); }
-  33% { box-shadow: 4px 4px 50px 50px rgba(54, 162, 215, 1); }
-  66% { box-shadow: 4px 4px 50px 50px rgba(162, 215, 54, 1); }
-  100% { box-shadow: 4px 4px 50px 50px rgba(215, 54, 162, 1); }
+  0% {
+    box-shadow: 4px 4px 50px 50px rgba(215, 54, 162, 1);
+  }
+  33% {
+    box-shadow: 4px 4px 50px 50px rgba(54, 162, 215, 1);
+  }
+  66% {
+    box-shadow: 4px 4px 50px 50px rgba(162, 215, 54, 1);
+  }
+  100% {
+    box-shadow: 4px 4px 50px 50px rgba(215, 54, 162, 1);
+  }
 }
 
 @keyframes run-spot {

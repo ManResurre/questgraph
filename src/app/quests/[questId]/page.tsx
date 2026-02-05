@@ -1,13 +1,12 @@
 'use client'
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo} from "react";
 import {
     ReactFlow,
     Background,
-    Controls,
+    Controls, useReactFlow,
 } from "@xyflow/react";
 
 import {useParams} from "next/navigation";
-import useLayoutElements from "@/app/quests/[questId]/dagreLayout";
 
 import '@xyflow/react/dist/style.css';
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
@@ -20,8 +19,7 @@ import {useQuestGraph} from "@/app/quests/[questId]/hooks/graph";
 import {
     CONNECTION_LINE_TYPE,
     CONTAINER_STYLE,
-    CustomEdgeType, EDGE_TYPES, NODE_TYPES,
-    SceneNodeType
+    EDGE_TYPES, NODE_TYPES,
 } from "@/app/quests/[questId]/constants/graph";
 import {buildGraphFromScenes} from "@/app/quests/[questId]/utils/graphUtils";
 
@@ -36,11 +34,7 @@ const QuestPage = () => {
         [scenes]
     );
 
-    const [nodes, setNodes] = useState<SceneNodeType[]>(initialNodes);
-    const [edges, setEdges] = useState<CustomEdgeType[]>(initialEdges);
-
-    const {onLayout} = useLayoutElements({nodes, edges, setNodes, setEdges, questId: Number(questId)});
-
+    const {setNodes, setEdges} = useReactFlow();
     const {
         onNodesChange,
         onEdgesChange,
@@ -50,25 +44,25 @@ const QuestPage = () => {
         onDragStart,
         onDragOver,
         handleEdgeClick
-    } = useQuestGraph(Number(questId), nodes, setNodes, setEdges, typeDraggable);
+    } = useQuestGraph(Number(questId), setNodes, setEdges, typeDraggable);
 
     useEffect(() => {
-        setNodes(initialNodes);
-        setEdges(initialEdges);
-    }, [initialNodes, initialEdges]);
-
-    const memoizedNodes = useMemo(() => nodes, [nodes]);
+        if (initialNodes.length) {
+            setNodes(initialNodes);
+            setEdges(initialEdges);
+        }
+    }, [initialNodes, initialEdges, setNodes, setEdges]);
 
     return (
         <Grid container spacing={1}>
             <div style={CONTAINER_STYLE}>
                 <ReactFlow
-                    nodes={memoizedNodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
+                    defaultNodes={initialNodes}
+                    defaultEdges={initialEdges}
                     selectNodesOnDrag={true}
                     elevateNodesOnSelect={true}
                     nodesDraggable={true}
+                    onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
                     onConnectEnd={onConnectEnd}
@@ -80,13 +74,13 @@ const QuestPage = () => {
                     colorMode="dark"
                     edgeTypes={EDGE_TYPES}
                     nodeTypes={NODE_TYPES}
-                    fitView
+                    proOptions={{hideAttribution: true}}
                 >
                     <Background/>
                     <Controls/>
                 </ReactFlow>
                 <GraphSidebar/>
-                <GraphMenuSidebar onLayout={onLayout}/>
+                <GraphMenuSidebar />
                 <PlayerModal/>
             </div>
         </Grid>

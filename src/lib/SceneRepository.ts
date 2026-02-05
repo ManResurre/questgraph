@@ -68,6 +68,8 @@ export async function getScenesWithChoices(questId: number) {
         type: "sceneNode",
         dragHandle: ".drag-handle",
         position: scene.position ? JSON.parse(scene.position) : {x: 0, y: 0},
+        width: 300,
+        // height: 150,
         data: {
             id: scene.id,
             name: scene.name,
@@ -240,6 +242,8 @@ export interface UpdatePositionsProps {
 }
 
 export async function updatePositions(questId: number, positions: UpdatePositionsProps[]) {
+    console.log(positions);
+
     try {
         // формируем массив для upsert
         const updates = positions.map(pos => ({

@@ -36,13 +36,11 @@ import UploadIcon from '@mui/icons-material/Upload';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import TuneIcon from "@mui/icons-material/Tune";
 import BuildIcon from "@mui/icons-material/Build";
+import useLayoutElements from "@/app/quests/[questId]/dagreLayout";
 
-interface MiniDrawerProps {
-    onLayout?: (direction?: string) => void
-}
-
-const GraphMenuSidebar = ({onLayout}: MiniDrawerProps) => {
+const GraphMenuSidebar = () => {
     const {questId} = useParams();
+    const {onLayout} = useLayoutElements();
     const {setTypeDraggable, openSidebar} = useSidebar();
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = useState('');

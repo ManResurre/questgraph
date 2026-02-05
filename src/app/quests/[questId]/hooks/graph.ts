@@ -1,24 +1,40 @@
-import {DragEvent, DragEventHandler, useCallback} from "react";
+import {DragEvent, DragEventHandler, useCallback, useMemo} from "react";
 import {
     addEdge,
     applyEdgeChanges,
     applyNodeChanges,
     Connection,
-    FinalConnectionState,
-    NodeChange,
+    FinalConnectionState, NodeChange,
     useReactFlow
 } from "@xyflow/react";
 import {setNextSceneId} from "@/lib/ChoiceRepository";
 import {createScene} from "@/lib/SceneRepository";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
-import {CustomEdgeType, SceneNodeType} from "@/app/quests/[questId]/constants/graph";
+import {CustomEdgeType, NODE_TYPES, SceneNodeType} from "@/app/quests/[questId]/constants/graph";
 import {useQueryClient} from "@tanstack/react-query";
+
+function throttleRAF<T extends (...args: any[]) => void>(callback: T): T {
+    let scheduled = false;
+    let lastArgs: any[] | null = null;
+    return ((...args: any[]) => {
+        lastArgs = args;
+        if (!scheduled) {
+            scheduled = true;
+            requestAnimationFrame(() => {
+                scheduled = false;
+                if (lastArgs) {
+                    callback(...lastArgs);
+                    lastArgs = null;
+                }
+            });
+        }
+    }) as T;
+}
 
 export const useQuestGraph = (
     questId: number,
-    nodes: SceneNodeType[],
-    setNodes: React.Dispatch<React.SetStateAction<SceneNodeType[]>>,
-    setEdges: React.Dispatch<React.SetStateAction<CustomEdgeType[]>>,
+    setNodes: any,
+    setEdges: any,
     typeDraggable: string | null,
 ) => {
 
@@ -27,12 +43,32 @@ export const useQuestGraph = (
     const {openSidebar} = useSidebar();
 
     /** Обновление узлов */
-    const onNodesChange = useCallback(
-        (changes: NodeChange<SceneNodeType>[]) => {
-            setNodes(nodes => applyNodeChanges(changes, nodes));
-        },
+    const throttledApplyPositions = useMemo(
+        () =>
+            throttleRAF((posChanges: NodeChange<SceneNodeType>[]) => {
+                setNodes(prev => applyNodeChanges(posChanges, prev));
+            }),
         [setNodes]
     );
+
+    const onNodesChange = useCallback(
+        (changes: NodeChange<SceneNodeType>[]) => {
+            const posChanges = changes.filter(c => c.type === "position");
+            const other = changes.filter(c => c.type !== "position");
+
+            // apply non-position changes immediately
+            if (other.length) {
+                setNodes(prev => applyNodeChanges(other, prev));
+            }
+
+            // throttle only position changes
+            if (posChanges.length) {
+                throttledApplyPositions(posChanges);
+            }
+        },
+        [setNodes, throttledApplyPositions]
+    );
+
 
     /** Обновление рёбер */
     const onEdgesChange = useCallback(

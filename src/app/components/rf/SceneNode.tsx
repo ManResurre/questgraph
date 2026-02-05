@@ -1,4 +1,4 @@
-import React, {useCallback, useRef} from "react";
+import React, {useCallback} from "react";
 import {Position} from "@xyflow/system";
 import {Divider, IconButton} from "@mui/material";
 import {useSidebar} from "@/app/components/sidebar/graphSidebarProvider";
@@ -9,6 +9,7 @@ import {NodeProps, XYPosition} from "@xyflow/react";
 import {usePlayer} from "@/app/components/sidebar/PlayerProvider";
 import PlayerText from "@/app/components/quest_player/PlayerText";
 import FormatListBulletedAddIcon from '@mui/icons-material/FormatListBulletedAdd';
+import {NodeResizeControl} from '@xyflow/react';
 import "./style.scss";
 
 export interface SceneNodeData extends Node {
@@ -51,7 +52,7 @@ const SceneNode = ({data}: SceneNodeProps) => {
         onClick={handleClickCard}
     >
         <div
-            className="max-w-[300px] hover:ring-1 ring-gray-600 relative border bg-card text-card-foreground dark:bg-neutral-800 rounded-[2px]">
+            className="scene hover:ring-1 ring-gray-600 relative border bg-card text-card-foreground dark:bg-neutral-800 rounded-[2px]">
             <div className="flex flex-col gap-y-2 font-normal text-gray-700 dark:text-gray-400 cursor-auto">
                 <CustomHandle id={`s${data.id}`}
                               type={'target'} position={Position.Left}/>
@@ -81,10 +82,6 @@ const SceneNode = ({data}: SceneNodeProps) => {
 
                 <div className="px-2">
                     <div
-                        style={{
-                            resize: 'both',
-                        }}
-
                         className="bg-neutral-900/50 dark:bg-neutral-700/30 border border-gray-300 dark:border-neutral-600 rounded-[4px] p-2 min-h-[60px]  overflow-y-auto
                     scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent">
                         <div
@@ -116,6 +113,10 @@ const SceneNode = ({data}: SceneNodeProps) => {
                     })}
                 </ul>
             </div>
+            <NodeResizeControl
+                minWidth={300}
+                minHeight={100}
+            />
         </div>
     </div>
 };
