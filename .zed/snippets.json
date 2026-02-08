@@ -1,0 +1,10 @@
+{
+  "language": ["javascript", "typescript", "jsx", "tsx"],
+  "snippets": [
+    {
+      "name": "console.log",
+      "prefix": "clg",
+      "body": "console.log($1);",
+    },
+  ],
+}
