@@ -2,7 +2,8 @@ import { FinalConnectionState, XYPosition } from "@xyflow/react";
 import { parseLocations, parsePaths } from "@/lib/RepositoryHelper";
 import supabase from "@/supabaseClient";
 import { Database } from "@/supabase";
-import { Choice } from "@/lib/ChoiceRepository";
+import { Choice, SceneFullData } from "@/lib/ChoiceRepository";
+import { SceneNodeType } from "@/pages/quests/id/constants/graph";
 
 export type Scene = Database["public"]["Tables"]["scene"]["Row"];
 export type SceneText = Database["public"]["Tables"]["scene_texts"]["Row"];
@@ -11,16 +12,6 @@ export interface SceneFullData extends Scene, Record<string, unknown> {
   choices?: Choice[];
   texts?: SceneText[];
   connectionState?: FinalConnectionState;
-}
-
-// Тип для узла сцены, который возвращается из getScenesWithChoices
-export interface SceneNodeForFlow {
-  id: string; // ID узла для React Flow (всегда строка)
-  type: string;
-  dragHandle: string;
-  position: XYPosition;
-  width: number;
-  data: SceneFullData; // Вложенные данные сцены (с числовым ID)
 }
 
 export async function updateChoices(sceneId: number, choices: Choice[]) {
@@ -48,7 +39,7 @@ export async function updateChoices(sceneId: number, choices: Choice[]) {
 
 export async function getScenesWithChoices(
   questId: number,
-): Promise<SceneNodeForFlow[]> {
+): Promise<SceneNodeType[]> {
   const { data: scenes, error } = await supabase
     .from("scene")
     .select(

@@ -13,7 +13,11 @@ import SearchNode from "@/components/rf/SearchNode";
 import ButtonEdge from "@/components/rf/ButtonEdge";
 import { SceneNodeData } from "@/components/rf/SceneNode";
 
-export type SceneNodeType = Node<SceneFullData>;
+export type SceneNodeType = Node<SceneFullData> & {
+  type: string;
+  dragHandle: string;
+  width: number;
+};
 export type CustomEdgeType = Edge & {
   sourceHandle?: string;
   targetHandle?: string;

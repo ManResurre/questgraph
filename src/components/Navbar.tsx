@@ -39,6 +39,7 @@ export default function Navbar() {
                     to="/"
                     variant={pathname === "/" ? "contained" : "text"}
                     color="inherit"
+                    sx={{ ml: 1 }}
                 >
                     Home
                 </Button>
@@ -49,6 +50,7 @@ export default function Navbar() {
                         to="/quests"
                         variant={pathname === "/quests" ? "contained" : "text"}
                         color="inherit"
+                        sx={{ ml: 1 }}
                     >
                         Quests
                     </Button>
@@ -59,11 +61,14 @@ export default function Navbar() {
                     to="/about"
                     variant={pathname === "/about" ? "contained" : "text"}
                     color="inherit"
+                    sx={{ ml: 1 }}
                 >
                     About
                 </Button>
 
-                <Login user={user} />
+                <div style={{ marginLeft: '8px' }}>
+                    <Login user={user} />
+                </div>
             </Toolbar>
         </AppBar>
     );
