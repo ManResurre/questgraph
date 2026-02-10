@@ -2,21 +2,18 @@ import {
   ConnectionLineType,
   Edge,
   Node,
-  NodeProps,
   NodeTypes,
 } from "@xyflow/react";
 import { SceneFullData } from "@/lib/SceneRepository";
-import { ComponentType } from "react";
 import { SmartBezierEdge } from "@tisoap/react-flow-smart-edge";
 import SceneNode from "@/components/rf/SceneNode";
 import SearchNode from "@/components/rf/SearchNode";
 import ButtonEdge from "@/components/rf/ButtonEdge";
-import { SceneNodeData } from "@/components/rf/SceneNode";
 
 export type SceneNodeType = Node<SceneFullData> & {
   type: string;
-  dragHandle: string;
-  width: number;
+  dragHandle?: string;
+  width?: number;
 };
 export type CustomEdgeType = Edge & {
   sourceHandle?: string;
@@ -25,7 +22,7 @@ export type CustomEdgeType = Edge & {
 
 // Константы
 export const NODE_TYPES: NodeTypes = {
-  sceneNode: SceneNode as any,
+  sceneNode: SceneNode,
   searchNode: SearchNode,
 };
 
