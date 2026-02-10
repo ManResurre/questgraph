@@ -1,9 +1,10 @@
-import { DragEvent, useCallback, useMemo } from "react";
+import React, { DragEvent, useCallback, useMemo } from "react";
 import {
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
   Connection,
+  EdgeChange,
   FinalConnectionState,
   NodeChange,
   useReactFlow,
@@ -37,8 +38,8 @@ function throttleRAF<T extends (...args: any[]) => void>(callback: T): T {
 
 export const useQuestGraph = (
   questId: number,
-  setNodes: any,
-  setEdges: any,
+  setNodes: (payload: SceneNodeType[] | ((nodes: SceneNodeType[]) => SceneNodeType[])) => void,
+  setEdges: (payload: CustomEdgeType[] | ((edges: CustomEdgeType[]) => CustomEdgeType[])) => void,
   typeDraggable: string | null,
 ) => {
   const queryClient = useQueryClient();
@@ -49,7 +50,7 @@ export const useQuestGraph = (
   const throttledApplyPositions = useMemo(
     () =>
       throttleRAF((posChanges: NodeChange<SceneNodeType>[]) => {
-        setNodes((prev) => applyNodeChanges(posChanges, prev));
+        setNodes((prev: SceneNodeType[]) => applyNodeChanges(posChanges, prev));
       }),
     [setNodes],
   );
@@ -61,7 +62,7 @@ export const useQuestGraph = (
 
       // apply non-position changes immediately
       if (other.length) {
-        setNodes((prev) => applyNodeChanges(other, prev));
+        setNodes((prev: SceneNodeType[]) => applyNodeChanges(other, prev));
       }
 
       // throttle only position changes
@@ -74,7 +75,7 @@ export const useQuestGraph = (
 
   /** Обновление рёбер */
   const onEdgesChange = useCallback(
-    (changes: any) => setEdges((edges) => applyEdgeChanges(changes, edges)),
+    (changes: EdgeChange<CustomEdgeType>[]) => setEdges((edges: CustomEdgeType[]) => applyEdgeChanges(changes, edges)),
     [setEdges],
   );
 
@@ -89,7 +90,7 @@ export const useQuestGraph = (
           setNextSceneId(choiceId, sceneId);
         }
       }
-      setEdges((edges) =>
+      setEdges((edges: CustomEdgeType[]) =>
         addEdge({ ...connection, type: "buttonEdge" }, edges),
       );
     },
@@ -124,15 +125,15 @@ export const useQuestGraph = (
       const pos = screenToFlowPosition({ x: clientX, y: clientY });
       const id = `search-node-${Date.now()}`;
 
-      const searchNode: SceneNodeType = {
+      const searchNode = {
         id,
         type: "searchNode",
         position: { x: pos.x, y: pos.y },
         data: { connectionState },
-      };
+      } as SceneNodeType;
 
-      setNodes((nodes) => nodes.concat(searchNode));
-      setEdges((eds) =>
+      setNodes((nodes: SceneNodeType[]) => nodes.concat(searchNode));
+      setEdges((eds: CustomEdgeType[]) =>
         eds.concat({
           id,
           source: connectionState.fromNode?.id!,

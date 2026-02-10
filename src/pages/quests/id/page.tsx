@@ -16,8 +16,10 @@ import { buildGraphFromScenes } from "@/utils/graphUtils";
 import {
   CONNECTION_LINE_TYPE,
   CONTAINER_STYLE,
+  CustomEdgeType,
   EDGE_TYPES,
   NODE_TYPES,
+  SceneNodeType,
 } from "@/pages/quests/id/constants/graph";
 import { questIdRoute } from "@/routes/quests";
 
@@ -33,7 +35,7 @@ const QuestPage = () => {
     [scenes],
   );
 
-  const { setNodes, setEdges } = useReactFlow();
+  const { setNodes, setEdges } = useReactFlow<SceneNodeType, CustomEdgeType>();
   const {
     onNodesChange,
     onEdgesChange,

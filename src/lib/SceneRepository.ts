@@ -6,6 +6,7 @@ import { Choice } from "@/lib/ChoiceRepository";
 import { SceneNodeType } from "@/pages/quests/id/constants/graph";
 
 export type Scene = Database["public"]["Tables"]["scene"]["Row"];
+export type SceneInsert = Database["public"]["Tables"]["scene"]["Insert"];
 export type SceneText = Database["public"]["Tables"]["scene_texts"]["Row"];
 
 export interface SceneFullData extends Scene, Record<string, unknown> {
@@ -111,7 +112,7 @@ export default async function updateScene(scene: SceneFullData) {
 
 export async function updateSceneTexts(sceneId: number, texts: SceneText[]) {
   // удаляем все старые тексты для этой сцены
-  const { data, error: delErr } = await supabase
+  const {  error: delErr } = await supabase
     .from("scene_texts")
     .delete()
     .eq("scene_id", sceneId);
@@ -132,20 +133,18 @@ export async function updateSceneTexts(sceneId: number, texts: SceneText[]) {
   if (insErr) throw insErr;
 }
 
-export async function createScene(scene: Scene) {
-  console.log(scene);
-  // return ;
+export async function createScene(scene: SceneInsert) {
   const { data, error } = await supabase
     .from("scene")
-    .insert([scene]) // вставляем объект
-    .select(); // возвращаем вставленную строку
+    .insert([scene])
+    .select();
 
   if (error) {
     console.error("Error creating scene:", error);
     throw error;
   }
 
-  return data?.[0]; // возвращаем созданную сцену
+  return data?.[0];
 }
 
 // export async function createScene(scene: Scene) {
