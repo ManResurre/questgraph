@@ -15,7 +15,7 @@ const QuestsPage = () => {
         <QuestEditForm user={user as User}/>
         {isLoading ?
             <CircularProgress size={24} color="inherit"/> :
-            <QuestList user={user}/>}
+            <QuestList/>}
     </Container>
 }
 
