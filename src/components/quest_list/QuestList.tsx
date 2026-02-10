@@ -19,7 +19,7 @@ import QuestListItem from "@/components/quest_list/QuestListItem.tsx";
 import { useCurrentUser } from "@/hooks/useCurrentUser.ts";
 import { createQuestCompareFunction } from "@/lib/QuestHelper";
 
-export function QuestList() {
+const QuestList = () => {
   const { user } = useCurrentUser();
   const { quests, deleteQuest } = useQuests();
   const queryClient = useQueryClient();
@@ -81,4 +81,6 @@ export function QuestList() {
       </Dialog>
     </Card>
   );
-}
+};
+
+export default React.memo(QuestList);
