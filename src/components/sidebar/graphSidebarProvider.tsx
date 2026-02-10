@@ -8,7 +8,6 @@ import React, {
 import { useIsFetching } from "@tanstack/react-query";
 import {
   CustomEdgeType,
-  SceneNodeType,
 } from "@/pages/quests/id/constants/graph";
 import { SceneFullData } from "@/lib/SceneRepository";
 

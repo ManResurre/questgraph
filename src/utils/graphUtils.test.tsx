@@ -1,4 +1,5 @@
 import { buildGraphFromScenes } from "./graphUtils";
+import { SceneNodeType } from "@/pages/quests/id/constants/graph";
 import { SceneFullData } from "@/lib/SceneRepository";
 
 describe("graphUtils", () => {
@@ -8,53 +9,54 @@ describe("graphUtils", () => {
       expect(result).toEqual({ nodes: [], edges: [] });
     });
 
-    test("should return empty nodes and edges if scenes array is empty", () => {
-      const result = buildGraphFromScenes([]);
-      expect(result).toEqual({ nodes: [], edges: [] });
-    });
-
     test("should build graph from scenes with choices", () => {
-      const mockScenes: SceneFullData[] = [
+      const mockScenes: SceneNodeType[] = [
         {
-          id: 1,
-          title: "Scene 1",
-          text: "This is scene 1",
-          choices: [
-            {
-              id: 1,
-              label: null,
-              nextSceneId: 2,
-              quest_id: null,
-              text: "Go to scene 2",
-              transition_text: null,
-            },
-          ],
-          // Добавляем обязательные поля из Database["public"]["Tables"]["scene"]["Row"]
-          locPosition: null,
-          name: null,
-          position: null,
-          quest_id: 1,
-          samplyLink: null,
-          // Добавляем другие поля из SceneFullData
-          data: {},
-          texts: [],
-          created_at: "",
+          id: "1",
+          type: "sceneNode",
+          dragHandle: ".drag-handle",
+          width: 300,
+          position: { x: 0, y: 0 },
+          data: {
+            id: 1,
+            name: "Scene 1",
+            text: "This is scene 1",
+            choices: [
+              {
+                id: 1,
+                label: "Choice 1",
+                nextSceneId: 2,
+                quest_id: 1,
+                text: "Go to scene 2",
+                transition_text: null,
+              },
+            ],
+            locPosition: null,
+            position: null,
+            quest_id: 1,
+            samplyLink: null,
+            created_at: "",
+            texts: [],
+          },
         },
         {
-          id: 2,
-          title: "Scene 2",
-          text: "This is scene 2",
-          choices: [],
-          // Добавляем обязательные поля из Database["public"]["Tables"]["scene"]["Row"]
-          locPosition: null,
-          name: null,
-          position: null,
-          quest_id: 1,
-          samplyLink: null,
-          // Добавляем другие поля из SceneFullData
-          data: {},
-          texts: [],
-          created_at: "",
+          id: "2",
+          type: "sceneNode",
+          dragHandle: ".drag-handle",
+          width: 300,
+          position: { x: 0, y: 0 },
+          data: {
+            id: 2,
+            name: "Scene 2",
+            text: "This is scene 2",
+            choices: [],
+            locPosition: null,
+            position: null,
+            quest_id: 1,
+            samplyLink: null,
+            created_at: "",
+            texts: [],
+          },
         },
       ];
 

@@ -1,4 +1,3 @@
-'use client'
 import parse from "html-react-parser";
 import Img from "./components/Img";
 import {Box, Card, List, ListItem, Paper} from "@mui/material";

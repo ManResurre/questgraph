@@ -2,11 +2,11 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import {usePlayer} from "@/components/sidebar/PlayerProvider";
-import Player from "@/app/components/quest_player/Player";
 import Draggable from 'react-draggable';
 import {IconButton} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
-import SamplyPlayer from "@/app/components/samply_player/SamplyPlayer";
+import Player from "@/components/quest_player/Player.tsx";
+import SamplyPlayer from "@/components/samply_player/SamplyPlayer.tsx";
 
 
 const style = {

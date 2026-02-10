@@ -1,8 +1,8 @@
 import React from "react";
 import {usePlayer} from "@/components/sidebar/PlayerProvider";
 import {Card, CardContent, Stack} from "@mui/material";
-import ChoiceButton from "@/app/components/choice/ChoiceButton";
-import PlayerText from "@/app/components/quest_player/PlayerText";
+import PlayerText from "@/components/quest_player/PlayerText.tsx";
+import ChoiceButton from "@/components/choice/ChoiceButton.tsx";
 
 const Player = () => {
     const {currentScene} = usePlayer();
@@ -15,7 +15,7 @@ const Player = () => {
                     <div
                         className="text-lg text-gray-300 font-sans whitespace-pre-wrap break-words leading-5">
                         {currentScene.texts.map((t) => {
-                            return <div key={t.id}><PlayerText text={t.text} /></div>
+                            return <div key={t.id}><PlayerText text={t.text ?? ''}/></div>
                         })}
                     </div>
                 </div>
@@ -36,7 +36,7 @@ const Player = () => {
                                 style={{
                                     display: 'flex',
                                     alignItems: 'flex-start',
-                                    margin:'8px',
+                                    margin: '8px',
                                     textAlign: 'left'
                                 }}
                             >

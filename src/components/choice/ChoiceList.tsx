@@ -3,11 +3,9 @@ import {Box, CircularProgress, Paper, TextField} from "@mui/material";
 import {Virtuoso, VirtuosoHandle} from "react-virtuoso";
 import ChoiceItem from "@/components/choice/ChoiceItem";
 import {useChoices} from "@/hooks/choice";
-import {Database} from "@/supabase";
 import {useParams} from "@tanstack/react-router";
 import {questIdRoute} from "@/routes/quests";
-
-type Choice = Database["public"]["Tables"]["choice"]["Row"];
+import {Choice} from "@/lib/ChoiceRepository.ts";
 
 function ChoiceList() {
     const {id: questId} = useParams({from: questIdRoute.id});

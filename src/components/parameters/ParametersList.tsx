@@ -1,11 +1,9 @@
 import React, {useMemo, useRef, useState, useTransition} from "react";
 import {Box, CircularProgress, Paper, TextField} from "@mui/material";
 import {Virtuoso, VirtuosoHandle} from "react-virtuoso";
-import {Database} from "@/supabase";
 import ParameterItem from "@/components/parameters/ParameterItem";
 import {useParameters} from "@/components/parameters/ParametersProvider";
-
-type Parameter = Database["public"]["Tables"]["parameters"]["Row"];
+import {Parameter} from "@/lib/ParametersRepository.ts";
 
 const ParametersList = () => {
     const [searchTerm, setSearchTerm] = useState("");

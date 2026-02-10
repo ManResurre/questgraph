@@ -1,5 +1,3 @@
-import { should } from "chai";
-
 describe("Authentication Process Tests", () => {
   it("should handle authentication flow correctly", () => {
     // Перехватываем сетевые запросы

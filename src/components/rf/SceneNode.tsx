@@ -3,7 +3,7 @@ import { Position } from "@xyflow/system";
 import { Divider, IconButton } from "@mui/material";
 import { useSidebar } from "@/components/sidebar/graphSidebarProvider";
 import { SettingsIcon } from "lucide-react";
-import { Scene, SceneFullData } from "@/lib/SceneRepository";
+import { SceneFullData } from "@/lib/SceneRepository";
 import { NodeProps, XYPosition } from "@xyflow/react";
 import { usePlayer } from "@/components/sidebar/PlayerProvider";
 import FormatListBulletedAddIcon from "@mui/icons-material/FormatListBulletedAdd";

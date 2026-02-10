@@ -1,8 +1,7 @@
 // Based on https://github.com/qiao/PathFinding.js
 
-
-import {DiagonalMovement} from "@/app/components/rf/aStar/types";
-import {Grid, GridNode} from "@/app/components/rf/aStar/grid";
+import {DiagonalMovement} from "@/components/rf/aStar/types";
+import {Grid, GridNode} from "@/components/rf/aStar/grid";
 
 export interface AStarOptions {
   diagonalMovement?: DiagonalMovement;

@@ -1,8 +1,6 @@
 import React, { useMemo } from "react";
 import { Autocomplete, Box, TextField } from "@mui/material";
-import {Database} from "@/supabase";
-
-type Choice = Database["public"]["Tables"]["choice"]["Row"];
+import {Choice} from "@/lib/ChoiceRepository.ts";
 
 export interface ScenesAutocompleteParams {
     choices: Choice[];

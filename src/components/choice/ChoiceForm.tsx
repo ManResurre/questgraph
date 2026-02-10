@@ -1,4 +1,3 @@
-'use client';
 import {Controller, useFormContext} from "react-hook-form";
 import {Stack, TextField} from "@mui/material";
 import React from "react";

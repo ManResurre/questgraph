@@ -1,6 +1,6 @@
 import React, {useCallback, useState} from "react";
 import {Autocomplete, Box, TextField} from "@mui/material";
-import {Scene} from "@/lib/db";
+import {Scene} from "@/lib/SceneRepository.ts";
 
 export interface ScenesAutocompleteParams {
     scenes?: Scene[],

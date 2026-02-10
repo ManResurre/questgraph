@@ -13,7 +13,8 @@
     "deploy": "wrangler pages deploy dist --project-name=questgraph",
     "test": "jest",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "gen-types": "npx supabase gen types typescript --schema public > src/supabase.ts"
   },
   "dependencies": {
     "@emmetio/codemirror6-plugin": "^0.4.0",
@@ -52,6 +53,7 @@
     "react-dom": "19.1.1",
     "react-hook-form": "^7.60.0",
     "react-resizable": "^3.0.5",
+    "react-spring": "^10.0.3",
     "react-virtuoso": "^4.13.0",
     "reflect-metadata": "^0.2.2",
     "sass": "^1.92.1",

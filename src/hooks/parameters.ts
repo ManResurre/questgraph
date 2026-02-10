@@ -1,5 +1,5 @@
 import {useQuery} from "@tanstack/react-query";
-import {getParameterChoice, getParameters, getSceneParameters} from "@/lib/ParametersRepository";
+import {getChoiceParameters, getParameters, getSceneParameters} from "@/lib/ParametersRepository";
 
 export function useParametersQuery(questId: number) {
     return useQuery({
@@ -17,10 +17,10 @@ export function useParametersSceneQuery(sceneId: number) {
     });
 }
 
-export function useParameterChoice(id: number) {
+export function useChoiceParameters(choice_id: number) {
     return useQuery({
-        queryKey: ["getParameterChoice", id],
-        queryFn: () => getParameterChoice(id),
-        enabled: !!id,
+        queryKey: ["parameter_choice", choice_id],
+        queryFn: () => getChoiceParameters(choice_id),
+        enabled: !!choice_id,
     });
 }

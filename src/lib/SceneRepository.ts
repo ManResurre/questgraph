@@ -1,8 +1,8 @@
-import { FinalConnectionState, XYPosition } from "@xyflow/react";
+import { FinalConnectionState } from "@xyflow/react";
 import { parseLocations, parsePaths } from "@/lib/RepositoryHelper";
 import supabase from "@/supabaseClient";
 import { Database } from "@/supabase";
-import { Choice, SceneFullData } from "@/lib/ChoiceRepository";
+import { Choice } from "@/lib/ChoiceRepository";
 import { SceneNodeType } from "@/pages/quests/id/constants/graph";
 
 export type Scene = Database["public"]["Tables"]["scene"]["Row"];

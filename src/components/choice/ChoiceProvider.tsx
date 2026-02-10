@@ -1,7 +1,5 @@
 import React, {createContext, useContext, useState} from "react";
-import {Database} from "@/supabase";
-
-type Choice = Database["public"]["Tables"]["choice"]["Row"];
+import {Choice} from "@/lib/ChoiceRepository.ts";
 
 interface ChoiceContextValue {
     editingChoice?: Choice;
