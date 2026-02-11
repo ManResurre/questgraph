@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { SceneFullData } from "@/lib/SceneRepository";
 import { useReactFlow } from "@xyflow/react";
-import { questIdRoute } from "@/routes/quests";
+import { questIdRoute, questsRoute } from "@/routes/quests";
 import { useParams } from "@tanstack/react-router";
 import { useScenesWithChoices } from "@/hooks/scene";
 
@@ -39,6 +39,7 @@ interface PlayerProviderProps {
 
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children }) => {
   const { id: questId } = useParams({ from: questIdRoute.id });
+
   const { fitView } = useReactFlow();
   const [openModal, setOpenModal] = React.useState(false);
   const { data: scenes } = useScenesWithChoices(Number(questId));
