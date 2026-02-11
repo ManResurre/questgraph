@@ -11,8 +11,6 @@ export const questsIndexRoute = createRoute({
   component: () => <QuestsPage />,
 });
 
-// Создаем общий родительский маршрут, который содержит параметр id
-// но не отображает компонент
 export const questIdParentRoute = createRoute({
   getParentRoute: () => questsRoute,
   path: "$id",
