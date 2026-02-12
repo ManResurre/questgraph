@@ -73,21 +73,24 @@ export async function getScenesWithChoices(
     if (error) throw error;
     if (!scenes?.length) return [];
 
-    return scenes.map((scene) => ({
-        id: scene.id?.toString(),
-        type: "sceneNode",
-        dragHandle: ".drag-handle",
-        position: scene.position ? JSON.parse(scene.position) : {x: 0, y: 0},
-        width: 300,
-        // height: 150,
-        data: {
-            ...scene,
-            texts: scene.scene_texts || [],
-            choices: (scene.scene_choice || [])
-                .map((sc) => sc.choice)
-                .filter((choice) => choice !== null) as Choice[],
-        },
-    }));
+    return scenes.map((scene) => {
+
+        const {scene_texts, scene_choice, ...rest} = scene;
+
+        return {
+            id: scene.id?.toString(),
+            type: "sceneNode",
+            dragHandle: ".drag-handle",
+            position: scene.position ? JSON.parse(scene.position) : {x: 0, y: 0},
+            width: 300,
+            // height: 150,
+            data: {
+                ...rest,
+                texts: scene_texts || [],
+                choices: (scene_choice || []).map(e => e.choice) as Choice[],
+            },
+        }
+    });
 }
 
 export default async function updateScene(scene: SceneFullData) {
