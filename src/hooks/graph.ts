@@ -13,10 +13,8 @@ import { setNextSceneId } from "@/lib/ChoiceRepository";
 import { createScene } from "@/lib/SceneRepository";
 import { useSidebar } from "@/components/sidebar/graphSidebarProvider";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  CustomEdgeType,
-  SceneNodeType,
-} from "@/pages/quests/id/constants/graph";
+import { CustomEdgeType } from "@/pages/quests/id/constants/graph";
+import { SceneNodeType } from "@/components/rf/SceneNode";
 
 function throttleRAF<T extends (...args: any[]) => void>(callback: T): T {
   let scheduled = false;
@@ -38,8 +36,12 @@ function throttleRAF<T extends (...args: any[]) => void>(callback: T): T {
 
 export const useQuestGraph = (
   questId: number,
-  setNodes: (payload: SceneNodeType[] | ((nodes: SceneNodeType[]) => SceneNodeType[])) => void,
-  setEdges: (payload: CustomEdgeType[] | ((edges: CustomEdgeType[]) => CustomEdgeType[])) => void,
+  setNodes: (
+    payload: SceneNodeType[] | ((nodes: SceneNodeType[]) => SceneNodeType[]),
+  ) => void,
+  setEdges: (
+    payload: CustomEdgeType[] | ((edges: CustomEdgeType[]) => CustomEdgeType[]),
+  ) => void,
   typeDraggable: string | null,
 ) => {
   const queryClient = useQueryClient();
@@ -75,7 +77,8 @@ export const useQuestGraph = (
 
   /** Обновление рёбер */
   const onEdgesChange = useCallback(
-    (changes: EdgeChange<CustomEdgeType>[]) => setEdges((edges: CustomEdgeType[]) => applyEdgeChanges(changes, edges)),
+    (changes: EdgeChange<CustomEdgeType>[]) =>
+      setEdges((edges: CustomEdgeType[]) => applyEdgeChanges(changes, edges)),
     [setEdges],
   );
 

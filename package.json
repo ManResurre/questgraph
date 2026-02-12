@@ -14,7 +14,8 @@
     "test": "jest",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "gen-types": "npx supabase gen types typescript --schema public > src/supabase.ts"
+    "gen-types": "npx supabase gen types typescript --schema public > src/supabase.ts",
+    "tsc": "npx tsc --noEmit"
   },
   "dependencies": {
     "@emmetio/codemirror6-plugin": "^0.4.0",

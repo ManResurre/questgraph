@@ -19,8 +19,8 @@ import {
   CustomEdgeType,
   EDGE_TYPES,
   NODE_TYPES,
-  SceneNodeType,
 } from "@/pages/quests/id/constants/graph";
+import { SceneNodeType } from "@/components/rf/SceneNode";
 import { questIdRoute } from "@/routes/quests";
 
 const QuestPage = () => {

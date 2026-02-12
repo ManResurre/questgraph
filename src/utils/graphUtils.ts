@@ -1,14 +1,10 @@
-import {
-  CustomEdgeType,
-  SceneNodeType,
-} from "@/pages/quests/id/constants/graph";
+import { CustomEdgeType } from "@/pages/quests/id/constants/graph";
+import { SceneNodeType } from "@/components/rf/SceneNode";
 
 /**
  * Создает рёбра для ReactFlow на основе сцен.
  */
-export function buildGraphFromScenes(
-  scenes: SceneNodeType[],
-): {
+export function buildGraphFromScenes(scenes: SceneNodeType[]): {
   nodes: SceneNodeType[];
   edges: CustomEdgeType[];
 } {

@@ -24,7 +24,7 @@ import {
 import Submenu from "@/components/sidebar/Submenu";
 import { useCallback, useEffect, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
-import { SceneNodeData } from "@/components/rf/SceneNode";
+import { SceneNodeType } from "@/components/rf/SceneNode";
 import { useDebounce } from "@uidotdev/usehooks";
 import { useSidebar } from "@/components/sidebar/graphSidebarProvider";
 import useFileLoader from "@/components/sidebar/fileLoader";
@@ -64,7 +64,7 @@ const GraphMenuSidebar = () => {
   }, []);
 
   useEffect(() => {
-    const nodes = getNodes() as SceneNodeData[];
+    const nodes = getNodes() as SceneNodeType[];
 
     const filteredNodes = nodes.filter((node) => {
       const sceneName = node.data?.name;

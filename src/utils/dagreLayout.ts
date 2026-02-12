@@ -9,7 +9,7 @@ import dagre from "dagre";
 import { updatePositions, UpdatePositionsProps } from "@/lib/SceneRepository";
 import { useParams } from "@tanstack/react-router";
 import { questIdRoute } from "@/routes/quests";
-import { SceneNodeType } from "@/pages/quests/id/constants/graph";
+import { SceneNodeType } from "@/components/rf/SceneNode";
 
 const defaultNodeWidth = 200;
 const defaultNodeHeight = 70;
