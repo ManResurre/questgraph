@@ -247,6 +247,7 @@ export type Database = {
           position: string | null
           quest_id: number
           samplyLink: string | null
+          type: string | null
         }
         Insert: {
           id?: number
@@ -255,6 +256,7 @@ export type Database = {
           position?: string | null
           quest_id: number
           samplyLink?: string | null
+          type?: string | null
         }
         Update: {
           id?: number
@@ -263,6 +265,7 @@ export type Database = {
           position?: string | null
           quest_id?: number
           samplyLink?: string | null
+          type?: string | null
         }
         Relationships: [
           {

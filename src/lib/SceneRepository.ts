@@ -4,16 +4,27 @@ import supabase from "@/supabaseClient";
 import {Database} from "@/supabase";
 import {Choice} from "@/lib/ChoiceRepository";
 import {SceneNodeType} from "@/pages/quests/id/constants/graph";
+import {sceneRegistry, SceneType} from "@/components/quest_player/Player.tsx";
 
 export type Scene = Database["public"]["Tables"]["scene"]["Row"];
 export type SceneInsert = Database["public"]["Tables"]["scene"]["Insert"];
 export type SceneText = Database["public"]["Tables"]["scene_texts"]["Row"];
 
+export function normalizeSceneType(type: string | null): SceneType {
+    if (type && type in sceneRegistry) {
+        return type as SceneType;
+    }
+    return "pathfinder";
+}
+
 export interface SceneFullData extends Scene {
     choices: Choice[];
     texts?: SceneText[];
     connectionState?: FinalConnectionState;
+    type: SceneType;
 }
+
+export type SceneFullDataWithRecord = SceneFullData & Record<string, unknown>
 
 export async function updateChoices(sceneId: number, choices: Choice[]) {
     // удаляем все старые связи для этой сцены
@@ -51,6 +62,7 @@ export async function getScenesWithChoices(
       quest_id,
       locPosition,
       samplyLink,
+      type,
       scene_texts (
         id,
         text,
@@ -75,7 +87,7 @@ export async function getScenesWithChoices(
 
     return scenes.map((scene) => {
 
-        const {scene_texts, scene_choice, ...rest} = scene;
+        const {scene_texts, scene_choice, type, ...rest} = scene;
 
         return {
             id: scene.id?.toString(),
@@ -86,6 +98,7 @@ export async function getScenesWithChoices(
             // height: 150,
             data: {
                 ...rest,
+                type: normalizeSceneType(type),
                 texts: scene_texts || [],
                 choices: (scene_choice || []).map(e => e.choice) as Choice[],
             },
