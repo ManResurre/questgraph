@@ -173,9 +173,12 @@ export const useQuestGraph = (
   );
 
   /** Drag start */
-  const onDragStart = useCallback((event: DragEvent, nodeType: string) => {
-    event.dataTransfer.setData("text/plain", nodeType);
-    event.dataTransfer.effectAllowed = "move";
+  const onDragStart = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    const nodeType = event.currentTarget.getAttribute("data-nodetype");
+    if (nodeType) {
+      event.dataTransfer.setData("text/plain", nodeType);
+      event.dataTransfer.effectAllowed = "move";
+    }
     // console.log(event);
   }, []);
 
@@ -206,7 +209,6 @@ export const useQuestGraph = (
     onConnect,
     onConnectEnd,
     onDrop,
-    onDragStart,
     onDragOver,
     handleEdgeClick,
   };

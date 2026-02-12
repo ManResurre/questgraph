@@ -42,7 +42,6 @@ const QuestPage = () => {
     onConnect,
     onConnectEnd,
     onDrop,
-    onDragStart,
     onDragOver,
     handleEdgeClick,
   } = useQuestGraph(Number(questId), setNodes, setEdges, typeDraggable);
@@ -69,7 +68,6 @@ const QuestPage = () => {
             onConnect={onConnect}
             onConnectEnd={onConnectEnd}
             onDrop={onDrop}
-            onDragStart={onDragStart}
             onDragOver={onDragOver}
             onEdgeClick={handleEdgeClick}
             connectionLineType={CONNECTION_LINE_TYPE}
