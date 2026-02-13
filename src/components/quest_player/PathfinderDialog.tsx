@@ -27,7 +27,9 @@ const PathfinderDialog = ({choices}: PathfinderDialogProps) => {
                 {/*    плоть, что ткань, что металл, всё едино».*/}
                 {/*</div>*/}
                 <ol className="list-decimal pl-10 options space-y-1 choice-text font-['Alegreya'] font-semibold text-lg">
-                    {choices.map((choice)=><li>{choice.text}</li>)}
+                    {choices.map((choice) =>
+                        <li key={`choice_id_${choice.id}`}>{choice.text}</li>
+                    )}
                 </ol>
             </div>
 
