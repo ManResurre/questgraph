@@ -1,6 +1,6 @@
 import React from "react";
-import { usePlayer } from "@/components/sidebar/PlayerProvider";
-import { Stack } from "@mui/material";
+import {usePlayer} from "@/components/sidebar/PlayerProvider";
+import {Stack} from "@mui/material";
 import PlayerText from "@/components/quest_player/PlayerText.tsx";
 import PathfinderDialog from "./PathfinderDialog";
 import PathfinderScene from "@/components/quest_player/PathfinderScene.tsx";
@@ -9,8 +9,8 @@ import SciFiScene from "@/components/quest_player/SciFiScene.tsx";
 type SceneComponent = React.ComponentType<{ children: React.ReactNode }>;
 
 const sceneEntries = [
-  ["pathfinder", PathfinderScene],
-  ["sciFi", SciFiScene],
+    ["pathfinder", PathfinderScene],
+    ["sciFi", SciFiScene],
 ] as const;
 
 export const sceneRegistry = new Map<string, SceneComponent>(sceneEntries);
@@ -18,7 +18,7 @@ export const sceneRegistry = new Map<string, SceneComponent>(sceneEntries);
 export type SceneType = (typeof sceneEntries)[number][0];
 
 const Player = () => {
-  const { currentScene } = usePlayer();
+    const {currentScene} = usePlayer();
 
   const SceneComponent =
     sceneRegistry.get(currentScene?.type ?? "") ?? PathfinderScene;

@@ -1,17 +1,17 @@
 import { FinalConnectionState } from "@xyflow/react";
 import { parseLocations, parsePaths } from "@/lib/RepositoryHelper";
 import supabase from "@/supabaseClient";
-import { Database } from "@/supabase";
-import { Choice } from "@/lib/ChoiceRepository";
-import { SceneNodeType } from "@/components/rf/SceneNode";
-import { sceneRegistry, SceneType } from "@/components/quest_player/Player.tsx";
+import {Database} from "@/supabase";
+import {Choice} from "@/lib/ChoiceRepository";
+import {SceneNodeType} from "@/components/rf/SceneNode";
+import {sceneRegistry, SceneType} from "@/components/quest_player/Player.tsx";
 
 export type Scene = Database["public"]["Tables"]["scene"]["Row"];
 export type SceneInsert = Database["public"]["Tables"]["scene"]["Insert"];
 export type SceneText = Database["public"]["Tables"]["scene_texts"]["Row"];
 
 export function normalizeSceneType(type: string | null): SceneType {
-  if (type && type in sceneRegistry) {
+  if (type && sceneRegistry.has(type)) {
     return type as SceneType;
   }
   return "pathfinder";
@@ -105,24 +105,26 @@ export async function getScenesWithChoices(
   });
 }
 
-export default async function updateScene(scene: SceneFullData) {
+export default async function updateScene({
+  texts,
+  choices,
+  ...scene
+}: SceneFullData) {
   // обновляем саму сцену
   const { error: sceneErr } = await supabase
     .from("scene")
     .update({
-      name: scene.name,
-      locPosition: scene.locPosition,
-      samplyLink: scene.samplyLink,
+      ...scene,
     })
     .eq("id", scene.id!);
 
   if (sceneErr) throw sceneErr;
 
   // обновляем тексты сцены
-  await updateSceneTexts(scene.id!, scene.texts as SceneText[]);
+  await updateSceneTexts(scene.id!, texts as SceneText[]);
 
   // обновляем выборы
-  await updateChoices(scene.id!, scene.choices as Choice[]);
+  await updateChoices(scene.id!, choices as Choice[]);
 }
 
 export async function updateSceneTexts(sceneId: number, texts: SceneText[]) {
