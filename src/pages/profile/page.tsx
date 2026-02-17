@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Container,
   Paper,
@@ -8,23 +8,35 @@ import {
   IconButton,
   Button,
   Divider,
+  Alert,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import UploadIcon from "@mui/icons-material/Upload";
 import { useLocalUser } from "@/hooks/useLocalUser";
 import { db, User as DbUser } from "@/lib/db";
+import supabase from "@/supabaseClient";
 
 const Profile = () => {
   const { localUser, loading } = useLocalUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [alert, setAlert] = useState<{
+    severity: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  const showAlert = (severity: "success" | "error", message: string) => {
+    setAlert({ severity, message });
+    setTimeout(() => setAlert(null), 5000);
+  };
 
   const handleCopy = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert(`${label} скопирован в буфер обмена`);
+      showAlert("success", `${label} copied to clipboard`);
     } catch (err) {
-      console.error("Не удалось скопировать:", err);
+      console.error("Failed to copy:", err);
+      showAlert("error", `Failed to copy ${label}`);
     }
   };
 
@@ -60,11 +72,11 @@ const Profile = () => {
       const data = JSON.parse(text) as DbUser;
 
       if (!data.publicKey || !data.privateKey) {
-        alert("Неверный формат файла: отсутствуют ключи");
+        showAlert("error", "Invalid file format: missing keys");
         return;
       }
 
-      // Очищаем таблицу и добавляем импортированного пользователя
+      // Clear table and add imported user
       await db.user.clear();
       await db.user.add({
         name: data.name,
@@ -73,27 +85,32 @@ const Profile = () => {
         auth_id: data.auth_id,
       });
 
-      alert("Ключи успешно импортированы! Страница будет перезагружена.");
-      window.location.reload();
+      // Logout from current session
+      await supabase.auth.signOut();
+
+      showAlert(
+        "success",
+        "Keys imported successfully! You have been logged out.",
+      );
     } catch (err) {
-      console.error("Ошибка импорта:", err);
-      alert("Ошибка при импорте ключей. Проверьте формат файла.");
+      console.error("Import error:", err);
+      showAlert("error", "Error importing keys. Check the file format.");
     }
 
-    // Сбрасываем value input, чтобы можно было загрузить тот же файл снова
+    // Reset input value to allow uploading the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   if (loading) {
-    return <Container>Загрузка...</Container>;
+    return <Container>Loading...</Container>;
   }
 
   if (!localUser) {
     return (
       <Container>
-        <Typography>Пользователь не найден</Typography>
+        <Typography>User not found</Typography>
       </Container>
     );
   }
@@ -101,7 +118,7 @@ const Profile = () => {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Профиль
+        Profile
       </Typography>
 
       <Paper sx={{ p: 3, mt: 2 }}>
@@ -113,7 +130,7 @@ const Profile = () => {
             mb: 2,
           }}
         >
-          <Typography variant="h6">Ключи аутентификации</Typography>
+          <Typography variant="h6">Authentication Keys</Typography>
           <Box sx={{ display: "flex", gap: 1 }}>
             <input
               type="file"
@@ -128,7 +145,7 @@ const Profile = () => {
               onClick={() => fileInputRef.current?.click()}
               size="small"
             >
-              Импорт
+              Import
             </Button>
             <Button
               variant="outlined"
@@ -136,20 +153,30 @@ const Profile = () => {
               onClick={handleExport}
               size="small"
             >
-              Экспорт
+              Export
             </Button>
           </Box>
         </Box>
 
         <Divider sx={{ mb: 2 }} />
 
+        {alert && (
+          <Alert
+            severity={alert.severity}
+            onClose={() => setAlert(null)}
+            sx={{ mb: 2 }}
+          >
+            {alert.message}
+          </Alert>
+        )}
+
         <Box sx={{ mt: 2 }}>
           <TextField
-            label="Имя"
+            label="Name"
             value={localUser.name || "—"}
             fullWidth
             margin="normal"
-            InputProps={{ readOnly: true }}
+            slotProps={{ input: { readOnly: true } }}
           />
 
           <TextField
@@ -159,16 +186,20 @@ const Profile = () => {
             margin="normal"
             multiline
             rows={4}
-            InputProps={{
-              readOnly: true,
-              endAdornment: (
-                <IconButton
-                  onClick={() => handleCopy(localUser.publicKey, "Public Key")}
-                  size="small"
-                >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-              ),
+            slotProps={{
+              input: {
+                readOnly: true,
+                endAdornment: (
+                  <IconButton
+                    onClick={() =>
+                      handleCopy(localUser.publicKey, "Public Key")
+                    }
+                    size="small"
+                  >
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                ),
+              },
             }}
           />
 
@@ -179,18 +210,20 @@ const Profile = () => {
             margin="normal"
             multiline
             rows={4}
-            InputProps={{
-              readOnly: true,
-              endAdornment: (
-                <IconButton
-                  onClick={() =>
-                    handleCopy(localUser.privateKey, "Private Key")
-                  }
-                  size="small"
-                >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-              ),
+            slotProps={{
+              input: {
+                readOnly: true,
+                endAdornment: (
+                  <IconButton
+                    onClick={() =>
+                      handleCopy(localUser.privateKey, "Private Key")
+                    }
+                    size="small"
+                  >
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                ),
+              },
             }}
           />
 
@@ -200,7 +233,7 @@ const Profile = () => {
               value={localUser.auth_id}
               fullWidth
               margin="normal"
-              InputProps={{ readOnly: true }}
+              slotProps={{ input: { readOnly: true } }}
             />
           )}
         </Box>
