@@ -93,10 +93,10 @@ const SceneNode = ({ data: scene }: SceneNodeProps) => {
 
           <div className="px-2">
             <div
-              className="bg-neutral-900/50 dark:bg-neutral-700/30 border border-gray-300 dark:border-neutral-600 rounded-[4px] p-2 min-h-[60px]  overflow-y-auto
+              className="bg-neutral-900/50 dark:bg-neutral-700/30 border border-gray-300 dark:border-neutral-600 `rounded-lg p-2 min-h-15  overflow-y-auto
                     scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent"
             >
-              <div className="text-xs text-gray-600 dark:text-gray-300 font-sans whitespace-pre-wrap break-words leading-4">
+              <div className="text-xs text-gray-600 dark:text-gray-300 font-sans whitespace-pre-wrap wrap-break-word leading-4">
                 {scene.texts && (
                   <PlayerText text={scene.texts.map((t) => t.text).join("")} />
                 )}
