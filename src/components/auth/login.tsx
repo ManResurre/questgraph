@@ -1,10 +1,12 @@
 import React, { useCallback, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { CryptHelper } from "@/lib/CryptHelper";
 import { db, User } from "@/lib/db";
 import supabase from "@/supabaseClient";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LoginIcon from "@mui/icons-material/Login";
-import { CircularProgress, IconButton } from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+import { Box, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -73,19 +75,42 @@ const Login = ({ user }: LoginProps) => {
     }
   }, []);
 
-  return (
-    <IconButton
-      color={user ? "success" : "inherit"}
-      onClick={user ? handleLogout : () => handleLogin(localUser!)}
-    >
-      {loading || !localUser ? (
+  if (loading || !localUser) {
+    return (
+      <IconButton color="inherit" disabled>
         <CircularProgress className="loader" size={24} color="inherit" />
-      ) : user ? (
-        <LogoutIcon />
-      ) : (
+      </IconButton>
+    );
+  }
+
+  if (user) {
+    return (
+      <Box sx={{ display: "flex", gap: 0.5 }}>
+        <Tooltip title="Профиль">
+          <IconButton
+            component={Link}
+            to="/profile"
+            color="success"
+            size="small"
+          >
+            <PersonIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Выйти">
+          <IconButton onClick={handleLogout} color="inherit" size="small">
+            <LogoutIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    );
+  }
+
+  return (
+    <Tooltip title="Войти">
+      <IconButton color="inherit" onClick={() => handleLogin(localUser)}>
         <LoginIcon />
-      )}
-    </IconButton>
+      </IconButton>
+    </Tooltip>
   );
 };
 

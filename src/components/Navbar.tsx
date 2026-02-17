@@ -6,70 +6,74 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import Login from "./auth/login";
 
 export default function Navbar() {
-    const pathname = useRouterState({
-        select: (s) => s.location.pathname,
-    });
+  const pathname = useRouterState({
+    select: (s) => s.location.pathname,
+  });
 
-    const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
 
-    useEffect(() => {
-        const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) setUser(user);
-        };
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) setUser(user);
+    };
 
-        checkUser();
+    checkUser();
 
-        const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => subscription.subscription.unsubscribe();
-    }, []);
-
-    return (
-        <AppBar position="static">
-            <Toolbar>
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                    Quest Editor
-                </Typography>
-
-                <Button
-                    component={Link}
-                    to="/"
-                    variant={pathname === "/" ? "contained" : "text"}
-                    color="inherit"
-                    sx={{ ml: 1 }}
-                >
-                    Home
-                </Button>
-
-                {user && (
-                    <Button
-                        component={Link}
-                        to="/quests"
-                        variant={pathname === "/quests" ? "contained" : "text"}
-                        color="inherit"
-                        sx={{ ml: 1 }}
-                    >
-                        Quests
-                    </Button>
-                )}
-
-                <Button
-                    component={Link}
-                    to="/about"
-                    variant={pathname === "/about" ? "contained" : "text"}
-                    color="inherit"
-                    sx={{ ml: 1 }}
-                >
-                    About
-                </Button>
-
-                <div style={{ marginLeft: '8px' }}>
-                    <Login user={user} />
-                </div>
-            </Toolbar>
-        </AppBar>
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      },
     );
+
+    return () => subscription.subscription.unsubscribe();
+  }, []);
+
+  return (
+    <AppBar position="static">
+      <Toolbar>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Quest Editor
+        </Typography>
+
+        <Button
+          component={Link}
+          to="/"
+          variant={pathname === "/" ? "contained" : "text"}
+          color="inherit"
+          sx={{ ml: 1 }}
+        >
+          Home
+        </Button>
+
+        {user && (
+          <Button
+            component={Link}
+            to="/quests"
+            variant={pathname === "/quests" ? "contained" : "text"}
+            color="inherit"
+            sx={{ ml: 1 }}
+          >
+            Quests
+          </Button>
+        )}
+
+        <Button
+          component={Link}
+          to="/about"
+          variant={pathname === "/about" ? "contained" : "text"}
+          color="inherit"
+          sx={{ ml: 1 }}
+        >
+          About
+        </Button>
+
+        <div style={{ marginLeft: "8px" }}>
+          <Login user={user} />
+        </div>
+      </Toolbar>
+    </AppBar>
+  );
 }

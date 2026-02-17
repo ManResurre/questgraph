@@ -8,6 +8,7 @@ import {
   questsRoute,
 } from "./quests";
 import { aboutRoute } from "./about";
+import { profileRoute } from "./profile";
 import { createRouter } from "@tanstack/react-router";
 
 const routeTree = rootRoute.addChildren([
@@ -17,6 +18,7 @@ const routeTree = rootRoute.addChildren([
     questIdParentRoute.addChildren([questIdRoute, questIdPlayRoute]),
   ]),
   aboutRoute,
+  profileRoute,
 ]);
 
 export const router = createRouter({ routeTree });
