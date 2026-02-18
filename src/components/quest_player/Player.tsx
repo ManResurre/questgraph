@@ -1,27 +1,39 @@
 import React from "react";
-import {usePlayer} from "@/components/sidebar/PlayerProvider";
-import {Stack} from "@mui/material";
+import { usePlayer } from "@/components/sidebar/PlayerProvider";
+import { Stack } from "@mui/material";
 import PlayerText from "@/components/quest_player/PlayerText.tsx";
-import PathfinderDialog from "./PathfinderDialog";
-import PathfinderScene from "@/components/quest_player/PathfinderScene.tsx";
-import SciFiScene from "@/components/quest_player/SciFiScene.tsx";
+import PathfinderDialog from "./theme/pathfinder/PathfinderDialog.tsx";
+import PathfinderScene from "@/components/quest_player/theme/pathfinder/PathfinderScene.tsx";
+import SciFiScene from "@/components/quest_player/theme/sciFi/SciFiScene.tsx";
+import { Choice } from "@/lib/ChoiceRepository.ts";
+import SciFiDialog from "@/components/quest_player/theme/sciFi/SciFiDialog.tsx";
 
 type SceneComponent = React.ComponentType<{ children: React.ReactNode }>;
+type DialogComponent = React.ComponentType<{ choices: Choice[] }>;
 
 const sceneEntries = [
-    ["pathfinder", PathfinderScene],
-    ["sciFi", SciFiScene],
+  ["pathfinder", { scene: PathfinderScene, dialog: PathfinderDialog }],
+  ["sciFi", { scene: SciFiScene, dialog: SciFiDialog }],
 ] as const;
 
-export const sceneRegistry = new Map<string, SceneComponent>(sceneEntries);
+interface RegistryObject {
+  scene: SceneComponent;
+  dialog: DialogComponent;
+}
+
+export const sceneRegistry = new Map<string, RegistryObject>(sceneEntries);
 
 export type SceneType = (typeof sceneEntries)[number][0];
 
-const Player = () => {
-    const {currentScene} = usePlayer();
+function getRegistryObject(type?: string): RegistryObject {
+  return sceneRegistry.get(type ?? "") ?? sceneRegistry.get("pathfinder")!;
+}
 
-  const SceneComponent =
-    sceneRegistry.get(currentScene?.type ?? "") ?? PathfinderScene;
+const Player = () => {
+  const { currentScene } = usePlayer();
+  const { scene: SceneComponent, dialog: DialogComponent } = getRegistryObject(
+    currentScene?.type,
+  );
 
   return (
     <Stack spacing={0} className="flex flex-col h-[calc(100vh-64px)]">
@@ -41,7 +53,7 @@ const Player = () => {
 
       {/*<PlayerChoicesList />*/}
       <div className="mt-auto">
-        <PathfinderDialog choices={currentScene?.choices} />
+        <DialogComponent choices={currentScene?.choices ?? []} />
       </div>
     </Stack>
   );

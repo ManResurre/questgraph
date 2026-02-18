@@ -54,7 +54,7 @@ const SceneNodeEdit = ({scene}: SceneNodeEditProps) => {
             quest_id: Number(questId),
             locPosition: scene?.locPosition ?? false,
             samplyLink: scene.samplyLink ?? "",
-            type: scene.type ?? "pathfinder",
+            type: scene.type ?? "sciFi",
         },
     });
 

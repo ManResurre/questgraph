@@ -3,7 +3,7 @@ import "./dialog.scss";
 import {Choice} from "@/lib/ChoiceRepository.ts";
 
 interface PathfinderDialogProps {
-    choices?: Choice[] | undefined
+    choices?: Choice[]
 }
 
 const PathfinderDialog = ({choices}: PathfinderDialogProps) => {
