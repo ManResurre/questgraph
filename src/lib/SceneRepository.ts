@@ -273,8 +273,6 @@ export async function updatePositions(
             throw error;
         }
 
-        // После успешной операции upsert data всегда должен быть массивом
-        // Проверяем только на null/undefined
         const updatedCount = data ? (data as Scene[]).length : 0;
         console.log(`Successfully updated ${updatedCount} scene positions`);
 

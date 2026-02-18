@@ -39,7 +39,6 @@ interface PlayerProviderProps {
 
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({children}) => {
     const {id: questId} = useParams({from: questIdParentRoute.id});
-    console.log('PlayerProvider', questId);
 
     const {fitView} = useReactFlow();
     const [openModal, setOpenModal] = React.useState(false);

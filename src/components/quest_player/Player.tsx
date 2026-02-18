@@ -26,7 +26,7 @@ export const sceneRegistry = new Map<string, RegistryObject>(sceneEntries);
 export type SceneType = (typeof sceneEntries)[number][0];
 
 function getRegistryObject(type?: string): RegistryObject {
-  return sceneRegistry.get(type ?? "") ?? sceneRegistry.get("pathfinder")!;
+  return sceneRegistry.get(type ?? "") ?? sceneRegistry.get("sciFi")!;
 }
 
 const Player = () => {

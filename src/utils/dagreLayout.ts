@@ -99,7 +99,7 @@ export default function useLayoutElements() {
       return;
     }
 
-    setupPositions();
+    // setupPositions();
   }, [nodesInitialized, setupPositions]);
 
   return { onLayout: setupPositions };

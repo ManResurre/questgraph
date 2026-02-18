@@ -31,7 +31,9 @@ const QuestsLayout = ({children}: { children: ReactNode }) => {
         <QueryClientProvider client={queryClient}>
             <ReactFlowProvider>
                 <GraphSidebarProvider>
-                    <QuestProvider>{children}</QuestProvider>
+                    <QuestProvider>
+                            {children}
+                    </QuestProvider>
                 </GraphSidebarProvider>
             </ReactFlowProvider>
         </QueryClientProvider>
