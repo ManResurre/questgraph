@@ -413,7 +413,7 @@ export type Database = {
       delete_orphaned_signals_batch: { Args: never; Returns: undefined }
     }
     Enums: {
-      ParameterType: "calculation" | "value" | "percent"
+      ParameterType: "calculation" | "value" | "percent" | "range"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -541,7 +541,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      ParameterType: ["calculation", "value", "percent"],
+      ParameterType: ["calculation", "value", "percent", "range"],
     },
   },
 } as const

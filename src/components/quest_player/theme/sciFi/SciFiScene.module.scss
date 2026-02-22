@@ -1,0 +1,5 @@
+.sci-fi-scene {
+  height: calc(100vh - 72px); /* высота экрана минус AppBar Material-UI */
+  overflow-y: auto;
+  position: relative;
+}

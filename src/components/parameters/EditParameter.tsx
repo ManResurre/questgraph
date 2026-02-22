@@ -24,7 +24,7 @@ import {ParameterInsert, ParameterScene, ParameterType} from "@/lib/ParametersRe
 import {useSidebar} from "@/components/sidebar/graphSidebarProvider";
 import {questIdRoute} from "@/routes/quests";
 
-const parameterTypes: ParameterType[] = ["value", "calculation", "percent"];
+const parameterTypes: ParameterType[] = ["value", "calculation", "percent", "range"];
 
 interface EditParameterProps {
     onSubmit?: (p: ParameterInsert, ps: ParameterScene | null) => void,

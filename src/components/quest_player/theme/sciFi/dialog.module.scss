@@ -1,25 +1,29 @@
 .dialog-frame {
-  position: relative;
-  background: linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.5) 100%
-  );
+  position: absolute;
+  left: 0;
+  width: 100%;
+  bottom: 0;
+  min-height: 100px;
 
   &:before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    /* background-image: url("https://i.pinimg.com/736x/ec/d8/34/ecd834e40fc5bbd91f3156a2f1823fca.jpg"); */
-    /* background-size: cover; */
-    /* background-position: center; */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    inset: 0;
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     pointer-events: none;
-    filter: blur(10px);
+    z-index: 0;
+  }
+
+  .dialog-text,
+  .choice-text {
+    position: relative;
+    z-index: 1;
   }
 
   .dialog-text {

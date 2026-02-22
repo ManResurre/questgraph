@@ -43,18 +43,18 @@ const Player = () => {
             {currentScene.texts.map((t) => {
               return (
                 <div key={t.id}>
-                  <PlayerText text={t.text ?? ""} />
+                  <PlayerText key={t.id} text={t.text ?? ""} />
                 </div>
               );
             })}
+
+            <DialogComponent choices={currentScene?.choices ?? []} />
           </SceneComponent>
         </div>
       )}
 
       {/*<PlayerChoicesList />*/}
-      <div className="mt-auto">
-        <DialogComponent choices={currentScene?.choices ?? []} />
-      </div>
+      <div className="mt-auto"></div>
     </Stack>
   );
 };
