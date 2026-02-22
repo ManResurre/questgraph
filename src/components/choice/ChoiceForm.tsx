@@ -1,19 +1,7 @@
 import {Controller, useFormContext} from "react-hook-form";
 import {Stack, TextField} from "@mui/material";
 import React from "react";
-import CodeMirror, {EditorView} from "@uiw/react-codemirror";
-import {darcula} from "@uiw/codemirror-theme-darcula";
-import {langs} from "@uiw/codemirror-extensions-langs";
-import {abbreviationTracker, expandAbbreviation} from "@emmetio/codemirror6-plugin";
-import {Prec} from "@codemirror/state";
-import {keymap} from "@codemirror/view";
-import {formatCode} from "@/lib/CodeMirrorHelper";
-
-const customTheme = EditorView.theme({
-    '&': {
-        fontSize: '18px'
-    }
-})
+import CMEditor from "@/components/cm/CMEditor.tsx";
 
 export interface ChoiceFormProps {
     index: number;
@@ -46,31 +34,9 @@ function ChoiceForm({index, prefix}: ChoiceFormProps) {
         <Controller
             name={getFieldName('text')}
             control={control}
-            render={({field: {value, onChange}}) => (
-                <CodeMirror
-                    value={value}
-                    theme={darcula}
-                    extensions={[
-                        langs.html(),
-                        abbreviationTracker(),
-                        customTheme,
-                        Prec.highest(
-                            keymap.of([
-                                {
-                                    key: "Tab", run: expandAbbreviation
-                                },
-                                {
-                                    key: "Ctrl-Alt-l",
-                                    run: (view) => {
-                                        formatCode(view, 'html');
-                                        return true;
-                                    }
-                                }
-                            ])
-                        )
-                    ]}
-                    onChange={onChange}
-                />)}
+            render={({field}) => (
+                <CMEditor value={field.value ?? ""} onChange={field.onChange} lang="json"/>
+            )}
         />
 
         {/*<Controller*/}

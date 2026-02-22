@@ -1,20 +1,8 @@
 import React, {useState, useEffect} from "react";
 import {Controller, useFieldArray} from "react-hook-form";
-import CodeMirror, {EditorView} from "@uiw/react-codemirror";
-import {darcula} from "@uiw/codemirror-theme-darcula";
-import {langs} from "@uiw/codemirror-extensions-langs";
-import {abbreviationTracker, expandAbbreviation} from "@emmetio/codemirror6-plugin";
-import {Prec} from "@codemirror/state";
-import {keymap} from "@codemirror/view";
 import {Button, Box, Select, MenuItem, IconButton, Typography, FormControl, InputLabel} from "@mui/material";
 import {Add, Delete, NavigateBefore, NavigateNext} from "@mui/icons-material";
-import {formatCode} from "@/lib/CodeMirrorHelper";
-
-const customTheme = EditorView.theme({
-    '&': {
-        fontSize: '18px'
-    }
-})
+import CMEditor from "@/components/cm/CMEditor.tsx";
 
 export default function SceneFormText({methods}: any) {
     const {fields, append, remove} = useFieldArray({
@@ -136,32 +124,7 @@ export default function SceneFormText({methods}: any) {
                         name={getFieldName(index, 'text')}
                         control={methods.control}
                         render={({field: {value, onChange}}) => (
-                            <CodeMirror
-                                value={value}
-                                theme={darcula}
-                                minHeight="100px"
-                                extensions={[
-                                    langs.html(),
-                                    abbreviationTracker(),
-                                    customTheme,
-                                    EditorView.lineWrapping,
-                                    Prec.highest(
-                                        keymap.of([
-                                            {
-                                                key: "Tab", run: expandAbbreviation
-                                            },
-                                            {
-                                                key: "Ctrl-Alt-l",
-                                                run: (view) => {
-                                                    formatCode(view, 'html');
-                                                    return true;
-                                                }
-                                            }
-                                        ])
-                                    )
-                                ]}
-                                onChange={onChange}
-                            />
+                            <CMEditor value={value ?? ""} onChange={onChange} lang="json"/>
                         )}
                     />
                 </Box>
