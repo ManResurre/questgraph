@@ -117,7 +117,7 @@ const CMEditor = ({value, onChange, lang = "json"}: {
         }
     }, [value]);
 
-    return <div ref={host} style={{minHeight: 160}}/>;
+    return <div ref={host}/>;
 }
 
 export default CMEditor;
