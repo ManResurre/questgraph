@@ -100,10 +100,8 @@ const CMEditor = ({value, onChange, lang = "json"}: {
             view.destroy();
             viewRef.current = null;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [host]);
 
-    // sync external -> editor
     useEffect(() => {
         const view = viewRef.current;
         if (!view) return;
