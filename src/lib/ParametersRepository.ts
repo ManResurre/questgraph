@@ -97,7 +97,6 @@ export async function getSceneParameters(sceneId: number) {
 export async function upsertSceneParameter(
     value: ParameterScene | ParameterSceneInsert,
 ) {
-    console.log("upsertSceneParameter");
     const {error} = await supabase.from("parameter_scene").upsert(value);
 
     if (error) {
@@ -114,6 +113,19 @@ export async function getParametersChoice(choiceId: number) {
         .order("id", {ascending: true});
 
     if (error) throw error;
+
+    return data;
+}
+
+export async function deleteSceneParameter(id: number) {
+    const {data, error} = await supabase
+        .from("parameter_scene")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        throw error;
+    }
 
     return data;
 }

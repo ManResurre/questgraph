@@ -4,13 +4,19 @@ import SceneParameterList from "@/components/scene_list/SceneParametrList";
 import {ParameterInsert, ParameterScene} from "@/lib/ParametersRepository";
 import {Stack} from "@mui/material";
 import {useParameters} from "@/components/parameters/ParametersProvider";
-import ParametersList from "@/components/parameters/ParametersList";
 import {useSidebar} from "@/components/sidebar/graphSidebarProvider";
+import {useParametersSceneMutations} from "@/hooks/parameters.ts";
+import ParametersSelector from "@/components/parameters/ParametersSelector.tsx";
+import ParametersList from "@/components/parameters/ParametersList.tsx";
 
 const SceneParametersManagement = () => {
-    const {selectedElementData: {data: scene}} = useSidebar();
-    const {upsertSceneParameter, editingParameterScene, setEditingParameterScene} = useParameters();
-    // console.log(editingParameterScene);
+    const {selectedElementData: {scene}} = useSidebar();
+    const {
+        editingParameterScene,
+        setEditingParameterScene,
+        setEditingParameter
+    } = useParameters();
+    const {upsertSceneParameter} = useParametersSceneMutations();
 
     const handleSubmit = async (p: ParameterInsert, ps: ParameterScene | null) => {
         await upsertSceneParameter({
@@ -20,9 +26,11 @@ const SceneParametersManagement = () => {
             value: JSON.stringify(p)
         })
         setEditingParameterScene(null)
+        setEditingParameter(null)
     }
+
     return <Stack spacing={1}>
-        <ParametersList/>
+        <ParametersList renderItem={ParametersSelector}/>
         <EditParameter patch={editingParameterScene} onSubmit={handleSubmit}/>
         <SceneParameterList/>
     </Stack>

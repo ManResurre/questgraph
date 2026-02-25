@@ -41,6 +41,7 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
         editingParameter,
         editingParameterScene,
         setEditingParameter,
+        setEditingParameterScene,
         upsertParameter,
     } = useParameters();
 
@@ -54,7 +55,7 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
             key: "",
             text: "",
             hide: false,
-            type: "value",
+            type: "value" as const,
             desc: "",
             ...editingParameter,
         }),
@@ -71,12 +72,17 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
     });
 
     useEffect(() => {
-        if (editingParameter) reset(editingParameter);
-
-        if (patch && patch.value) {
-            console.log(patch);
-            reset(JSON.parse(patch.value));
+        if (onSubmit) {
+            if (patch && patch.value) {
+                reset(JSON.parse(patch.value));
+                return;
+            }
+            reset(initialValues)
+            return;
         }
+
+
+        if (editingParameter) reset(editingParameter);
     }, [editingParameter]);
 
     const submit = useCallback(
@@ -98,6 +104,7 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
     const clear = () => {
         reset(initialValues as ParameterInsert);
         setEditingParameter(null);
+        setEditingParameterScene(null);
     };
 
     return (
@@ -229,4 +236,4 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
     );
 };
 
-export default React.memo(EditParameter);
+export default EditParameter;

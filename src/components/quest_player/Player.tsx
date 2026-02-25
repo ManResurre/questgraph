@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { usePlayer } from "@/components/sidebar/PlayerProvider";
 import { Stack, Drawer, Box } from "@mui/material";
 import PlayerText from "@/components/quest_player/PlayerText.tsx";
@@ -10,6 +10,7 @@ import SciFiDialog from "@/components/quest_player/theme/sciFi/SciFiDialog.tsx";
 import Status from "@/components/quest_player/Status.tsx";
 import { useParams } from "@tanstack/react-router";
 import { questIdParentRoute } from "@/routes/quests";
+import { useParametersSceneQuery } from "@/hooks/parameters";
 
 type SceneComponent = React.ComponentType<{ children: React.ReactNode }>;
 type DialogComponent = React.ComponentType<{ choices: Choice[] }>;
@@ -33,11 +34,20 @@ function getRegistryObject(type?: string): RegistryObject {
 }
 
 const Player = () => {
-  const { id: questId } = useParams({ from: questIdParentRoute.id });
   const { currentScene } = usePlayer();
   const { scene: SceneComponent, dialog: DialogComponent } = getRegistryObject(
     currentScene?.type,
   );
+
+  const { data: parametersScene } = useParametersSceneQuery(
+    currentScene?.id ?? 0,
+  );
+
+  useEffect(() => {
+    if (parametersScene) {
+      console.log("parameter_scene:", parametersScene);
+    }
+  }, [parametersScene]);
 
   const statusList = [
     { id: 1, name: "Health", value: 100 },

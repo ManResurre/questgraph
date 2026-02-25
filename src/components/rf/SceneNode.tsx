@@ -38,7 +38,6 @@ const SceneNode = ({ data: scene }: SceneNodeProps) => {
   const handleEditParams = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      console.log("editSceneParams");
       openSidebar({
         flags: { editSceneParams: true },
         elementData: { type: "node", scene },
@@ -48,7 +47,6 @@ const SceneNode = ({ data: scene }: SceneNodeProps) => {
   );
 
   const handleClickCard = () => {
-    console.log("handleClickCard");
     localStorage.setItem("selectedNode", String(scene.id));
     setCurrentScene(scene);
   };
