@@ -4,6 +4,14 @@ import tailwind from "@tailwindcss/vite";
 import path from "path";
 
 export default defineConfig({
+  server: {
+    fs: {
+      cachedChecks: false,
+    },
+  },
+  optimizeDeps: {
+    force: true,
+  },
   plugins: [
     react({
       jsxImportSource: "@emotion/react",

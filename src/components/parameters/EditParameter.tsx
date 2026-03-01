@@ -1,6 +1,16 @@
-import React, {useCallback, useEffect, useMemo} from "react";
+import React, {useEffect, useMemo} from "react";
 import {useParams} from "@tanstack/react-router";
-import {Controller, useForm, useWatch} from "react-hook-form";
+import {Controller, useForm} from "react-hook-form";
+
+import {
+    ParameterInsert,
+    ParameterScene,
+    ParameterType,
+} from "@/lib/ParametersRepository";
+import {useParameters} from "@/components/parameters/ParametersProvider";
+import {useSidebar} from "@/components/sidebar/graphSidebarProvider";
+import {questIdRoute} from "@/routes/quests";
+import {useParameterEditStrategy} from "@/hooks/useParameterEditStrategy";
 import {
     Box,
     Button,
@@ -13,14 +23,6 @@ import {
     FormLabel,
 } from "@mui/material";
 
-import {useParameters} from "@/components/parameters/ParametersProvider";
-import {
-    ParameterInsert,
-    ParameterScene,
-    ParameterType,
-} from "@/lib/ParametersRepository";
-import {useSidebar} from "@/components/sidebar/graphSidebarProvider";
-import {questIdRoute} from "@/routes/quests";
 import CMEditor from "@/components/cm/CMEditor.tsx";
 
 const parameterTypes: ParameterType[] = [
@@ -35,20 +37,15 @@ interface EditParameterProps {
     patch?: ParameterScene | null;
 }
 
-const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
+const EditParameter = ({patch}: EditParameterProps) => {
     const {id: questId} = useParams({from: questIdRoute.id});
+
     const {
         editingParameter,
-        editingParameterScene,
-        setEditingParameter,
-        setEditingParameterScene,
-        upsertParameter,
     } = useParameters();
 
-    const {setLoading} = useSidebar();
-
-    const initialValues = useMemo(
-        () => ({
+    const initialValues = useMemo(() => (
+        {
             quest_id: Number(questId),
             label: "",
             value: "",
@@ -57,55 +54,25 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
             hide: false,
             type: "value" as const,
             desc: "",
-            ...editingParameter,
-        }),
-        [questId],
-    );
+        }
+    ), [questId]);
 
     const {
-        control,
-        handleSubmit,
-        formState: {errors},
-        reset,
-    } = useForm<ParameterInsert>({
+        handleSubmit: submit,
+    } = useParameterEditStrategy();
+
+    const {control, handleSubmit, reset} = useForm<ParameterInsert>({
         defaultValues: initialValues as ParameterInsert,
     });
 
     useEffect(() => {
-        if (onSubmit) {
-            if (patch && patch.value) {
-                reset(JSON.parse(patch.value));
-                return;
-            }
+        if (!editingParameter) {
             reset(initialValues)
             return;
         }
 
-
-        if (editingParameter) reset(editingParameter);
+        reset(editingParameter)
     }, [editingParameter]);
-
-    const submit = useCallback(
-        async (data: ParameterInsert) => {
-            setLoading(true);
-
-            if (onSubmit) {
-                onSubmit(data, editingParameterScene);
-            } else {
-                await upsertParameter(data as ParameterInsert);
-            }
-
-            setLoading(false);
-            clear();
-        },
-        [editingParameterScene],
-    );
-
-    const clear = () => {
-        reset(initialValues as ParameterInsert);
-        setEditingParameter(null);
-        setEditingParameterScene(null);
-    };
 
     return (
         <Stack
@@ -125,8 +92,7 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
                         {...field}
                         label="Label"
                         size="small"
-                        error={!!errors.label}
-                        helperText={errors.label?.message}
+                        fullWidth
                     />
                 )}
             />
@@ -140,8 +106,7 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
                         {...field}
                         label="Key"
                         size="small"
-                        error={!!errors.key}
-                        helperText={errors.key?.message}
+                        fullWidth
                     />
                 )}
             />
@@ -151,20 +116,16 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
                 name="value"
                 control={control}
                 render={({field, fieldState: {error}}) => {
-                    const type = useWatch<ParameterInsert>({control, name: "type"});
-                    return type === "range" ? (
+                    // Для доступа к type используем контекст формы через useWatch
+                    return (
                         <FormControl fullWidth error={!!error}>
                             <FormLabel>Value</FormLabel>
-                            <CMEditor value={field.value ?? ""} onChange={field.onChange} lang="json"/>
+                            <CMEditor
+                                value={field.value ?? ""}
+                                onChange={field.onChange}
+                                lang="json"
+                            />
                         </FormControl>
-                    ) : (
-                        <TextField
-                            {...field}
-                            label="Value"
-                            size="small"
-                            error={!!error}
-                            helperText={error?.message}
-                        />
                     );
                 }}
             />
@@ -176,7 +137,11 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
                 render={({field, fieldState: {error}}) => (
                     <FormControl fullWidth error={!!error}>
                         <FormLabel>Text</FormLabel>
-                        <CMEditor value={field.value ?? ""} onChange={field.onChange} lang="html"/>
+                        <CMEditor
+                            value={field.value ?? ""}
+                            onChange={field.onChange}
+                            lang="html"
+                        />
                     </FormControl>
                 )}
             />
@@ -188,7 +153,11 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
                 render={({field, fieldState: {error}}) => (
                     <FormControl fullWidth error={!!error}>
                         <FormLabel>Description</FormLabel>
-                        <CMEditor value={field.value ?? ""} onChange={field.onChange} lang="json"/>
+                        <CMEditor
+                            value={field.value ?? ""}
+                            onChange={field.onChange}
+                            lang="json"
+                        />
                     </FormControl>
                 )}
             />
@@ -199,7 +168,9 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
                 control={control}
                 render={({field}) => (
                     <FormControlLabel
-                        control={<Checkbox {...field} checked={!!field.value}/>}
+                        control={
+                            <Checkbox {...field} checked={!!field.value}/>
+                        }
                         label="Hide"
                     />
                 )}
@@ -215,8 +186,7 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
                         select
                         label="Type"
                         size="small"
-                        error={!!errors.type}
-                        helperText={errors.type?.message}
+                        fullWidth
                     >
                         {parameterTypes.map((t) => (
                             <MenuItem key={t} value={t}>
@@ -228,7 +198,12 @@ const EditParameter = ({onSubmit, patch}: EditParameterProps) => {
             />
 
             <Box display="flex" justifyContent="space-between" gap={1}>
-                <Button size="small" variant="contained" type="submit" fullWidth>
+                <Button
+                    size="small"
+                    variant="contained"
+                    type="submit"
+                    fullWidth
+                >
                     Save
                 </Button>
             </Box>

@@ -1,79 +1,81 @@
-import React, { useMemo } from "react";
-import { Box, IconButton, ListItem, ListItemText } from "@mui/material";
-import { Edit as EditIcon } from "@mui/icons-material";
+import React, {useMemo} from "react";
+import {Box, IconButton, ListItem, ListItemText} from "@mui/material";
+import {Edit as EditIcon} from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useSidebar } from "@/components/sidebar/graphSidebarProvider";
-import { useParameters } from "@/components/parameters/ParametersProvider";
-import { ParameterScene } from "@/lib/ParametersRepository";
-import { diff } from "@/lib/RepositoryHelper";
-import { useParametersSceneMutations } from "@/hooks/parameters.ts";
+import {useSidebar} from "@/components/sidebar/graphSidebarProvider";
+import {useParameters} from "@/components/parameters/ParametersProvider";
+import {ParameterScene} from "@/lib/ParametersRepository";
+import {diff} from "@/lib/RepositoryHelper";
+import {useParametersSceneMutations} from "@/hooks/parameters.ts";
 
 interface SceneParameterItemProps {
-  parameterScene: ParameterScene;
+    parameterScene: ParameterScene;
 }
 
-const SceneParameterItem = ({ parameterScene }: SceneParameterItemProps) => {
-  const { setEditingParameter, parameters, setEditingParameterScene } =
-    useParameters();
-  const { setLoading } = useSidebar();
-  const { deleteSceneParameter } = useParametersSceneMutations();
+const SceneParameterItem = ({parameterScene}: SceneParameterItemProps) => {
+    const {setEditingParameter, parameters, setEditingParameterScene} =
+        useParameters();
+    const {setLoading} = useSidebar();
+    const {deleteSceneParameter} = useParametersSceneMutations();
 
-  const parameter = useMemo(
-    () => parameters.find((p) => p.id == parameterScene.param_id),
-    [parameters],
-  );
+    const parameter = useMemo(
+        () => parameters.find((p) => p.id == parameterScene.param_id),
+        [parameters],
+    );
 
-  const handleDelete = async () => {
-    setLoading(true);
+    const handleDelete = async () => {
+        setLoading(true);
 
-    await deleteSceneParameter(parameterScene.id);
+        await deleteSceneParameter(parameterScene.id);
 
-    setLoading(false);
-  };
+        setLoading(false);
+    };
 
-  const handleEditParameterScene = () => {
-    setEditingParameter(parameter ?? null);
-    setEditingParameterScene(parameterScene ?? null);
-  };
+    const handleEditParameterScene = () => {
+        setEditingParameter({
+            ...JSON.parse(parameterScene.value ?? '')
+        });
+        setEditingParameterScene(parameterScene ?? null);
+    };
 
-  const getValue = () => {
-    if (!parameterScene.value || !parameter) return "";
+    const getValue = () => {
+        if (!parameterScene.value || !parameter) return "";
 
-    return JSON.stringify(diff(parameter, JSON.parse(parameterScene.value)));
-  };
+        return JSON.stringify(diff(parameter, JSON.parse(parameterScene.value)));
+    };
 
-  return (
-    <ListItem
-      secondaryAction={
-        <Box>
-          <IconButton onClick={handleEditParameterScene} sx={{ mr: 0.5 }}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton onClick={handleDelete} sx={{ mr: 0.5 }}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      }
-    >
-      <ListItemText
-        primary={`${parameter?.label} := ${getValue()}`}
-        slotProps={{
-          secondary: {
-            component: "div",
-          },
-        }}
-        sx={{
-          pr: 8,
-          minWidth: 0,
-          "& .MuiTypography-root": {
-            wordWrap: "break-word",
-            overflowWrap: "break-word",
-            whiteSpace: "normal",
-          },
-        }}
-      />
-    </ListItem>
-  );
+    return (
+        <ListItem
+            secondaryAction={
+                <Box>
+                    <IconButton onClick={handleEditParameterScene} sx={{mr: 0.5}}>
+                        <EditIcon fontSize="small"/>
+                    </IconButton>
+                    <IconButton onClick={handleDelete} sx={{mr: 0.5}}>
+                        <DeleteIcon fontSize="small"/>
+                    </IconButton>
+                </Box>
+            }
+        >
+            <ListItemText
+                primary={`${parameter?.label} := ${getValue()}`}
+                slotProps={{
+                    secondary: {
+                        component: "div",
+                    },
+                }}
+                sx={{
+                    pr: 8,
+                    minWidth: 0,
+                    "& .MuiTypography-root": {
+                        wordWrap: "break-word",
+                        overflowWrap: "break-word",
+                        whiteSpace: "normal",
+                    },
+                }}
+            />
+        </ListItem>
+    );
 };
 
 export default SceneParameterItem;

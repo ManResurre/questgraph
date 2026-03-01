@@ -5,7 +5,7 @@
   "description": "Questgraph – React SPA (Vite) for Cloudflare.",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force",
     "build": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",

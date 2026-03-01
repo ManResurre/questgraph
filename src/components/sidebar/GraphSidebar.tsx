@@ -96,7 +96,7 @@ const GraphSidebar = () => {
                 },
             }}
         >
-            {/* Кастомная ручка для резиза */}
+            
             <Box
                 onMouseDown={handleMouseDown}
                 sx={{

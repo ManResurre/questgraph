@@ -67,6 +67,8 @@ export async function upsertParameter(parameter: Parameter | ParameterInsert) {
         console.error("Error updating Parameter:", error);
         throw error;
     }
+
+    console.log("Parameter has been saved");
 }
 
 export async function deleteParameter(parameterId: number) {
@@ -103,6 +105,8 @@ export async function upsertSceneParameter(
         console.error("Error updating Parameter Scene:", error);
         throw error;
     }
+
+    console.log("Scene Parameter has been saved");
 }
 
 export async function getParametersChoice(choiceId: number) {
