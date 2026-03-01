@@ -1,14 +1,17 @@
-import {ParameterInsert, ParameterSceneInsert} from "@/lib/ParametersRepository";
+import {ParameterInsert} from "@/lib/ParametersRepository";
 import {useParameters} from "@/components/parameters/ParametersProvider.tsx";
 import {useParametersSceneMutations} from "@/hooks/parameters.ts";
 import {useSidebar} from "@/components/sidebar/graphSidebarProvider.tsx";
+import {useMemo} from "react";
+
+export type EditMode = 'parameter' | 'parameterScene';
 
 interface IEditStrategy {
-    handleSubmit: (data: ParameterInsert | ParameterSceneInsert) => Promise<void>;
+    handleSubmit: (data: ParameterInsert) => Promise<void>;
 }
 
 export function useParameterEditStrategy() {
-    const {selectedElementData: {scene}, setLoading} = useSidebar();
+    const {selectedElementData: {scene}} = useSidebar();
     const {
         editingParameterScene,
         upsertParameter,
@@ -17,40 +20,32 @@ export function useParameterEditStrategy() {
 
     const {upsertSceneParameter} = useParametersSceneMutations();
 
-    const strategy = new Map<string, IEditStrategy>([
+    const strategy = useMemo(() => new Map<EditMode, IEditStrategy>([
         ["parameter", {
-            handleSubmit: async (data) => {
-                setLoading(true)
-                await upsertParameter(data);
-                setEditingParameter(null);
-                setLoading(false)
-            }
+            handleSubmit: upsertParameter
         }],
         ["parameterScene", {
             handleSubmit: async (data) => {
-                if (!data.id || !scene.id) {
+                if (!data.id || !scene?.id) {
                     return;
                 }
 
-                setLoading(true)
                 await upsertSceneParameter({
                     id: editingParameterScene?.id ?? undefined,
                     param_id: data.id,
                     scene_id: scene.id,
                     value: JSON.stringify(data)
                 })
-                setEditingParameter(null);
-                setLoading(false)
             }
         }]
-    ]);
+    ]), [scene, editingParameterScene]);
 
-    let handleSubmit = async (data: ParameterInsert) => {
-    }
-    if (scene) {
-        handleSubmit = strategy.get('parameterScene')?.handleSubmit ?? handleSubmit
-    } else {
-        handleSubmit = strategy.get('parameter')?.handleSubmit ?? handleSubmit
+    const mode: EditMode = scene ? 'parameterScene' : 'parameter';
+
+    const handleSubmit = async (data: ParameterInsert) => {
+        if (!strategy.has(mode)) return;
+        await strategy.get(mode)?.handleSubmit(data)
+        setEditingParameter(null);
     }
 
     return {
