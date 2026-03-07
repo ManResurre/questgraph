@@ -9,6 +9,7 @@ import {
 } from "./quests";
 import { aboutRoute } from "./about";
 import { profileRoute } from "./profile";
+import { sandboxRoute } from "./sandbox";
 import { createRouter } from "@tanstack/react-router";
 
 const routeTree = rootRoute.addChildren([
@@ -19,6 +20,7 @@ const routeTree = rootRoute.addChildren([
   ]),
   aboutRoute,
   profileRoute,
+  sandboxRoute,
 ]);
 
 export const router = createRouter({ routeTree });

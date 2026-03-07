@@ -70,6 +70,16 @@ export default function Navbar() {
           About
         </Button>
 
+        <Button
+            component={Link}
+            to="/sandbox"
+            variant={pathname === "/sandbox" ? "contained" : "text"}
+            color="inherit"
+            sx={{ ml: 1 }}
+        >
+          Sandbox
+        </Button>
+
         <div style={{ marginLeft: "8px" }}>
           <Login user={user} />
         </div>
