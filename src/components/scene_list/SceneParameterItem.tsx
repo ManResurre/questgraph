@@ -58,6 +58,7 @@ const SceneParameterItem = ({parameterScene}: SceneParameterItemProps) => {
             }
         >
             <ListItemText
+                className="single-line"
                 primary={`${parameter?.label} := ${getValue()}`}
                 slotProps={{
                     secondary: {
@@ -68,9 +69,12 @@ const SceneParameterItem = ({parameterScene}: SceneParameterItemProps) => {
                     pr: 8,
                     minWidth: 0,
                     "& .MuiTypography-root": {
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        whiteSpace: "normal",
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        // wordWrap: "break-word",
+                        // overflowWrap: "break-word",
+                        // whiteSpace: "normal",
+
                     },
                 }}
             />

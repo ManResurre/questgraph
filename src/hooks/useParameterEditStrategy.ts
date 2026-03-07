@@ -11,11 +11,15 @@ interface IEditStrategy {
 }
 
 export function useParameterEditStrategy() {
-    const {selectedElementData: {scene}} = useSidebar();
+    const {selectedElementData} = useSidebar();
+
+    const scene = selectedElementData?.scene ?? null;
+
     const {
         editingParameterScene,
         upsertParameter,
-        setEditingParameter
+        setEditingParameter,
+        setEditingParameterScene
     } = useParameters();
 
     const {upsertSceneParameter} = useParametersSceneMutations();
@@ -46,6 +50,7 @@ export function useParameterEditStrategy() {
         if (!strategy.has(mode)) return;
         await strategy.get(mode)?.handleSubmit(data)
         setEditingParameter(null);
+        setEditingParameterScene(null);
     }
 
     return {

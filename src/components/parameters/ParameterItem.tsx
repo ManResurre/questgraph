@@ -35,7 +35,7 @@ const ParameterItem = ({parameter}: { parameter: Parameter }) => {
         }
     >
         <ListItemText
-            primary={`[${parameter.key}] (${parameter.label}) := ${parameter.value}`}
+            primary={`[${parameter.key}] (${parameter.label}) := `}
             slotProps={
                 {
                     secondary: {
