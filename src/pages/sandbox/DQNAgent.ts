@@ -1,5 +1,4 @@
-import * as tf from "@tensorflow/tfjs-core";
-import * as tfl from "@tensorflow/tfjs-layers";
+import * as tf from "@tensorflow/tfjs";
 
 export class DQNAgent {
     stateSize: number;
@@ -19,7 +18,7 @@ export class DQNAgent {
         done: boolean;
     }[] = [];
 
-    model: tfl.LayersModel;
+    model: tf.LayersModel;
 
     constructor(stateSize: number, actionSize: number) {
         this.stateSize = stateSize;
@@ -27,11 +26,11 @@ export class DQNAgent {
         this.model = this.buildModel();
     }
 
-    private buildModel(): tfl.LayersModel {
-        const model = tfl.sequential();
+    private buildModel(): tf.LayersModel {
+        const model = tf.sequential();
 
         model.add(
-            tfl.layers.dense({
+            tf.layers.dense({
                 units: 64,
                 activation: "relu",
                 inputShape: [this.stateSize],
@@ -39,14 +38,14 @@ export class DQNAgent {
         );
 
         model.add(
-            tfl.layers.dense({
+            tf.layers.dense({
                 units: 64,
                 activation: "relu",
             })
         );
 
         model.add(
-            tfl.layers.dense({
+            tf.layers.dense({
                 units: this.actionSize,
                 activation: "linear",
             })
@@ -61,13 +60,17 @@ export class DQNAgent {
     }
 
     act(state: number[]): number {
+        // epsilon-greedy
         if (Math.random() < this.epsilon) {
             return Math.floor(Math.random() * this.actionSize);
         }
 
-        const q = this.model.predict(tf.tensor([state])) as tf.Tensor;
-        const arr = q.dataSync();
-        return arr.indexOf(Math.max(...arr));
+        return tf.tidy(() => {
+            const input = tf.tensor([state]);
+            const q = this.model.predict(input) as tf.Tensor;
+            const arr = q.dataSync();
+            return arr.indexOf(Math.max(...arr));
+        });
     }
 
     remember(state: number[], action: number, reward: number, nextState: number[], done: boolean) {
@@ -106,6 +109,7 @@ export class DQNAgent {
         await this.model.fit(tf.tensor(states), tf.tensor(targets), {
             epochs: 1,
             batchSize,
+            verbose: 0,
         });
 
         if (this.epsilon > this.epsilonMin) {

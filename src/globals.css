@@ -139,4 +139,8 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    #root{
+        height: calc(100vh - 64px);
+    }
 }

@@ -1,12 +1,13 @@
-import { CircleEntity } from "./CircleEntity";
+import { Bot } from "./Bot.ts";
 import { circleCollision } from "./utils";
+import {Health} from "@/pages/sandbox/Health.ts";
 
 export function castRay(
-    bot: CircleEntity,
+    bot: Bot,
     angle: number,
-    obstacles: CircleEntity[],
-    enemy: CircleEntity,
-    item: CircleEntity,
+    obstacles: Bot[],
+    enemy: Bot,
+    item: Health,
     maxDist = 300
 ): [number, number, number] {
   const step = 4;
@@ -43,10 +44,10 @@ export function castRay(
 }
 
 export function getRays(
-    bot: CircleEntity,
-    obstacles: CircleEntity[],
-    enemy: CircleEntity,
-    item: CircleEntity
+    bot: Bot,
+    obstacles: Bot[],
+    enemy: Bot,
+    item: Health
 ): number[] {
   const rays: number[] = [];
   const count = 12;

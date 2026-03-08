@@ -1,7 +1,3 @@
-import { initTF } from "./tf-init";
-
-await initTF();
-
 import "./globals.css"
 import React from "react";
 import ReactDOM from "react-dom/client";
