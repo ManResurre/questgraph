@@ -1,9 +1,9 @@
-import { Graphics, HTMLText } from "pixi.js";
-import { DQNAgent } from "./DQNAgent";
-import { getRays } from "./raycast";
-import { Bullet } from "./Bullet";
-import { Health } from "./Health";
-import { EntityManager } from "./EntityManager";
+import {Graphics, HTMLText} from "pixi.js";
+import {DQNAgent} from "./DQNAgent";
+import {getRays} from "./raycast";
+import {Bullet} from "./Bullet";
+import {Health} from "./Health";
+import {EntityManager} from "./EntityManager";
 
 export class Bot extends Graphics {
     id = 0;
@@ -15,12 +15,20 @@ export class Bot extends Graphics {
     enemy: Bot | null = null;
     item: Health | null = null;
 
-    frame = 0;
-    bullets: Bullet[] = [];
-
     manager: EntityManager | null = null;
 
     hpText: HTMLText | null = null;
+
+    vx = 0;
+    vy = 0;
+    accel = 0.8;
+    friction = 0.92;
+    maxSpeed = 4.5;
+
+    kills = 0;
+
+    // глобальный счётчик шагов для обучения
+    static globalStep = 0;
 
     constructor() {
         super();
@@ -47,7 +55,6 @@ export class Bot extends Graphics {
                 }
             });
 
-            // HTMLText в Pixi v8 поддерживает anchor
             this.hpText.anchor.set(0.5);
             this.hpText.position.set(0, 0);
 
@@ -64,9 +71,6 @@ export class Bot extends Graphics {
         return this;
     }
 
-    // -----------------------------
-    // STATE
-    // -----------------------------
     getState() {
         const enemy = this.enemy;
         const item = this.item;
@@ -96,25 +100,16 @@ export class Bot extends Graphics {
         ];
     }
 
-    // -----------------------------
-    // ACTIONS
-    // -----------------------------
     applyAction(action: number) {
-        const speed = 3;
-
         switch (action) {
-            case 0: this.x -= speed; break;
-            case 1: this.x += speed; break;
-            case 2: this.y -= speed; break;
-            case 3: this.y += speed; break;
+            case 0: this.vx -= this.accel; break;
+            case 1: this.vx += this.accel; break;
+            case 2: this.vy -= this.accel; break;
+            case 3: this.vy += this.accel; break;
             case 4: this.tryShoot(); break;
             case 5: break;
-            case 6:
-                if (this.item) this.moveToward(this.item);
-                break;
-            case 7:
-                if (this.enemy) this.moveAway(this.enemy);
-                break;
+            case 6: if (this.item) this.moveToward(this.item); break;
+            case 7: if (this.enemy) this.moveAway(this.enemy); break;
         }
     }
 
@@ -122,21 +117,25 @@ export class Bot extends Graphics {
         const dx = target.x - this.x;
         const dy = target.y - this.y;
         const len = Math.sqrt(dx * dx + dy * dy) || 1;
-        this.x += (dx / len) * 2;
-        this.y += (dy / len) * 2;
+
+        this.vx += (dx / len) * this.accel;
+        this.vy += (dy / len) * this.accel;
     }
 
     moveAway(target: Bot) {
         const dx = this.x - target.x;
         const dy = this.y - target.y;
         const len = Math.sqrt(dx * dx + dy * dy) || 1;
-        this.x += (dx / len) * 2;
-        this.y += (dy / len) * 2;
+
+        this.vx += (dx / len) * this.accel;
+        this.vy += (dy / len) * this.accel;
     }
 
     tryShoot() {
         if (!this.canShoot || !this.enemy) return;
-        if (this.bullets.length > 2) return;
+        if (!this.manager) return;
+
+        if (this.manager.bullets.filter(b => b.owner === this).length > 2) return;
 
         const dx = this.enemy.x - this.x;
         const dy = this.enemy.y - this.y;
@@ -158,22 +157,21 @@ export class Bot extends Graphics {
             .addVelocity(vx, vy);
 
         this.parent?.addChild(bullet);
-        this.bullets.push(bullet);
+        this.manager.bullets.push(bullet);
     }
 
-    // -----------------------------
-    // HELPERS
-    // -----------------------------
     getClosestEnemyBulletDistance() {
-        if (!this.enemy) return 999;
+        if (!this.enemy || !this.manager) return 999;
 
         let minDist = 999;
 
-        for (const b of this.enemy.bullets) {
-            const dx = b.x - this.x;
-            const dy = b.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < minDist) minDist = dist;
+        for (const b of this.manager.bullets) {
+            if (b.owner === this.enemy) {
+                const dx = b.x - this.x;
+                const dy = b.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < minDist) minDist = dist;
+            }
         }
 
         return minDist;
@@ -198,14 +196,6 @@ export class Bot extends Graphics {
         return this.x < 0 || this.x > 800 || this.y < 0 || this.y > 600;
     }
 
-    getFrame() {
-        const count = this.manager?.bots ? this.manager?.bots.length : 0;
-        return 10 + count;
-    }
-
-    // -----------------------------
-    // RESPAWN
-    // -----------------------------
     respawn() {
         this.x = Math.random() * 760 + 20;
         this.y = Math.random() * 560 + 20;
@@ -216,19 +206,56 @@ export class Bot extends Graphics {
             this.hpText.text = "100";
         }
 
-        for (const b of this.bullets) {
-            b.destroy();
+        this.vx = 0;
+        this.vy = 0;
+    }
+
+    updatePhysics(delta: number) {
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (speed > this.maxSpeed) {
+            this.vx = (this.vx / speed) * this.maxSpeed;
+            this.vy = (this.vy / speed) * this.maxSpeed;
         }
-        this.bullets.length = 0;
+
+        this.x += this.vx * delta;
+        this.y += this.vy * delta;
+
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+
+        if (this.item && this.checkItemPickup()) {
+            this.hp = Math.min(100, this.hp + 30);
+            this.item.respawn();
+            if (this.hpText) this.hpText.text = String(this.hp);
+        }
+
+        const minX = 20;
+        const maxX = 780;
+        const minY = 20;
+        const maxY = 580;
+
+        if (this.x < minX) {
+            this.x = minX;
+            this.vx = Math.abs(this.vx) * 0.4;
+        }
+        if (this.x > maxX) {
+            this.x = maxX;
+            this.vx = -Math.abs(this.vx) * 0.4;
+        }
+        if (this.y < minY) {
+            this.y = minY;
+            this.vy = Math.abs(this.vy) * 0.4;
+        }
+        if (this.y > maxY) {
+            this.y = maxY;
+            this.vy = -Math.abs(this.vy) * 0.4;
+        }
     }
 
     // -----------------------------
-    // UPDATE
+    // UPDATE (редко — только RL)
     // -----------------------------
-    async update() {
-        this.frame++;
-        if (this.frame % this.getFrame() !== 0) return;
-
+    update() {
         if (this.manager) {
             this.enemy = this.manager.getEnemy(this);
             this.item = this.manager.getClosestItem(this);
@@ -248,45 +275,22 @@ export class Bot extends Graphics {
 
         let reward = -0.01;
 
-        // --- штраф за выход за границы ---
-        if (this.isOutOfBounds()) {
-            reward -= 1;
-        }
+        if (this.isOutOfBounds()) reward -= 1;
 
-        // --- смерть ---
         if (this.hp <= 0) {
-            const deathPenalty = -10;
-
-            this.agent.remember(
-                state,
-                action,
-                deathPenalty,
-                nextState,
-                true
-            );
-
+            this.agent.remember(state, action, -10, nextState, true);
             this.respawn();
             return;
         }
 
-        // --- уклонение ---
         const closestBulletAfter = this.getClosestEnemyBulletDistance();
-        if (closestBulletAfter > closestBulletBefore + 5) {
-            reward += 0.5;
-        }
+        if (closestBulletAfter > closestBulletBefore + 5) reward += 0.5;
 
-        // --- получение урона ---
-        if (this.hp < prevHp) {
-            reward -= 3;
-        }
+        if (this.hp < prevHp) reward -= 3;
 
-        // --- движение к аптечке ---
         const nextItemDist = this.getItemDistance();
-        if (nextItemDist < prevItemDist - 2) {
-            reward += 0.2;
-        }
+        if (nextItemDist < prevItemDist - 2) reward += 0.2;
 
-        // --- подбор аптечки ---
         const pickedUpAfter = this.checkItemPickup();
         if (!pickedUpBefore && pickedUpAfter && this.item) {
             reward += 5;
@@ -294,34 +298,14 @@ export class Bot extends Graphics {
             this.item.respawn();
         }
 
-        if (this.hpText) {
-            this.hpText.text = String(this.hp);
-        }
+        if (this.hpText) this.hpText.text = String(this.hp);
 
         this.agent.remember(state, action, reward, nextState, false);
-        await this.agent.replay(32);
 
-        this.updateBullets();
-    }
-
-    updateBullets() {
-        for (let i = this.bullets.length - 1; i >= 0; i--) {
-            const b = this.bullets[i];
-            const hit = b.update(1);
-
-            if (hit) {
-                this.agent.remember(
-                    this.getState(),
-                    4,
-                    +3,
-                    this.getState(),
-                    false
-                );
-            }
-
-            if (b.destroyed) {
-                this.bullets.splice(i, 1);
-            }
+        // 🔥 обучение — редко, без накопления задач
+        Bot.globalStep++;
+        if (Bot.globalStep % 10 === 0) {
+            this.agent.replay(32);
         }
     }
 }

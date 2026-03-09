@@ -1,5 +1,5 @@
 import {useEffect, useRef} from "react";
-import {Application} from "pixi.js";
+import {Application, HTMLText} from "pixi.js";
 import {Box} from "@mui/material";
 import {Bot} from "./Bot";
 import {Health} from "./Health";
@@ -27,38 +27,31 @@ export default function Sandbox() {
                 if (initializedRef.current) return;
                 initializedRef.current = true;
 
+                const app = appRef.current;
+
+                const fpsText = new HTMLText({
+                    text: "FPS: 0",
+                    style: {
+                        fontSize: 14,
+                        fill: "#00ff00",
+                        fontWeight: "bold",
+                    },
+                });
+                fpsText.position.set(10, 10);
+                app.stage.addChild(fpsText);
+
                 const manager = new EntityManager();
+                manager.setApp(app);
 
-                const bot1 = new Bot()
-                    .circle(0, 0, 20)
-                    .fill(0x44ccff)
-                    .setPosition(400, 300)
-                    .bot(100, true)
-                    .addBrain();
-
-                bot1.id = 1;
-
-                const bot2 = new Bot()
-                    .circle(0, 0, 20)
-                    .fill(0xff4444)
-                    .setPosition(200, 150)
-                    .bot(100, true)
-                    .addBrain();
-
-                bot2.id = 2;
+                // создаём 5 ботов
+                manager.setBotCount(5);
 
                 const cover = new Cover()
                     .circle(0, 0, 20)
                     .fill(0x888888)
                     .setPosition(600, 400);
 
-
-                manager
-                    .addBot(bot1)
-                    .addBot(bot2)
-                    .addCover(cover);
-
-                appRef.current.stage.addChild(bot1, bot2, cover);
+                app.stage.addChild(cover);
 
                 for (let i = 0; i < 5; i++) {
                     const item = new Health()
@@ -67,15 +60,18 @@ export default function Sandbox() {
                         .setPosition(100 * i + 20, 200);
 
                     manager.addItem(item);
-                    appRef.current.stage.addChild(item);
+                    app.stage.addChild(item);
                 }
 
-                const tickerHandler = async () => {
-                    await bot1.update();
-                    await bot2.update();
+                const tickerHandler = () => {
+                    const delta = app.ticker.deltaMS / 16.666;
+
+                    fpsText.text = "FPS: " + Math.round(app.ticker.FPS);
+
+                    manager.update(delta)
                 };
 
-                appRef.current.ticker.add(tickerHandler);
+                app.ticker.add(tickerHandler);
             });
 
         return () => {
@@ -83,7 +79,7 @@ export default function Sandbox() {
             appRef.current.destroy(true);
             appRef.current = null;
         };
-    }, [appRef, canvasRef]);
+    }, []);
 
     return (
         <Box
