@@ -1,6 +1,6 @@
 import {useEffect, useRef} from "react";
 import {Application, HTMLText} from "pixi.js";
-import {Box} from "@mui/material";
+import {Box, Typography} from "@mui/material";
 import {Bot} from "./Bot";
 import {Health} from "./Health";
 import {Cover} from "./Cover";
@@ -87,6 +87,7 @@ export default function Sandbox() {
             justifyContent="center"
             alignItems="center"
         >
+            <Typography>Rectified Linear Unit Bot Learning</Typography>
             <canvas ref={canvasRef}/>
         </Box>
     );

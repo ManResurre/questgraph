@@ -303,7 +303,7 @@ export class Bot extends Graphics {
         this.agent.remember(state, action, reward, nextState, false);
 
         Bot.globalStep++;
-        if (Bot.globalStep % 10 === 0) {
+        if (Bot.globalStep % 60 === 0) {
             this.agent.replay(32);
         }
     }
