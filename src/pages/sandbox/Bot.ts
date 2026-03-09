@@ -253,7 +253,7 @@ export class Bot extends Graphics {
     }
 
     // -----------------------------
-    // UPDATE (редко — только RL)
+    // UPDATE RL
     // -----------------------------
     update() {
         if (this.manager) {
@@ -302,7 +302,6 @@ export class Bot extends Graphics {
 
         this.agent.remember(state, action, reward, nextState, false);
 
-        // 🔥 обучение — редко, без накопления задач
         Bot.globalStep++;
         if (Bot.globalStep % 10 === 0) {
             this.agent.replay(32);

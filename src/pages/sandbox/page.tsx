@@ -42,8 +42,6 @@ export default function Sandbox() {
 
                 const manager = new EntityManager();
                 manager.setApp(app);
-
-                // создаём 5 ботов
                 manager.setBotCount(5);
 
                 const cover = new Cover()
