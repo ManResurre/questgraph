@@ -1,5 +1,6 @@
 import type { Bot } from "./Bot";
 import type { Health } from "./Health";
+import type { Cover } from "./Cover";
 import { circleCollision } from "./utils";
 import {
   RAY_COUNT,
@@ -13,7 +14,7 @@ import {
 export function castRay(
   bot: Bot,
   angle: number,
-  obstacles: Bot[],
+  obstacles: Cover[],
   enemy: Bot | null,
   item: Health | null,
   maxDist = RAY_MAX_DIST,
@@ -52,7 +53,7 @@ export function castRay(
 
 export function getRays(
   bot: Bot,
-  obstacles: Bot[],
+  obstacles: Cover[],
   enemy: Bot | null,
   item: Health | null,
 ): number[] {

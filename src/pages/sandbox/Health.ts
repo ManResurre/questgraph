@@ -1,6 +1,5 @@
-import { Graphics } from "pixi.js";
+import { Entity } from "./Entity";
 import { circleCollision } from "./utils";
-import { EntityManager } from "./EntityManager";
 import {
   ARENA_MIN_X,
   ARENA_MAX_X,
@@ -10,14 +9,7 @@ import {
   SPAWN_MIN_DIST_FROM_BOT,
 } from "./config";
 
-export class Health extends Graphics {
-  manager: EntityManager | null = null;
-
-  setPosition(x: number, y: number) {
-    this.position.set(x, y);
-    return this;
-  }
-
+export class Health extends Entity {
   respawn() {
     if (!this.manager) return;
 

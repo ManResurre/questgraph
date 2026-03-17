@@ -156,7 +156,7 @@ export class EntityManager {
     if (!bot) return;
 
     // 5. RL-обновление только одного бота
-    bot.update();
+    bot.update(delta);
 
     // 6. Проверка фрагов
     if (bot.kills >= RL_KILLS_TO_COPY_BRAIN) {

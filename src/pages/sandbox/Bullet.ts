@@ -1,6 +1,6 @@
-import { Graphics } from "pixi.js";
-import { circleCollision } from "./utils";
 import { Bot } from "./Bot";
+import { Entity } from "./Entity";
+import { circleCollision } from "./utils";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
@@ -8,7 +8,7 @@ import {
   BULLET_DAMAGE,
 } from "./config";
 
-export class Bullet extends Graphics {
+export class Bullet extends Entity {
   vx = 0;
   vy = 0;
 
@@ -18,11 +18,6 @@ export class Bullet extends Graphics {
   maxSpeed = BULLET_MAX_SPEED;
 
   owner: Bot | null = null;
-
-  setPosition(x: number, y: number) {
-    this.position.set(x, y);
-    return this;
-  }
 
   addOwner(owner: Bot) {
     this.owner = owner;
@@ -35,7 +30,7 @@ export class Bullet extends Graphics {
     return this;
   }
 
-  update(delta: number) {
+  update(delta: number): void {
     if (!this.owner || !this.owner.enemy) {
       this.destroy();
       return;

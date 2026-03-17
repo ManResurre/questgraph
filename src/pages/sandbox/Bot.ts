@@ -1,9 +1,10 @@
-import { Graphics, HTMLText } from "pixi.js";
+import { HTMLText } from "pixi.js";
 import { DQNAgent } from "./DQNAgent";
 import { getRays } from "./raycast";
 import { Bullet } from "./Bullet";
 import { Health } from "./Health";
 import { EntityManager } from "./EntityManager";
+import { Entity } from "./Entity";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
@@ -31,7 +32,7 @@ import {
   RL_REPLAY_INTERVAL,
 } from "./config";
 
-export class Bot extends Graphics {
+export class Bot extends Entity {
   id = 0;
   hp = BOT_START_HP;
   canShoot = false;
@@ -40,8 +41,6 @@ export class Bot extends Graphics {
 
   enemy: Bot | null = null;
   item: Health | null = null;
-
-  manager: EntityManager | null = null;
 
   hpText: HTMLText | null = null;
 
@@ -59,10 +58,10 @@ export class Bot extends Graphics {
   constructor() {
     super();
     this.id = Math.floor(Math.random() * 10000);
+    this.agent = new DQNAgent(44, 8);
   }
 
-  setPosition(x: number, y: number) {
-    this.position.set(x, y);
+  addBrain() {
     return this;
   }
 
@@ -92,11 +91,6 @@ export class Bot extends Graphics {
     return this;
   }
 
-  addBrain() {
-    this.agent = new DQNAgent(44, 8);
-    return this;
-  }
-
   getState() {
     const enemy = this.enemy;
     const item = this.item;
@@ -114,7 +108,7 @@ export class Bot extends Graphics {
     const hpNorm = this.hp / BOT_MAX_HP;
     const canShootNorm = this.canShoot ? 1 : 0;
 
-    const rays = getRays(this, obstacles as any, enemy as any, item as any);
+    const rays = getRays(this, obstacles, enemy, item);
 
     return [nx, ny, ex, ey, ix, iy, hpNorm, canShootNorm, ...rays];
   }
@@ -147,7 +141,7 @@ export class Bot extends Graphics {
     }
   }
 
-  moveToward(target: Graphics) {
+  moveToward(target: Health | Bot) {
     const dx = target.x - this.x;
     const dy = target.y - this.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -225,8 +219,7 @@ export class Bot extends Graphics {
     if (!this.item) return false;
     const dx = this.x - this.item.x;
     const dy = this.y - this.item.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    return dist < HEALTH_PICKUP_RADIUS;
+    return Math.sqrt(dx * dx + dy * dy) < HEALTH_PICKUP_RADIUS;
   }
 
   isOutOfBounds() {
@@ -292,7 +285,7 @@ export class Bot extends Graphics {
   // -----------------------------
   // UPDATE RL
   // -----------------------------
-  update() {
+  update(delta: number): void {
     if (this.manager) {
       this.enemy = this.manager.getEnemy(this);
       this.item = this.manager.getClosestItem(this);
