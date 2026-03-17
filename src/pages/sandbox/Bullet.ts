@@ -1,5 +1,6 @@
 import { Bot } from "./Bot";
 import { Entity } from "./Entity";
+import { Cover } from "./Cover";
 import { circleCollision } from "./utils";
 import {
   ARENA_WIDTH,
@@ -8,6 +9,8 @@ import {
   BULLET_DAMAGE,
   COLLISION_BOT_RADIUS,
   BULLET_POOL_SIZE,
+  COVER_BULLET_DAMAGE,
+  COLLISION_COVER_RADIUS,
 } from "./config";
 
 /** Object pool для пуль */
@@ -17,7 +20,7 @@ export class BulletPool {
 
   constructor(size: number = BULLET_POOL_SIZE) {
     for (let i = 0; i < size; i++) {
-      const bullet = new Bullet().circle(0, 0, 5).fill(0xffffff);
+      const bullet = new Bullet().circle(0, 0, 5).fill(0xffffff).restore();
       bullet.visible = false;
       this.pool.push(bullet);
     }
@@ -108,12 +111,13 @@ export class Bullet extends Entity {
   }
 
   update(delta: number): void {
-    if (!this.owner || !this.owner.enemy) {
+    if (!this.owner || !this.owner.manager) {
       this.destroy();
       return;
     }
 
     const enemy = this.owner.enemy;
+    const manager = this.owner.manager;
 
     this.vx += this.ax * delta;
     this.vy += this.ay * delta;
@@ -127,7 +131,34 @@ export class Bullet extends Entity {
     this.x += this.vx * delta;
     this.y += this.vy * delta;
 
-    if (circleCollision(this, enemy, COLLISION_BOT_RADIUS)) {
+    // Проверка коллизии с укрытиями
+    const nearby = manager.getNearbyObjects(
+      this.x,
+      this.y,
+      COLLISION_COVER_RADIUS,
+    );
+    for (const obj of nearby) {
+      if (obj instanceof Cover) {
+        if (circleCollision(this, obj, COLLISION_COVER_RADIUS)) {
+          // Проверяем тип укрытия
+          if (obj.type === "destructible") {
+            // Наносим урон разрушимому укрытию
+            const destroyed = obj.takeDamage(COVER_BULLET_DAMAGE);
+            if (destroyed) {
+              // Укрытие уничтожено — удаляем его
+              manager.removeCover(obj);
+            }
+          }
+          // Пуля уничтожается при попадании в любое укрытие
+          // (от неразрушимого просто отскакивает визуально, но исчезает)
+          this.destroy();
+          return;
+        }
+      }
+    }
+
+    // Проверка коллизии с врагом
+    if (enemy && circleCollision(this, enemy, COLLISION_BOT_RADIUS)) {
       enemy.hp = Math.max(0, enemy.hp - BULLET_DAMAGE);
       if (enemy.hp <= 0 && this.owner) {
         this.owner.kills++;
@@ -136,6 +167,7 @@ export class Bullet extends Entity {
       return;
     }
 
+    // Выход за границы арены
     if (
       this.x < 0 ||
       this.x > ARENA_WIDTH ||

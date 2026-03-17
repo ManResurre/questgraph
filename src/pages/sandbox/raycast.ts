@@ -11,8 +11,6 @@ import {
   COLLISION_COVER_RADIUS,
   COLLISION_ITEM_RADIUS,
 } from "./config";
-
-/** Кэшированные углы для лучей (вычисляются один раз при загрузке) */
 const CACHED_RAY_ANGLES: number[] = [];
 for (let i = 0; i < RAY_COUNT; i++) {
   CACHED_RAY_ANGLES.push((i / RAY_COUNT) * Math.PI * 2);

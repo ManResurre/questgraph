@@ -52,6 +52,7 @@ export class EntityManager {
     const bot = new Bot()
       .circle(0, 0, 20)
       .fill(0xffffff * Math.random())
+      .restore()
       .setPosition(
         Math.random() * (ARENA_WIDTH - 40) + 20,
         Math.random() * (ARENA_HEIGHT - 40) + 20,
@@ -88,6 +89,14 @@ export class EntityManager {
   addCover(cover: Cover) {
     this.covers.push(cover);
     return this;
+  }
+
+  removeCover(cover: Cover) {
+    const i = this.covers.indexOf(cover);
+    if (i !== -1) {
+      cover.destroy();
+      this.covers.splice(i, 1);
+    }
   }
 
   /** Получить пул пуль */

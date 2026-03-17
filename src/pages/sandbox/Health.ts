@@ -7,9 +7,27 @@ import {
   ARENA_MAX_Y,
   SPAWN_MIN_DIST_FROM_COVER,
   SPAWN_MIN_DIST_FROM_BOT,
+  HEALTH_RADIUS,
 } from "./config";
 
+/** Цвет аптечки */
+const HEALTH_COLOR = 0x44ff44;
+
 export class Health extends Entity {
+  /** Радиус аптечки */
+  radius: number = HEALTH_RADIUS;
+
+  /**
+   * Нарисовать аптечку (зелёный круг)
+   */
+  draw(): this {
+    this.clear();
+    this.circle(0, 0, this.radius);
+    this.fill(HEALTH_COLOR);
+    this.restore();
+    return this;
+  }
+
   respawn() {
     if (!this.manager) return;
 

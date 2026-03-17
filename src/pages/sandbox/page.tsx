@@ -167,19 +167,42 @@ export default function Sandbox() {
     manager.setBotCount(botCount);
 
     // Добавляем укрытия
-    const cover = new Cover()
-      .circle(0, 0, 20)
-      .fill(0x888888)
-      .setPosition(600, 400);
-    app.stage.addChild(cover);
-    manager.addCover(cover);
+    // Неразрушимые укрытия (синие, больше размером)
+    const indestructibleCoversData = [
+      { x: 200, y: 150 },
+      { x: 600, y: 150 },
+      { x: 300, y: 450 },
+    ];
+
+    for (const coverData of indestructibleCoversData) {
+      const cover = new Cover()
+        .setPosition(coverData.x, coverData.y)
+        .setType("indestructible")
+        .draw();
+      app.stage.addChild(cover);
+      manager.addCover(cover);
+    }
+
+    // Разрушимые укрытия (красные, меньше размером)
+    const destructibleCoversData = [
+      { x: 400, y: 300 },
+      { x: 500, y: 450 },
+      { x: 150, y: 300 },
+    ];
+
+    for (const coverData of destructibleCoversData) {
+      const cover = new Cover()
+        .setPosition(coverData.x, coverData.y)
+        .setType("destructible")
+        .draw();
+      app.stage.addChild(cover);
+      manager.addCover(cover);
+    }
 
     // Добавляем аптечки
     for (let i = 0; i < 5; i++) {
-      const item = new Health()
-        .circle(0, 0, 20)
-        .fill(0x44ff44)
-        .setPosition(100 * i + 20, 200);
+      const item = new Health();
+      item.setPosition(100 * i + 20, 200).draw();
       manager.addItem(item);
       app.stage.addChild(item);
     }
