@@ -326,7 +326,8 @@ export class Bot extends Entity {
     const pickedUpBefore = this.checkItemPickup();
     const prevItemDist = this.getItemDistance();
 
-    const action = this.agent.act(state);
+    // Используем target network для стабильности
+    const action = this.agent.actWithTarget(state);
     this.applyAction(action);
 
     const nextState = this.getState();
