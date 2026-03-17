@@ -2,8 +2,11 @@ import { HTMLText } from "pixi.js";
 import { DQNAgent } from "./DQNAgent";
 import { getRays } from "./raycast";
 import { Health } from "./Health";
+import { Cover } from "./Cover";
+import { RectCover } from "./RectCover";
 import { EntityManager } from "./EntityManager";
 import { Entity } from "./Entity";
+import { circleCollision, getCircleRectCollisionResponse } from "./utils";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
@@ -29,6 +32,8 @@ import {
   RL_REWARD_APPROACH_ITEM,
   RL_REWARD_PICKUP_ITEM,
   RL_REPLAY_INTERVAL,
+  COLLISION_BOT_RADIUS,
+  COLLISION_COVER_RADIUS,
 } from "./config";
 
 /** Пул массивов для getState (избегаем аллокаций в игровом цикле) */
@@ -290,6 +295,72 @@ export class Bot extends Entity {
       this.hp = Math.min(BOT_MAX_HP, this.hp + HEALTH_PICKUP_HEAL);
       this.item.respawn();
       if (this.hpText) this.hpText.text = String(this.hp);
+    }
+
+    // Коллизия с укрытиями (круглыми и прямоугольными)
+    if (this.manager) {
+      const nearby = this.manager.getNearbyObjects(
+        this.x,
+        this.y,
+        COLLISION_COVER_RADIUS + COLLISION_BOT_RADIUS + 50, // +50 для прямоугольных
+      );
+      for (const obj of nearby) {
+        // Круглые укрытия
+        if (obj instanceof Cover) {
+          if (
+            circleCollision(
+              this,
+              obj,
+              COLLISION_COVER_RADIUS + COLLISION_BOT_RADIUS,
+            )
+          ) {
+            // Вычисляем направление отталкивания
+            const dx = this.x - obj.x;
+            const dy = this.y - obj.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+            // Нормализуем и отталкиваем
+            const overlap =
+              COLLISION_COVER_RADIUS + COLLISION_BOT_RADIUS - dist;
+            this.x += (dx / dist) * overlap;
+            this.y += (dy / dist) * overlap;
+
+            // Гасим скорость в направлении укрытия
+            const nx = dx / dist;
+            const ny = dy / dist;
+            const dotProduct = this.vx * nx + this.vy * ny;
+            if (dotProduct < 0) {
+              this.vx -= nx * dotProduct;
+              this.vy -= ny * dotProduct;
+            }
+          }
+        }
+        // Прямоугольные укрытия
+        else if (obj instanceof RectCover) {
+          const response = getCircleRectCollisionResponse(
+            this.x,
+            this.y,
+            COLLISION_BOT_RADIUS,
+            obj.x,
+            obj.y,
+            obj.coverWidth,
+            obj.coverHeight,
+          );
+          if (response) {
+            const { nx, ny, overlap } = response;
+            // Отталкиваем бота
+            this.x += nx * overlap;
+            this.y += ny * overlap;
+
+            // Гасим скорость в направлении укрытия
+            const dotProduct = this.vx * nx + this.vy * ny;
+            if (dotProduct < 0) {
+              this.vx -= nx * dotProduct;
+              this.vy -= ny * dotProduct;
+            }
+          }
+        }
+      }
     }
 
     if (this.x < ARENA_MIN_X) {

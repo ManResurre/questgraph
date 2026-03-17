@@ -2,6 +2,7 @@ import { Application } from "pixi.js";
 import { Bot } from "./Bot";
 import { Health } from "./Health";
 import { Cover } from "./Cover";
+import { RectCover } from "./RectCover";
 import { Bullet, BulletPool } from "./Bullet";
 import { SpatialHash } from "./spatial-hash";
 import {
@@ -11,10 +12,13 @@ import {
   COLLISION_BOT_RADIUS,
 } from "./config";
 
+/** Общий тип для всех укрытий */
+export type CoverEntity = Cover | RectCover;
+
 export class EntityManager {
   bots: Bot[] = [];
   items: Health[] = [];
-  covers: Cover[] = [];
+  covers: CoverEntity[] = [];
 
   /** Пул пуль вместо массива */
   bulletPool!: BulletPool;
@@ -86,12 +90,12 @@ export class EntityManager {
     return this;
   }
 
-  addCover(cover: Cover) {
+  addCover(cover: CoverEntity) {
     this.covers.push(cover);
     return this;
   }
 
-  removeCover(cover: Cover) {
+  removeCover(cover: CoverEntity) {
     const i = this.covers.indexOf(cover);
     if (i !== -1) {
       cover.destroy();

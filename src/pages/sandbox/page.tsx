@@ -13,6 +13,7 @@ import {
 import { Bot } from "./Bot";
 import { Health } from "./Health";
 import { Cover } from "./Cover";
+import { RectCover } from "./RectCover";
 import { EntityManager } from "./EntityManager";
 import { ARENA_WIDTH, ARENA_HEIGHT } from "./config";
 import type { TrainingMetrics } from "./DQNAgent";
@@ -193,6 +194,38 @@ export default function Sandbox() {
     for (const coverData of destructibleCoversData) {
       const cover = new Cover()
         .setPosition(coverData.x, coverData.y)
+        .setType("destructible")
+        .draw();
+      app.stage.addChild(cover);
+      manager.addCover(cover);
+    }
+
+    // Прямоугольные укрытия - неразрушимые (горизонтальные стены)
+    const rectIndestructibleCoversData = [
+      { x: 400, y: 100, width: 120, height: 25 },
+      { x: 100, y: 500, width: 100, height: 25 },
+    ];
+
+    for (const coverData of rectIndestructibleCoversData) {
+      const cover = new RectCover()
+        .setPosition(coverData.x, coverData.y)
+        .setSize(coverData.width, coverData.height)
+        .setType("indestructible")
+        .draw();
+      app.stage.addChild(cover);
+      manager.addCover(cover);
+    }
+
+    // Прямоугольные укрытия - разрушимые (вертикальные стены)
+    const rectDestructibleCoversData = [
+      { x: 250, y: 200, width: 25, height: 80 },
+      { x: 550, y: 350, width: 25, height: 80 },
+    ];
+
+    for (const coverData of rectDestructibleCoversData) {
+      const cover = new RectCover()
+        .setPosition(coverData.x, coverData.y)
+        .setSize(coverData.width, coverData.height)
         .setType("destructible")
         .draw();
       app.stage.addChild(cover);

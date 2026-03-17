@@ -1,12 +1,14 @@
 import { Bot } from "./Bot";
 import { Entity } from "./Entity";
 import { Cover } from "./Cover";
-import { circleCollision } from "./utils";
+import { RectCover } from "./RectCover";
+import { circleCollision, circleRectCollision } from "./utils";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
   BULLET_MAX_SPEED,
   BULLET_DAMAGE,
+  BULLET_RADIUS,
   COLLISION_BOT_RADIUS,
   BULLET_POOL_SIZE,
   COVER_BULLET_DAMAGE,
@@ -131,15 +133,18 @@ export class Bullet extends Entity {
     this.x += this.vx * delta;
     this.y += this.vy * delta;
 
-    // Проверка коллизии с укрытиями
+    // Проверка коллизии с укрытиями (круглыми и прямоугольными)
     const nearby = manager.getNearbyObjects(
       this.x,
       this.y,
-      COLLISION_COVER_RADIUS,
+      COLLISION_COVER_RADIUS + BULLET_RADIUS + 50, // +50 для прямоугольных
     );
     for (const obj of nearby) {
+      // Круглые укрытия
       if (obj instanceof Cover) {
-        if (circleCollision(this, obj, COLLISION_COVER_RADIUS)) {
+        if (
+          circleCollision(this, obj, COLLISION_COVER_RADIUS + BULLET_RADIUS)
+        ) {
           // Проверяем тип укрытия
           if (obj.type === "destructible") {
             // Наносим урон разрушимому укрытию
@@ -150,7 +155,33 @@ export class Bullet extends Entity {
             }
           }
           // Пуля уничтожается при попадании в любое укрытие
-          // (от неразрушимого просто отскакивает визуально, но исчезает)
+          this.destroy();
+          return;
+        }
+      }
+      // Прямоугольные укрытия
+      else if (obj instanceof RectCover) {
+        if (
+          circleRectCollision(
+            this.x,
+            this.y,
+            BULLET_RADIUS,
+            obj.x,
+            obj.y,
+            obj.coverWidth,
+            obj.coverHeight,
+          )
+        ) {
+          // Проверяем тип укрытия
+          if (obj.type === "destructible") {
+            // Наносим урон разрушимому укрытию
+            const destroyed = obj.takeDamage(COVER_BULLET_DAMAGE);
+            if (destroyed) {
+              // Укрытие уничтожено — удаляем его
+              manager.removeCover(obj);
+            }
+          }
+          // Пуля уничтожается при попадании в любое укрытие
           this.destroy();
           return;
         }
