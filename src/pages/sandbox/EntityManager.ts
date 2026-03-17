@@ -2,14 +2,25 @@ import { Application } from "pixi.js";
 import { Bot } from "./Bot";
 import { Health } from "./Health";
 import { Cover } from "./Cover";
-import { Bullet } from "./Bullet";
-import { ARENA_WIDTH, ARENA_HEIGHT, RL_KILLS_TO_COPY_BRAIN } from "./config";
+import { Bullet, BulletPool } from "./Bullet";
+import { SpatialHash } from "./spatial-hash";
+import {
+  ARENA_WIDTH,
+  ARENA_HEIGHT,
+  RL_KILLS_TO_COPY_BRAIN,
+  COLLISION_BOT_RADIUS,
+} from "./config";
 
 export class EntityManager {
   bots: Bot[] = [];
   items: Health[] = [];
   covers: Cover[] = [];
-  bullets: Bullet[] = [];
+
+  /** Пул пуль вместо массива */
+  bulletPool!: BulletPool;
+
+  /** Spatial Hash для быстрой проверки коллизий */
+  spatialHash!: SpatialHash;
 
   updateQueue: Bot[] = [];
 
@@ -17,6 +28,8 @@ export class EntityManager {
 
   setApp(app: Application) {
     this.app = app;
+    this.bulletPool = new BulletPool();
+    this.spatialHash = new SpatialHash(100);
   }
 
   addBot(bot: Bot) {
@@ -77,32 +90,45 @@ export class EntityManager {
     return this;
   }
 
-  updateBullets(delta: number) {
-    for (let i = this.bullets.length - 1; i >= 0; i--) {
-      const b = this.bullets[i];
-      b.update(delta);
-
-      if (b.destroyed) {
-        this.bullets.splice(i, 1);
-      }
-    }
+  /** Получить пул пуль */
+  getBulletPool(): BulletPool {
+    return this.bulletPool;
   }
 
-  // ближайший враг
+  /** Получить активные пули */
+  getBullets(): Bullet[] {
+    return this.bulletPool.getActive();
+  }
+
+  /** Обновить spatial hash */
+  updateSpatialHash(): void {
+    this.spatialHash.clear();
+    this.spatialHash.insertMany([...this.bots, ...this.covers, ...this.items]);
+  }
+
+  /** Получить ближайшие объекты для проверки коллизий */
+  getNearbyObjects(x: number, y: number, radius: number) {
+    return this.spatialHash.getNearby(x, y, radius);
+  }
+
+  // ближайший враг (с использованием spatial hash)
   getEnemy(forBot: Bot): Bot | null {
     let best: Bot | null = null;
     let bestDist = Infinity;
 
-    for (const bot of this.bots) {
-      if (bot === forBot) continue;
+    // Используем spatial hash для получения только близких ботов
+    const nearby = this.spatialHash.getNearby(forBot.x, forBot.y, 400);
 
-      const dx = bot.x - forBot.x;
-      const dy = bot.y - forBot.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+    for (const obj of nearby) {
+      if (obj === forBot || !(obj instanceof Bot)) continue;
+
+      const dx = obj.x - forBot.x;
+      const dy = obj.y - forBot.y;
+      const dist = dx * dx + dy * dy; // используем квадрат расстояния
 
       if (dist < bestDist) {
         bestDist = dist;
-        best = bot;
+        best = obj;
       }
     }
 
@@ -113,13 +139,19 @@ export class EntityManager {
     let best: Health | null = null;
     let bestDist = Infinity;
 
-    for (const item of this.items) {
-      const dx = item.x - forBot.x;
-      const dy = item.y - forBot.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+    // Используем spatial hash
+    const nearby = this.spatialHash.getNearby(forBot.x, forBot.y, 400);
+
+    for (const obj of nearby) {
+      if (!(obj instanceof Health)) continue;
+
+      const dx = obj.x - forBot.x;
+      const dy = obj.y - forBot.y;
+      const dist = dx * dx + dy * dy;
+
       if (dist < bestDist) {
         bestDist = dist;
-        best = item;
+        best = obj;
       }
     }
 
@@ -138,27 +170,30 @@ export class EntityManager {
 
   // главный update — ОЧЕРЕДЬ
   update(delta: number) {
-    // 1. Пули — каждый кадр
-    this.updateBullets(delta);
+    // 1. Обновляем spatial hash
+    this.updateSpatialHash();
 
-    // 2. Физика — каждый кадр
+    // 2. Пули — каждый кадр (обновляем через пул)
+    this.bulletPool.update(delta);
+
+    // 3. Физика — каждый кадр
     for (const bot of this.bots) {
       bot.updatePhysics(delta);
     }
 
-    // 3. Если очередь пуста — пересобираем
+    // 4. Если очередь пуста — пересобираем
     if (this.updateQueue.length === 0) {
       this.updateQueue = [...this.bots];
     }
 
-    // 4. Достаём одного бота
+    // 5. Достаём одного бота
     const bot = this.updateQueue.shift();
     if (!bot) return;
 
-    // 5. RL-обновление только одного бота
+    // 6. RL-обновление только одного бота
     bot.update(delta);
 
-    // 6. Проверка фрагов
+    // 7. Проверка фрагов
     if (bot.kills >= RL_KILLS_TO_COPY_BRAIN) {
       console.log("БОТ", bot.id, "СТАЛ ЛУЧШИМ — КОПИРУЕМ МОЗГ");
       this.copyBrainToAll(bot);

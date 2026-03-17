@@ -1,7 +1,6 @@
 import { HTMLText } from "pixi.js";
 import { DQNAgent } from "./DQNAgent";
 import { getRays } from "./raycast";
-import { Bullet } from "./Bullet";
 import { Health } from "./Health";
 import { EntityManager } from "./EntityManager";
 import { Entity } from "./Entity";
@@ -31,6 +30,22 @@ import {
   RL_REWARD_PICKUP_ITEM,
   RL_REPLAY_INTERVAL,
 } from "./config";
+
+/** Пул массивов для getState (избегаем аллокаций в игровом цикле) */
+const STATE_ARRAY_POOL: number[][] = [];
+const STATE_POOL_SIZE = 20;
+let statePoolIndex = 0;
+
+for (let i = 0; i < STATE_POOL_SIZE; i++) {
+  STATE_ARRAY_POOL.push(new Array(44)); // 8 базовых + 36 raycast (12 * 3)
+}
+
+/** Получить массив из пула */
+function acquireStateArray(): number[] {
+  const arr = STATE_ARRAY_POOL[statePoolIndex];
+  statePoolIndex = (statePoolIndex + 1) % STATE_POOL_SIZE;
+  return arr;
+}
 
 export class Bot extends Entity {
   id = 0;
@@ -94,23 +109,37 @@ export class Bot extends Entity {
   getState() {
     const enemy = this.enemy;
     const item = this.item;
-    const obstacles = this.manager?.covers ?? [];
+    const manager = this.manager;
+    if (!manager) {
+      return new Array(44).fill(0);
+    }
 
-    const nx = this.x / ARENA_WIDTH;
-    const ny = this.y / ARENA_HEIGHT;
+    const state = acquireStateArray();
+    let idx = 0;
 
-    const ex = enemy ? enemy.x / ARENA_WIDTH : 0;
-    const ey = enemy ? enemy.y / ARENA_HEIGHT : 0;
+    // Нормализованная позиция
+    state[idx++] = this.x / ARENA_WIDTH;
+    state[idx++] = this.y / ARENA_HEIGHT;
 
-    const ix = item ? item.x / ARENA_WIDTH : 0;
-    const iy = item ? item.y / ARENA_HEIGHT : 0;
+    // Нормализованная позиция врага
+    state[idx++] = enemy ? enemy.x / ARENA_WIDTH : 0;
+    state[idx++] = enemy ? enemy.y / ARENA_HEIGHT : 0;
 
-    const hpNorm = this.hp / BOT_MAX_HP;
-    const canShootNorm = this.canShoot ? 1 : 0;
+    // Нормализованная позиция аптечки
+    state[idx++] = item ? item.x / ARENA_WIDTH : 0;
+    state[idx++] = item ? item.y / ARENA_HEIGHT : 0;
 
-    const rays = getRays(this, obstacles, enemy, item);
+    // Здоровье и возможность стрельбы
+    state[idx++] = this.hp / BOT_MAX_HP;
+    state[idx++] = this.canShoot ? 1 : 0;
 
-    return [nx, ny, ex, ey, ix, iy, hpNorm, canShootNorm, ...rays];
+    // Raycasts (12 лучей * 3 значения = 36)
+    const rays = getRays(this, manager, enemy, item);
+    for (let i = 0; i < rays.length; i++) {
+      state[idx++] = rays[i];
+    }
+
+    return state;
   }
 
   applyAction(action: number) {
@@ -163,11 +192,14 @@ export class Bot extends Entity {
     if (!this.canShoot || !this.enemy) return;
     if (!this.manager) return;
 
+    const pool = this.manager.getBulletPool();
+    const activeBullets = pool.getActive();
     if (
-      this.manager.bullets.filter((b) => b.owner === this).length >
+      activeBullets.filter((b) => b.owner === this).length >=
       MAX_BULLETS_PER_BOT
-    )
+    ) {
       return;
+    }
 
     const dx = this.enemy.x - this.x;
     const dy = this.enemy.y - this.y;
@@ -180,23 +212,19 @@ export class Bot extends Entity {
     const spawnX = this.x + (dx / len) * BULLET_SPAWN_DIST;
     const spawnY = this.y + (dy / len) * BULLET_SPAWN_DIST;
 
-    const bullet = new Bullet()
-      .circle(0, 0, 5)
-      .fill(0xffffff)
-      .setPosition(spawnX, spawnY)
-      .addOwner(this)
-      .addVelocity(vx, vy);
-
-    this.parent?.addChild(bullet);
-    this.manager.bullets.push(bullet);
+    const bullet = pool.acquire(this, spawnX, spawnY, vx, vy);
+    if (bullet) {
+      this.parent?.addChild(bullet);
+    }
   }
 
   getClosestEnemyBulletDistance() {
     if (!this.enemy || !this.manager) return 999;
 
     let minDist = 999;
+    const bullets = this.manager.getBullets();
 
-    for (const b of this.manager.bullets) {
+    for (const b of bullets) {
       if (b.owner === this.enemy) {
         const dx = b.x - this.x;
         const dy = b.y - this.y;

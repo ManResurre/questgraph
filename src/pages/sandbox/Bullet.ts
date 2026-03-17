@@ -6,7 +6,73 @@ import {
   ARENA_HEIGHT,
   BULLET_MAX_SPEED,
   BULLET_DAMAGE,
+  COLLISION_BOT_RADIUS,
+  BULLET_POOL_SIZE,
 } from "./config";
+
+/** Object pool для пуль */
+export class BulletPool {
+  private pool: Bullet[] = [];
+  private active: Bullet[] = [];
+
+  constructor(size: number = BULLET_POOL_SIZE) {
+    for (let i = 0; i < size; i++) {
+      const bullet = new Bullet().circle(0, 0, 5).fill(0xffffff);
+      bullet.visible = false;
+      this.pool.push(bullet);
+    }
+  }
+
+  acquire(
+    owner: Bot,
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+  ): Bullet | null {
+    const bullet = this.pool.pop();
+    if (!bullet) return null;
+
+    bullet.reset(x, y, vx, vy, owner);
+    bullet.visible = true;
+    this.active.push(bullet);
+    return bullet;
+  }
+
+  release(bullet: Bullet): void {
+    const idx = this.active.indexOf(bullet);
+    if (idx !== -1) {
+      this.active.splice(idx, 1);
+    }
+    bullet.visible = false;
+    bullet.destroyed = false;
+    this.pool.push(bullet);
+  }
+
+  getActive(): Bullet[] {
+    return this.active;
+  }
+
+  update(delta: number): void {
+    for (let i = this.active.length - 1; i >= 0; i--) {
+      const bullet = this.active[i];
+      bullet.update(delta);
+      if (bullet.destroyed) {
+        this.release(bullet);
+      }
+    }
+  }
+
+  clear(): void {
+    while (this.active.length > 0) {
+      const bullet = this.active.pop();
+      if (bullet) {
+        bullet.visible = false;
+        this.pool.push(bullet);
+      }
+    }
+  }
+}
 
 export class Bullet extends Entity {
   vx = 0;
@@ -18,6 +84,17 @@ export class Bullet extends Entity {
   maxSpeed = BULLET_MAX_SPEED;
 
   owner: Bot | null = null;
+
+  /** Сбросить и инициализировать пулю */
+  reset(x: number, y: number, vx: number, vy: number, owner: Bot): this {
+    this.x = x;
+    this.y = y;
+    this.vx = vx;
+    this.vy = vy;
+    this.owner = owner;
+    this.destroyed = false;
+    return this;
+  }
 
   addOwner(owner: Bot) {
     this.owner = owner;
@@ -50,7 +127,7 @@ export class Bullet extends Entity {
     this.x += this.vx * delta;
     this.y += this.vy * delta;
 
-    if (circleCollision(this, enemy, 16)) {
+    if (circleCollision(this, enemy, COLLISION_BOT_RADIUS)) {
       enemy.hp = Math.max(0, enemy.hp - BULLET_DAMAGE);
       if (enemy.hp <= 0 && this.owner) {
         this.owner.kills++;

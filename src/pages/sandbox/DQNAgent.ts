@@ -10,6 +10,68 @@ import {
 } from "./config";
 import type { RLExperience } from "./types";
 
+/**
+ * Оптимизированный replay buffer с эффективным random sampling
+ * Использует циклический буфер и предварительную генерацию индексов
+ */
+class ReplayBuffer {
+  private buffer: RLExperience[] = [];
+  private capacity: number;
+  private index = 0;
+  private size = 0;
+
+  constructor(capacity: number) {
+    this.capacity = capacity;
+  }
+
+  push(experience: RLExperience): void {
+    if (this.buffer.length < this.capacity) {
+      this.buffer.push(experience);
+    } else {
+      this.buffer[this.index] = experience;
+    }
+    this.index = (this.index + 1) % this.capacity;
+    this.size = Math.min(this.size + 1, this.capacity);
+  }
+
+  get length(): number {
+    return this.size;
+  }
+
+  /** Получить случайную выборку без повторений */
+  sample(batchSize: number): RLExperience[] {
+    const result: RLExperience[] = [];
+    const len = this.size;
+
+    if (batchSize >= len) {
+      return [...this.buffer];
+    }
+
+    // Используем Set для избежания повторений
+    const usedIndices = new Set<number>();
+
+    while (result.length < batchSize) {
+      const idx = Math.floor(Math.random() * len);
+      if (!usedIndices.has(idx)) {
+        usedIndices.add(idx);
+        result.push(this.buffer[idx]);
+      }
+    }
+
+    return result;
+  }
+
+  clear(): void {
+    this.buffer = [];
+    this.index = 0;
+    this.size = 0;
+  }
+
+  toArray(): RLExperience[] {
+    return [...this.buffer];
+  }
+}
+
 export class DQNAgent {
   stateSize: number;
   actionSize: number;
@@ -20,13 +82,15 @@ export class DQNAgent {
   epsilonDecay = RL_EPSILON_DECAY;
   learningRate = RL_LEARNING_RATE;
 
-  memory: RLExperience[] = [];
+  /** Оптимизированный replay buffer */
+  private replayBuffer: ReplayBuffer;
 
   model: tf.LayersModel;
 
   constructor(stateSize: number, actionSize: number) {
     this.stateSize = stateSize;
     this.actionSize = actionSize;
+    this.replayBuffer = new ReplayBuffer(RL_MEMORY_SIZE);
     this.model = this.buildModel();
   }
 
@@ -84,17 +148,13 @@ export class DQNAgent {
     nextState: number[],
     done: boolean,
   ) {
-    this.memory.push({ state, action, reward, nextState, done });
-    if (this.memory.length > RL_MEMORY_SIZE) this.memory.shift();
+    this.replayBuffer.push({ state, action, reward, nextState, done });
   }
 
   async replay(batchSize = RL_REPLAY_BATCH_SIZE) {
-    if (this.memory.length < batchSize) return;
+    if (this.replayBuffer.length < batchSize) return;
 
-    const batch = [];
-    for (let i = 0; i < batchSize; i++) {
-      batch.push(this.memory[Math.floor(Math.random() * this.memory.length)]);
-    }
+    const batch = this.replayBuffer.sample(batchSize);
 
     const states: number[][] = [];
     const targets: number[][] = [];
@@ -129,5 +189,15 @@ export class DQNAgent {
     if (this.epsilon > this.epsilonMin) {
       this.epsilon *= this.epsilonDecay;
     }
+  }
+
+  /** Получить размер памяти */
+  getMemorySize(): number {
+    return this.replayBuffer.length;
+  }
+
+  /** Очистить память */
+  clearMemory(): void {
+    this.replayBuffer.clear();
   }
 }
