@@ -12,8 +12,7 @@
     "plugin:react-hooks/recommended",
     "plugin:jsx-a11y/recommended",
     "plugin:import/recommended",
-    "plugin:import/typescript",
-    "plugin:tailwindcss/recommended"
+    "plugin:import/typescript"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -23,13 +22,7 @@
       "jsx": true
     }
   },
-  "plugins": [
-    "react",
-    "@typescript-eslint",
-    "jsx-a11y",
-    "import",
-    "tailwindcss"
-  ],
+  "plugins": ["react", "@typescript-eslint", "jsx-a11y", "import"],
   "settings": {
     "react": {
       "version": "detect"
@@ -49,7 +42,6 @@
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
       }
-    ],
-    "tailwindcss/no-custom-classname": "off"
+    ]
   }
 }

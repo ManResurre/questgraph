@@ -4,9 +4,9 @@ import { getRays } from "./raycast";
 import { Health } from "./Health";
 import { Cover } from "./Cover";
 import { RectCover } from "./RectCover";
-import { EntityManager } from "./EntityManager";
 import { Entity } from "./Entity";
 import { circleCollision, getCircleRectCollisionResponse } from "./utils";
+import { castRay } from "./raycast";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
@@ -23,7 +23,6 @@ import {
   HEALTH_PICKUP_HEAL,
   MAX_BULLETS_PER_BOT,
   BULLET_SPAWN_DIST,
-  BULLET_DAMAGE,
   RL_REWARD_STEP,
   RL_REWARD_OUT_OF_BOUNDS,
   RL_REWARD_DAMAGE,
@@ -34,6 +33,8 @@ import {
   RL_REPLAY_INTERVAL,
   COLLISION_BOT_RADIUS,
   COLLISION_COVER_RADIUS,
+  RL_REWARD_IDLE,
+  RL_REWARD_SHOOT_THROUGH_WALL,
 } from "./config";
 
 /** Пул массивов для getState (избегаем аллокаций в игровом цикле) */
@@ -42,7 +43,7 @@ const STATE_POOL_SIZE = 20;
 let statePoolIndex = 0;
 
 for (let i = 0; i < STATE_POOL_SIZE; i++) {
-  STATE_ARRAY_POOL.push(new Array(44)); // 8 базовых + 36 raycast (12 * 3)
+  STATE_ARRAY_POOL.push(new Array(47)); // 11 базовых + 36 raycast (12 * 3)
 }
 
 /** Получить массив из пула */
@@ -50,6 +51,22 @@ function acquireStateArray(): number[] {
   const arr = STATE_ARRAY_POOL[statePoolIndex];
   statePoolIndex = (statePoolIndex + 1) % STATE_POOL_SIZE;
   return arr;
+}
+
+/** Лог поведения бота для анализа */
+export interface BotLogEntry {
+  step: number;
+  action: number;
+  reward: number;
+  hp: number;
+  x: number;
+  y: number;
+  hasEnemy: boolean;
+  hasItem: boolean;
+  itemDist: number;
+  isOutOfBounds: boolean;
+  shotThroughWall: boolean;
+  pickedUp: boolean; // Флаг подбора аптечки
 }
 
 export class Bot extends Entity {
@@ -72,13 +89,24 @@ export class Bot extends Entity {
 
   kills = 0;
 
-  // глобальный счётчик шагов для обучения
-  static globalStep = 0;
+  // Отслеживание стрельбы для штрафа за стены
+  private lastShotStep = -1;
+  private shotThroughWall = false;
+
+  // Детекция застревания
+  private lastPositions: { x: number; y: number }[] = [];
+  private stuckCounter = 0;
+
+  // Логирование поведения
+  private logs: BotLogEntry[] = [];
+  private lastAction = 0;
+  private lastReward = 0;
+  private consecutiveActionsToItem = 0; // Счётчик действий к аптечке подряд
 
   constructor() {
     super();
     this.id = Math.floor(Math.random() * 10000);
-    this.agent = new DQNAgent(44, 8);
+    this.agent = new DQNAgent(47, 8);
   }
 
   addBrain() {
@@ -134,6 +162,20 @@ export class Bot extends Entity {
     state[idx++] = item ? item.x / ARENA_WIDTH : 0;
     state[idx++] = item ? item.y / ARENA_HEIGHT : 0;
 
+    // Направление к аптечке (вектор)
+    if (item) {
+      const dx = item.x - this.x;
+      const dy = item.y - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      state[idx++] = dx / dist; // нормализованный X
+      state[idx++] = dy / dist; // нормализованный Y
+      state[idx++] = Math.min(dist / 300, 1); // расстояние нормализованное
+    } else {
+      state[idx++] = 0;
+      state[idx++] = 0;
+      state[idx++] = 1;
+    }
+
     // Здоровье и возможность стрельбы
     state[idx++] = this.hp / BOT_MAX_HP;
     state[idx++] = this.canShoot ? 1 : 0;
@@ -170,7 +212,12 @@ export class Bot extends Entity {
         if (this.item) this.moveToward(this.item);
         break;
       case 7:
-        if (this.enemy) this.moveAway(this.enemy);
+        // Если есть враг — убегаем, иначе — идём к аптечке
+        if (this.enemy) {
+          this.moveAway(this.enemy);
+        } else if (this.item) {
+          this.moveToward(this.item);
+        }
         break;
     }
   }
@@ -206,6 +253,13 @@ export class Bot extends Entity {
       return;
     }
 
+    // Проверяем видимость противника через raycast
+    const hasLineOfSight = this.checkLineOfSight(this.enemy);
+
+    // Запоминаем факт стрельбы сквозь стену для штрафа в update()
+    this.shotThroughWall = !hasLineOfSight;
+    this.lastShotStep = DQNAgent.globalSteps;
+
     const dx = this.enemy.x - this.x;
     const dy = this.enemy.y - this.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -221,6 +275,66 @@ export class Bot extends Entity {
     if (bullet) {
       this.parent?.addChild(bullet);
     }
+  }
+
+  /**
+   * Проверка видимости цели через raycast
+   * Возвращает true если между ботом и целью нет препятствий
+   */
+  private checkLineOfSight(target: Bot): boolean {
+    if (!this.manager) return false;
+
+    const dx = target.x - this.x;
+    const dy = target.y - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+    // Нормализованный вектор направления
+    const dirX = dx / dist;
+    const dirY = dy / dist;
+
+    // Пускаем лучи по направлению к цели с шагом
+    const step = 10;
+    let currentDist = 0;
+
+    while (currentDist < dist) {
+      const x = this.x + dirX * currentDist;
+      const y = this.y + dirY * currentDist;
+
+      // Проверяем препятствия в этой точке
+      const nearby = this.manager.getNearbyObjects(
+        x,
+        y,
+        COLLISION_COVER_RADIUS,
+      );
+
+      for (const obj of nearby) {
+        if (obj instanceof Cover || obj instanceof RectCover) {
+          // Проверяем коллизию с укрытием
+          if (obj instanceof Cover) {
+            if (circleCollision({ x, y }, obj, COLLISION_COVER_RADIUS)) {
+              return false; // Препятствие найдено
+            }
+          } else if (obj instanceof RectCover) {
+            const response = getCircleRectCollisionResponse(
+              x,
+              y,
+              5, // небольшой радиус для луча
+              obj.x,
+              obj.y,
+              obj.coverWidth,
+              obj.coverHeight,
+            );
+            if (response) {
+              return false; // Препятствие найдено
+            }
+          }
+        }
+      }
+
+      currentDist += step;
+    }
+
+    return true; // Путь чист
   }
 
   getClosestEnemyBulletDistance() {
@@ -248,11 +362,53 @@ export class Bot extends Entity {
     return Math.sqrt(dx * dx + dy * dy);
   }
 
+  /** Проверка, застрял ли бот */
+  private checkStuck(): boolean {
+    // Сохраняем последние 10 позиций
+    this.lastPositions.push({ x: this.x, y: this.y });
+    if (this.lastPositions.length > 10) {
+      this.lastPositions.shift();
+    }
+
+    if (this.lastPositions.length < 10) return false;
+
+    // Вычисляем дистанцию между первой и последней позицией
+    const first = this.lastPositions[0];
+    const last = this.lastPositions[9];
+    const dist = Math.sqrt((last.x - first.x) ** 2 + (last.y - first.y) ** 2);
+
+    // Если за 10 шагов прошёл меньше 5 единиц - застрял
+    return dist < 5;
+  }
+
+  /** Сбросить состояние застревания */
+  private resetStuck(): void {
+    this.lastPositions = [];
+    this.stuckCounter = 0;
+  }
+
+  /** Проверка, может ли бот подобрать аптечку (без подбора) */
+  canPickupItem(): boolean {
+    if (!this.item) return false;
+    const dx = this.x - this.item.x;
+    const dy = this.y - this.item.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    return dist < HEALTH_PICKUP_RADIUS && !this.item.isCollected;
+  }
+
   checkItemPickup() {
     if (!this.item) return false;
     const dx = this.x - this.item.x;
     const dy = this.y - this.item.y;
-    return Math.sqrt(dx * dx + dy * dy) < HEALTH_PICKUP_RADIUS;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < HEALTH_PICKUP_RADIUS && !this.item.isCollected) {
+      // Подбираем аптечку
+      this.item.collect();
+      return true;
+    }
+
+    return false;
   }
 
   isOutOfBounds() {
@@ -276,6 +432,9 @@ export class Bot extends Entity {
 
     this.vx = 0;
     this.vy = 0;
+
+    // Сбрасываем детекцию застревания
+    this.resetStuck();
   }
 
   updatePhysics(delta: number) {
@@ -293,7 +452,6 @@ export class Bot extends Entity {
 
     if (this.item && this.checkItemPickup()) {
       this.hp = Math.min(BOT_MAX_HP, this.hp + HEALTH_PICKUP_HEAL);
-      this.item.respawn();
       if (this.hpText) this.hpText.text = String(this.hp);
     }
 
@@ -393,22 +551,42 @@ export class Bot extends Entity {
     const state = this.getState();
 
     const prevHp = this.hp;
+    const prevX = this.x;
+    const prevY = this.y;
     const closestBulletBefore = this.getClosestEnemyBulletDistance();
-    const pickedUpBefore = this.checkItemPickup();
+    const canPickupBefore = this.canPickupItem(); // Только проверка, без подбора
     const prevItemDist = this.getItemDistance();
 
     // Используем target network для стабильности
-    const action = this.agent.actWithTarget(state);
+    let action = this.agent.actWithTarget(state);
+
+    // Детекция застревания - добавляем рандомизацию
+    if (this.checkStuck()) {
+      this.stuckCounter++;
+      // Если застрял больше 3 раз подряд - 50% шанс случайного действия
+      if (this.stuckCounter > 3 && Math.random() < 0.5) {
+        action = Math.floor(Math.random() * 6); // Случайное движение (0-5)
+      }
+    } else {
+      this.resetStuck();
+    }
+
     this.applyAction(action);
 
     const nextState = this.getState();
 
     let reward = RL_REWARD_STEP;
 
-    if (this.isOutOfBounds()) reward += RL_REWARD_OUT_OF_BOUNDS;
+    // Штраф за выход за границы
+    const outOfBounds = this.isOutOfBounds();
+    if (outOfBounds) {
+      reward += RL_REWARD_OUT_OF_BOUNDS;
+    }
 
     if (this.hp <= 0) {
       this.agent.remember(state, action, RL_REWARD_DEATH, nextState, true);
+      this.agent.incrementEpisode(); // Увеличиваем счётчик эпизодов
+      this.logAction(action, reward, outOfBounds, false); // Логируем перед респавном
       this.respawn();
       return;
     }
@@ -419,23 +597,97 @@ export class Bot extends Entity {
 
     if (this.hp < prevHp) reward += RL_REWARD_DAMAGE;
 
+    // Награда за приближение к аптечке (чувствительный порог)
     const nextItemDist = this.getItemDistance();
-    if (nextItemDist < prevItemDist - 2) reward += RL_REWARD_APPROACH_ITEM;
+    if (this.item && nextItemDist < prevItemDist - 0.5) {
+      reward += RL_REWARD_APPROACH_ITEM;
+    }
 
-    const pickedUpAfter = this.checkItemPickup();
-    if (!pickedUpBefore && pickedUpAfter && this.item) {
+    // Штраф за бездействие (если бот почти не двигается И не движется к аптечке)
+    const movedDist = Math.sqrt((this.x - prevX) ** 2 + (this.y - prevY) ** 2);
+    if (movedDist < 0.5 && this.item) {
+      // Штрафуем только если бот не движется к аптечке
+      const approachingItem = nextItemDist < prevItemDist - 1;
+      if (!approachingItem) {
+        reward += RL_REWARD_IDLE;
+      }
+    }
+
+    // Штраф за стрельбу сквозь стены
+    if (
+      this.shotThroughWall &&
+      DQNAgent.globalSteps === this.lastShotStep + 1
+    ) {
+      reward += RL_REWARD_SHOOT_THROUGH_WALL;
+      this.shotThroughWall = false; // Сбрасываем флаг после применения штрафа
+    }
+
+    // Подбор аптечки и награда
+    const pickedUp = this.checkItemPickup(); // Теперь подбираем
+    if (pickedUp && canPickupBefore) {
+      // Бот был рядом с аптечкой и подобрал её
       reward += RL_REWARD_PICKUP_ITEM;
-      this.hp = Math.min(BOT_MAX_HP, this.hp + HEALTH_PICKUP_HEAL);
-      this.item.respawn();
+      this.agent.incrementEpisode(); // Считаем подбор как "эпизод" в режиме exploration
     }
 
     if (this.hpText) this.hpText.text = String(this.hp);
 
     this.agent.remember(state, action, reward, nextState, false);
 
-    Bot.globalStep++;
-    if (Bot.globalStep % RL_REPLAY_INTERVAL === 0) {
+    // Логируем действие
+    this.logAction(action, reward, outOfBounds, pickedUp);
+
+    // Увеличиваем глобальный счётчик шагов (один раз на все боты)
+    if (this.id === this.manager?.bots[0]?.id) {
+      DQNAgent.globalSteps++;
+    }
+
+    if (DQNAgent.globalSteps % RL_REPLAY_INTERVAL === 0) {
       this.agent.replay(32);
     }
+  }
+
+  /**
+   * Записать действие в лог
+   */
+  private logAction(
+    action: number,
+    reward: number,
+    isOutOfBounds: boolean,
+    pickedUp: boolean,
+  ): void {
+    // Ограничиваем размер лога 1000 записей
+    if (this.logs.length >= 1000) {
+      this.logs.shift();
+    }
+
+    this.logs.push({
+      step: DQNAgent.globalSteps,
+      action,
+      reward,
+      hp: this.hp,
+      x: this.x,
+      y: this.y,
+      hasEnemy: !!this.enemy,
+      hasItem: !!this.item,
+      itemDist: this.getItemDistance(),
+      isOutOfBounds,
+      shotThroughWall: this.shotThroughWall,
+      pickedUp,
+    });
+  }
+
+  /**
+   * Получить логи поведения
+   */
+  getLogs(): BotLogEntry[] {
+    return [...this.logs];
+  }
+
+  /**
+   * Очистить логи
+   */
+  clearLogs(): void {
+    this.logs = [];
   }
 }

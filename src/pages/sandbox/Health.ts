@@ -13,9 +13,18 @@ import {
 /** Цвет аптечки */
 const HEALTH_COLOR = 0x44ff44;
 
+/** Задержка респауна в кадрах (при 60 FPS = ~5 секунд) */
+const RESPAWN_DELAY = 300;
+
 export class Health extends Entity {
   /** Радиус аптечки */
   radius: number = HEALTH_RADIUS;
+
+  /** Таймер до респауна */
+  respawnTimer: number = 0;
+
+  /** Видима ли аптечка */
+  isCollected: boolean = false;
 
   /**
    * Нарисовать аптечку (зелёный круг)
@@ -26,6 +35,30 @@ export class Health extends Entity {
     this.fill(HEALTH_COLOR);
     this.restore();
     return this;
+  }
+
+  /**
+   * Обновление аптечки (для респауна)
+   */
+  update(delta: number): void {
+    if (this.isCollected && this.respawnTimer > 0) {
+      this.respawnTimer -= delta;
+      if (this.respawnTimer <= 0) {
+        // Респаун
+        this.respawn();
+        this.isCollected = false;
+        this.visible = true;
+      }
+    }
+  }
+
+  /**
+   * Подобрать аптечку
+   */
+  collect(): void {
+    this.isCollected = true;
+    this.respawnTimer = RESPAWN_DELAY;
+    this.visible = false;
   }
 
   respawn() {

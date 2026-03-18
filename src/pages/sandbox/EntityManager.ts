@@ -189,24 +189,31 @@ export class EntityManager {
     // 2. Пули — каждый кадр (обновляем через пул)
     this.bulletPool.update(delta);
 
-    // 3. Физика — каждый кадр
+    // 3. Аптечки — обновляем таймеры респауна
+    for (const item of this.items) {
+      if (item instanceof Health) {
+        item.update(delta);
+      }
+    }
+
+    // 4. Физика — каждый кадр
     for (const bot of this.bots) {
       bot.updatePhysics(delta);
     }
 
-    // 4. Если очередь пуста — пересобираем
+    // 5. Если очередь пуста — пересобираем
     if (this.updateQueue.length === 0) {
       this.updateQueue = [...this.bots];
     }
 
-    // 5. Достаём одного бота
+    // 6. Достаём одного бота
     const bot = this.updateQueue.shift();
     if (!bot) return;
 
-    // 6. RL-обновление только одного бота
+    // 7. RL-обновление только одного бота
     bot.update(delta);
 
-    // 7. Проверка фрагов
+    // 8. Проверка фрагов
     if (bot.kills >= RL_KILLS_TO_COPY_BRAIN) {
       console.log("БОТ", bot.id, "СТАЛ ЛУЧШИМ — КОПИРУЕМ МОЗГ");
       this.copyBrainToAll(bot);

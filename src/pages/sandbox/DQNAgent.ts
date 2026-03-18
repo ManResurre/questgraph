@@ -263,6 +263,9 @@ export class DQNAgent {
   private rewardWindow: number[] = [];
   private rewardWindowSize = 100;
 
+  /** Глобальный счётчик шагов (общий для всех агентов) */
+  static globalSteps = 0;
+
   /** Оптимизированный replay buffer */
   private replayBuffer: ReplayBuffer;
 
@@ -388,7 +391,6 @@ export class DQNAgent {
     }
     this.metrics.averageReward =
       this.rewardWindow.reduce((a, b) => a + b, 0) / this.rewardWindow.length;
-    this.metrics.totalSteps++;
   }
 
   async replay(batchSize = RL_REPLAY_BATCH_SIZE): Promise<number> {
@@ -528,7 +530,13 @@ export class DQNAgent {
 
   /** Получить текущие метрики */
   getMetrics(): TrainingMetrics {
-    return { ...this.metrics };
+    return {
+      epsilon: this.epsilon,
+      loss: this.metrics.loss,
+      averageReward: this.metrics.averageReward,
+      totalSteps: DQNAgent.globalSteps,
+      episodes: this.metrics.episodes,
+    };
   }
 
   /** Сбросить метрики */
