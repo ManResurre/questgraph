@@ -1,9 +1,9 @@
-import type { Entity } from "./Entity";
 import type { Bot } from "./Bot";
 import type { Bullet } from "./Bullet";
-import type { Health } from "./Health";
 import type { Cover } from "./Cover";
 import type { DQNAgent } from "./DQNAgent";
+import type { Entity } from "./Entity";
+import type { Health } from "./Health";
 
 /** Тип укрытия */
 export type CoverType = "indestructible" | "destructible";

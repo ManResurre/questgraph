@@ -1,8 +1,4 @@
 import { Bot } from "./Bot";
-import { Entity } from "./Entity";
-import { Cover } from "./Cover";
-import { RectCover } from "./RectCover";
-import { circleCollision, circleRectCollision } from "./utils";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
@@ -14,6 +10,10 @@ import {
   COVER_BULLET_DAMAGE,
   COLLISION_COVER_RADIUS,
 } from "./config";
+import { Cover } from "./Cover";
+import { Entity } from "./Entity";
+import { RectCover } from "./RectCover";
+import { circleCollision, circleRectCollision } from "./utils";
 
 /** Object pool для пуль */
 export class BulletPool {

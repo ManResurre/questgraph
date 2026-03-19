@@ -1,12 +1,4 @@
 import { HTMLText } from "pixi.js";
-import { DQNAgent } from "./DQNAgent";
-import { getRays } from "./raycast";
-import { Health } from "./Health";
-import { Cover } from "./Cover";
-import { RectCover } from "./RectCover";
-import { Entity } from "./Entity";
-import { circleCollision, getCircleRectCollisionResponse } from "./utils";
-import { castRay } from "./raycast";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
@@ -36,6 +28,14 @@ import {
   RL_REWARD_IDLE,
   RL_REWARD_SHOOT_THROUGH_WALL,
 } from "./config";
+import { Cover } from "./Cover";
+import { DQNAgent } from "./DQNAgent";
+import { Entity } from "./Entity";
+import { Health } from "./Health";
+import { getRays  } from "./raycast";
+import { RectCover } from "./RectCover";
+import { circleCollision, getCircleRectCollisionResponse } from "./utils";
+
 
 /** Пул массивов для getState (избегаем аллокаций в игровом цикле) */
 const STATE_ARRAY_POOL: number[][] = [];
@@ -99,9 +99,6 @@ export class Bot extends Entity {
 
   // Логирование поведения
   private logs: BotLogEntry[] = [];
-  private lastAction = 0;
-  private lastReward = 0;
-  private consecutiveActionsToItem = 0; // Счётчик действий к аптечке подряд
 
   constructor() {
     super();

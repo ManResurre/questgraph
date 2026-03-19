@@ -1,8 +1,4 @@
 import type { Bot } from "./Bot";
-import type { Health } from "./Health";
-import { Cover } from "./Cover";
-import type { EntityManager } from "./EntityManager";
-import { circleCollision } from "./utils";
 import {
   RAY_COUNT,
   RAY_MAX_DIST,
@@ -11,6 +7,10 @@ import {
   COLLISION_COVER_RADIUS,
   COLLISION_ITEM_RADIUS,
 } from "./config";
+import { Cover } from "./Cover";
+import type { EntityManager } from "./EntityManager";
+import type { Health } from "./Health";
+import { circleCollision } from "./utils";
 const CACHED_RAY_ANGLES: number[] = [];
 for (let i = 0; i < RAY_COUNT; i++) {
   CACHED_RAY_ANGLES.push((i / RAY_COUNT) * Math.PI * 2);
@@ -102,7 +102,6 @@ export function getRays(
 ): number[] {
   const rays = acquireRaysArray();
   let rayIdx = 0;
-  const obstacles: Cover[] = []; // больше не используется, но оставляем для совместимости
 
   for (let i = 0; i < RAY_COUNT; i++) {
     const [obs, en, it] = castRay(
@@ -121,11 +120,4 @@ export function getRays(
   }
 
   return rays;
-}
-
-/**
- * Освободить массив обратно в пул (опционально, если нужно точное управление)
- */
-export function releaseRaysArray(rays: number[]): void {
-  // В простой реализации просто циклически переиспользуем
 }

@@ -29,6 +29,7 @@
     },
     "import/resolver": {
       "typescript": {
+        "alwaysTryTypes": true,
         "project": "./tsconfig.json"
       }
     }
@@ -41,6 +42,38 @@
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
+      }
+    ],
+    "import/no-unresolved": "off",
+    "import/order": [
+      "warn",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "@/**",
+            "group": "internal",
+            "position": "after"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["builtin"],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ],
+    "react/no-unknown-property": [
+      "error",
+      {
+        "ignore": ["pixiGraphics", "pixiContainer", "pixiSprite", "draw"]
       }
     ]
   }

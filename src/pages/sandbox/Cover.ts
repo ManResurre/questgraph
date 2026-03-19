@@ -1,5 +1,4 @@
 import { Entity } from "./Entity";
-import { COVER_TYPE_INDESTRUCTIBLE, COVER_TYPE_DESTRUCTIBLE } from "./config";
 import type { CoverType } from "./types";
 
 /** Радиус неразрушимого укрытия */

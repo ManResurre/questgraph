@@ -1,16 +1,15 @@
 import { Application } from "pixi.js";
 import { Bot } from "./Bot";
-import { Health } from "./Health";
-import { Cover } from "./Cover";
-import { RectCover } from "./RectCover";
 import { Bullet, BulletPool } from "./Bullet";
-import { SpatialHash } from "./spatial-hash";
 import {
   ARENA_WIDTH,
   ARENA_HEIGHT,
   RL_KILLS_TO_COPY_BRAIN,
-  COLLISION_BOT_RADIUS,
 } from "./config";
+import { Cover } from "./Cover";
+import { Health } from "./Health";
+import { RectCover } from "./RectCover";
+import { SpatialHash } from "./spatial-hash";
 
 /** Общий тип для всех укрытий */
 export type CoverEntity = Cover | RectCover;
@@ -191,9 +190,7 @@ export class EntityManager {
 
     // 3. Аптечки — обновляем таймеры респауна
     for (const item of this.items) {
-      if (item instanceof Health) {
-        item.update(delta);
-      }
+      item.update(delta);
     }
 
     // 4. Физика — каждый кадр

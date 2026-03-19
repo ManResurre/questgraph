@@ -1,5 +1,3 @@
-import { Entity } from "./Entity";
-import { circleCollision } from "./utils";
 import {
   ARENA_MIN_X,
   ARENA_MAX_X,
@@ -9,6 +7,8 @@ import {
   SPAWN_MIN_DIST_FROM_BOT,
   HEALTH_RADIUS,
 } from "./config";
+import { Entity } from "./Entity";
+import { circleCollision } from "./utils";
 
 /** Цвет аптечки */
 const HEALTH_COLOR = 0x44ff44;

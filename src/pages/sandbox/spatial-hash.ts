@@ -1,7 +1,7 @@
 import type { Bot } from "./Bot";
 import type { Cover } from "./Cover";
-import type { RectCover } from "./RectCover";
 import type { Health } from "./Health";
+import type { RectCover } from "./RectCover";
 
 /** Общий тип для укрытий */
 export type CoverEntity = Cover | RectCover;

@@ -2,6 +2,11 @@
 export const ARENA_WIDTH = 800;
 export const ARENA_HEIGHT = 600;
 
+// Псевдонимы для совместимости
+export const CANVAS_WIDTH = ARENA_WIDTH;
+export const CANVAS_HEIGHT = ARENA_HEIGHT;
+export const CANVAS_BACKGROUND = "#222";
+
 // Границы арены (отступы от краёв)
 export const ARENA_MARGIN_X = 20;
 export const ARENA_MARGIN_Y = 20;
