@@ -6,9 +6,11 @@ import {
     TilingSprite as PixiTilingSprite,
     Graphics as PixiGraphics,
     Container as PixiContainer, UPDATE_PRIORITY, TilingSprite, FillGradient,
-    Filter, GlProgram, Container, Graphics, Sprite
+    Filter, GlProgram, Container, Graphics, Sprite, BlurFilter
 } from "pixi.js";
-import {useEffect, useState, useCallback, useRef, RefAttributes, ReactNode, Key} from "react";
+import {useEffect, useState, useCallback, useRef, RefAttributes, ReactNode, Key, useMemo} from "react";
+import { GlowFilter } from 'pixi-filters';
+import {BLEND_MODES} from "pixi.js/lib/rendering/renderers/shared/state/const";
 
 type PixiComponentProps<T> = Partial<T> & RefAttributes<T> & {
     children?: ReactNode;
@@ -178,6 +180,18 @@ export function Planet(
     const spriteRef = useRef<TilingSprite>(null);
     const [shadowTexture, setShadowTexture] = useState<Texture | null>(null);
 
+    const blurFilter = useMemo(() => new BlurFilter(20), []);
+    const glowFilter = useMemo(
+        () => new GlowFilter({
+            distance: 10,           // радиус свечения (пиксели)
+            outerStrength: 4,       // интенсивность внешнего свечения
+            innerStrength: 0,       // интенсивность внутреннего свечения (0 = только внешнее)
+            color: 0x66b7ff,        // цвет свечения (голубой)
+            quality: 0.2,           // качество (0..1, выше = медленнее)
+        }),
+        []
+    );
+
     useTick({
         callback() {
             if (this.current) {
@@ -271,7 +285,6 @@ export function Planet(
                     height={radius * 2}
                     mask={maskGraphics}
                     tileScale={{x: 0.44, y: 0.44}}
-                    // filters={lensFilter ? [lensFilter] : undefined}
                 />
             )}
             {shadowTexture && (
@@ -286,7 +299,10 @@ export function Planet(
 
             {/*<pixiGraphics draw={drawShadow} rotation={Math.PI * 0.25}/>*/}
 
-            {/*<pixiGraphics draw={drawLens}/>*/}
+            <pixiGraphics
+                draw={drawLens}
+                filters={[blurFilter]}
+            />
         </pixiContainer>
     );
 }
