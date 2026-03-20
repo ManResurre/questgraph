@@ -2875,6 +2875,11 @@
   resolved "https://registry.yarnpkg.com/@pixi/colord/-/colord-2.9.6.tgz#7e4e7851480da6fd3cef4e331f008d60be7e1204"
   integrity sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA==
 
+"@pixi/filter-displacement@^7.4.3":
+  version "7.4.3"
+  resolved "https://registry.yarnpkg.com/@pixi/filter-displacement/-/filter-displacement-7.4.3.tgz#d6cad8df91d8d7e7c8c6504ca7d9a73eea9ed432"
+  integrity sha512-ax+cFA2mEnKgqf9F8qInpv09GNWzjwnASLETpwPXzWBtlAlNCeHV2tCv3+SlMdEKUkwG9sA7AmjjjC2JBUyt+Q==
+
 "@pixi/react@^8.0.5":
   version "8.0.5"
   resolved "https://registry.yarnpkg.com/@pixi/react/-/react-8.0.5.tgz#a725094421053bd2800a937ccc902b3e59b591dc"
