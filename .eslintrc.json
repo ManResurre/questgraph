@@ -12,7 +12,8 @@
     "plugin:react-hooks/recommended",
     "plugin:jsx-a11y/recommended",
     "plugin:import/recommended",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "plugin:tailwindcss/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -22,7 +23,7 @@
       "jsx": true
     }
   },
-  "plugins": ["react", "@typescript-eslint", "jsx-a11y", "import"],
+  "plugins": ["react", "@typescript-eslint", "jsx-a11y", "import", "tailwindcss"],
   "settings": {
     "react": {
       "version": "detect"
@@ -45,17 +46,34 @@
       }
     ],
     "import/no-unresolved": "off",
+    "react/no-unknown-property": [
+      "error",
+      {
+        "ignore": [
+          "pixiContainer",
+          "pixiGraphics",
+          "pixiTilingSprite",
+          "pixiSprite",
+          "draw",
+          "texture",
+          "anchor",
+          "tileScale",
+          "tilePosition",
+          "mask",
+          "filters",
+          "width",
+          "height",
+          "x",
+          "y",
+          "rotation"
+        ]
+      }
+    ],
+    "tailwindcss/no-custom-classname": "off",
     "import/order": [
       "warn",
       {
-        "groups": [
-          "builtin",
-          "external",
-          "internal",
-          "parent",
-          "sibling",
-          "index"
-        ],
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
         "pathGroups": [
           {
             "pattern": "@/**",
@@ -68,12 +86,6 @@
           "order": "asc",
           "caseInsensitive": true
         }
-      }
-    ],
-    "react/no-unknown-property": [
-      "error",
-      {
-        "ignore": ["pixiGraphics", "pixiContainer", "pixiSprite", "draw"]
       }
     ]
   }

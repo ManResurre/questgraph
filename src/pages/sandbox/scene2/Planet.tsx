@@ -2,64 +2,50 @@ import {extend, useTick} from "@pixi/react";
 import {
     Assets,
     Texture,
+    Text,
     TilingSprite as PixiTilingSprite,
     Graphics as PixiGraphics,
     Container as PixiContainer, UPDATE_PRIORITY, TilingSprite, FillGradient,
- Filter, GlProgram } from "pixi.js";
-import {useEffect, useState, useCallback, useRef} from "react";
+    Filter, GlProgram, Container, Graphics, Sprite
+} from "pixi.js";
+import {useEffect, useState, useCallback, useRef, RefAttributes, ReactNode, Key} from "react";
 
+type PixiComponentProps<T> = Partial<T> & RefAttributes<T> & {
+    children?: ReactNode;
+    key?: Key;
+};
 
-export class LensDistortionFilter extends Filter {
-    constructor(strength = 0.2) {
+declare global {
+    namespace JSX {
+        interface IntrinsicElements {
+            pixiContainer: PixiComponentProps<Container>;
+            pixiTilingSprite: PixiComponentProps<TilingSprite>;
+            pixiSprite: PixiComponentProps<Sprite>;
+            pixiText: PixiComponentProps<Text>;
 
-        const vertex = `
-            precision mediump float;
-
-            attribute vec2 aVertexPosition;
-            attribute vec2 aTextureCoord;
-
-            uniform mat3 uProjectionMatrix;
-
-            varying vec2 vTextureCoord;
-
-            void main() {
-                vTextureCoord = aTextureCoord;
-                gl_Position = vec4((uProjectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
-            }
-        `;
-
-        const fragment = `
-            precision mediump float;
-
-            varying vec2 vTextureCoord;
-            uniform sampler2D uTexture;
-            uniform float strength;
-
-            void main() {
-                vec2 uv = vTextureCoord * 2.0 - 1.0;
-                float dist = dot(uv, uv);
-
-                vec2 distorted = uv * (1.0 + strength * dist);
-                vec2 finalUV = (distorted + 1.0) * 0.5;
-
-                gl_FragColor = texture2D(uTexture, finalUV);
-            }
-        `;
-
-        const glProgram = new GlProgram({ vertex, fragment });
-
-        super({
-            glProgram,
-            resources: {
-                strengthUniforms: {
-                    strength: { value: strength, type: "f32" }
-                }
-            }
-        });
+            pixiGraphics: PixiComponentProps<Graphics> & {
+                draw?: (g: Graphics) => void;
+            };
+        }
     }
 }
 
-
+// export class LensDistortionFilter extends Filter {
+//     constructor(strength = 0.2) {
+//
+//         const vertex = `...`;
+//         const fragment = `...`;
+//
+//         const glProgram = new GlProgram({ vertex, fragment });
+//
+//         super({
+//             glProgram,
+//             resources: {
+//                 strength: { value: strength }
+//             }
+//         });
+//     }
+// }
 
 interface PlanetProps {
     texturePath: string;
@@ -76,6 +62,106 @@ extend({
     TilingSprite: PixiTilingSprite,
 });
 
+function createPlanetTexture(
+    radius: number,
+    azimuth: number = -Math.PI / 3,
+    elevation: number = Math.PI * 2,
+    softness: number = 0.2,
+    lightColor: string = "#f9e0b0",
+    shadowColor: string = "#5a3e2a",
+    terminator: number = 0.4
+): Texture {
+    const size = radius * 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+
+    const cx = radius;
+    const cy = radius;
+
+    const imageData = ctx.getImageData(0, 0, size, size);
+    const data = imageData.data;
+
+    const lightR = parseInt(lightColor.slice(1, 3), 16);
+    const lightG = parseInt(lightColor.slice(3, 5), 16);
+    const lightB = parseInt(lightColor.slice(5, 7), 16);
+    const shadowR = parseInt(shadowColor.slice(1, 3), 16);
+    const shadowG = parseInt(shadowColor.slice(3, 5), 16);
+    const shadowB = parseInt(shadowColor.slice(5, 7), 16);
+
+    // ⭐ 3D-вектор света
+    const lx = Math.cos(elevation) * Math.sin(azimuth);
+    const ly = Math.sin(elevation);
+    const lz = Math.cos(elevation) * Math.cos(azimuth);
+
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const dx = x - cx;
+            const dy = y - cy;
+            const dist = Math.hypot(dx, dy);
+            const idx = (y * size + x) * 4;
+
+            if (dist > radius) {
+                data[idx + 3] = 0;
+                continue;
+            }
+
+            // ⭐ нормаль к сфере
+            const nx = dx / radius;
+            const ny = dy / radius;
+            const nz = Math.sqrt(1 - nx * nx - ny * ny);
+
+            // ⭐ освещение: dot = N·L
+            let dot = nx * lx + ny * ly + nz * lz;
+
+            dot -= terminator;
+
+            let intensity = (dot + 1) / 2;
+
+            // мягкость терминатора
+            if (softness > 0) {
+                const t = (intensity - 0.5) / softness;
+                intensity = 1 / (1 + Math.exp(-t * 8));
+            }
+
+            // затемнение края
+            const edgeDarkening = 1 - (dist / radius) * 0.1;
+            intensity = Math.min(1, Math.max(0, intensity * edgeDarkening));
+
+            data[idx] = Math.round(lightR * intensity + shadowR * (1 - intensity));
+            data[idx + 1] = Math.round(lightG * intensity + shadowG * (1 - intensity));
+            data[idx + 2] = Math.round(lightB * intensity + shadowB * (1 - intensity));
+            data[idx + 3] = 255;
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    // ⭐⭐⭐ Атмосферное сияние (самый красивый вариант)
+    ctx.globalCompositeOperation = "lighter";
+
+    for (let i = 0; i < 3; i++) {
+        const r1 = radius * (1.05 + i * 0.05);
+        const r2 = radius * (1.15 + i * 0.05);
+
+        const grad = ctx.createRadialGradient(cx, cy, r1, cx, cy, r2);
+
+        grad.addColorStop(0.0, "rgba(120, 180, 255, 0.15)");
+        grad.addColorStop(1.0, "rgba(120, 180, 255, 0)");
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.globalCompositeOperation = "source-over";
+
+    return Texture.from(canvas);
+}
+
+
 export function Planet(
     {
         texturePath,
@@ -86,10 +172,11 @@ export function Planet(
     }: PlanetProps) {
 
     const [texture, setTexture] = useState<Texture | null>(null);
-    const [lensFilter, setLensFilter] = useState<LensDistortionFilter>(null);
+    // const [lensFilter, setLensFilter] = useState<LensDistortionFilter>();
 
     const [maskGraphics, setMaskGraphics] = useState<PixiGraphics | null>(null);
-    const spriteRef = useRef<TilingSprite>(null)
+    const spriteRef = useRef<TilingSprite>(null);
+    const [shadowTexture, setShadowTexture] = useState<Texture | null>(null);
 
     useTick({
         callback() {
@@ -102,6 +189,10 @@ export function Planet(
         isEnabled: true,
         priority: UPDATE_PRIORITY.HIGH,
     })
+
+    useEffect(() => {
+        setShadowTexture(createPlanetTexture(radius));
+    }, [radius]);
 
     // загрузка текстуры
     useEffect(() => {
@@ -122,7 +213,7 @@ export function Planet(
             //     scale: 150,
             // });
 
-            setLensFilter(new LensDistortionFilter(0.15));
+            // setLensFilter(new LensDistortionFilter(0.15));
         })();
 
         return () => {
@@ -160,7 +251,6 @@ export function Planet(
                 ]
             });
 
-
             g.fill(grad);
         },
         [radius]
@@ -171,6 +261,7 @@ export function Planet(
 
     return (
         <pixiContainer x={x} y={y}>
+            <pixiGraphics draw={drawMask}/>
             {maskGraphics && (
                 <pixiTilingSprite
                     ref={spriteRef}
@@ -183,10 +274,19 @@ export function Planet(
                     // filters={lensFilter ? [lensFilter] : undefined}
                 />
             )}
+            {shadowTexture && (
+                <pixiSprite
+                    blendMode="multiply"
+                    texture={shadowTexture}
+                    anchor={0.5}
+                    x={0}
+                    y={0}
+                />
+            )}
 
-            {/* маска */}
-            <pixiGraphics draw={drawMask}/>
-            <pixiGraphics draw={drawLens}/>
+            {/*<pixiGraphics draw={drawShadow} rotation={Math.PI * 0.25}/>*/}
+
+            {/*<pixiGraphics draw={drawLens}/>*/}
         </pixiContainer>
     );
 }
