@@ -13,6 +13,7 @@ import { sandboxLayoutRoute } from "./sandbox/_layout";
 import { sandboxIndexRoute } from "./sandbox";
 import { sandboxScene1Route } from "./sandbox/scene1";
 import { sandboxScene2Route } from "./sandbox/scene2";
+import { sandboxScene3Route } from "./sandbox/scene3";
 import { createRouter } from "@tanstack/react-router";
 
 const routeTree = rootRoute.addChildren([
@@ -27,6 +28,7 @@ const routeTree = rootRoute.addChildren([
     sandboxIndexRoute,
     sandboxScene1Route,
     sandboxScene2Route,
+    sandboxScene3Route,
   ]),
 ]);
 

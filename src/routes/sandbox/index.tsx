@@ -42,6 +42,16 @@ function SandboxIndex() {
         >
           Scene 2 — Тестовый круг
         </Button>
+
+        <Button
+          variant="contained"
+          size="large"
+          component={Link}
+          to="/sandbox/scene3"
+          sx={{ minWidth: 200 }}
+        >
+          Scene 3 — Земля
+        </Button>
       </Box>
     </Box>
   );
