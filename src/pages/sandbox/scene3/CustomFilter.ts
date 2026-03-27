@@ -1,49 +1,123 @@
 import { Filter, GlProgram } from "pixi.js";
 
-export interface CustomShaderOptions {
-  waveAmplitude?: number;
-  waveFrequency?: number;
+export interface PlanetShaderOptions {
+  /**
+   * Положение источника света [x, y]
+   * Диапазон: от -1.0 до 1.0
+   * [0.5, 0.3] — свет справа-сверху (по умолчанию)
+   * [0.0, 0.0] — свет по центру
+   * [-0.5, -0.3] — свет слева-снизу
+   */
+  lightPos?: [number, number];
+
+  /**
+   * Размеры спрайта [width, height]
+   * Нужно передавать те же значения, что и в width/height спрайта
+   */
+  spriteSize?: [number, number];
 }
 
 /**
- * Заготовка кастомного шейдерного фильтра
+ * Шейдер планеты с эффектом сферы и освещением
  *
  * @example
- * const customFilter = createCustomFilter({ waveAmplitude: 0.05, waveFrequency: 10.0 });
- * sprite.filters = [customFilter];
+ * // Базовое использование:
+ * const planetFilter = createPlanetFilter({ lightPos: [0.5, 0.3], spriteSize: [300, 300] });
+ * sprite.filters = [planetFilter];
  *
- * // В анимации:
- * app.ticker.add((ticker) => {
- *   customFilter.resources.timeUniforms.uniforms.uTime += 0.1 * ticker.deltaTime;
- * });
+ * // В анимации (вращение):
+ * filter.resources.planetUniforms.uniforms.uTime += 0.01;
+ *
+ * @param options.lightPos - Положение света [x, y] от -1 до 1
+ * @param options.spriteSize - Размеры спрайта [width, height]
+ *
+ * @uniforms
+ * uTime - время для вращения (0.1 = скорость вращения)
+ * uLightPos - направление на источник света
+ * uSpriteSize - размеры спрайта для коррекции пропорций
  */
-export function createCustomFilter(options: CustomShaderOptions = {}) {
-  const { waveAmplitude = 0.0, waveFrequency = 1.0 } = options;
+export function createPlanetFilter(options: PlanetShaderOptions = {}) {
+  const { lightPos = [0.5, 0.3], spriteSize = [300, 300] } = options;
 
+  // =====================================================
+  // FRAGMENT SHADER
+  // =====================================================
   const fragment = `
-    in vec2 vTextureCoord;
-    out vec4 finalColor;
-
+    varying vec2 vTextureCoord;
     uniform sampler2D uTexture;
     uniform float uTime;
-    uniform float uWaveAmplitude;
-    uniform float uWaveFrequency;
+    uniform vec2 uLightPos;
+    uniform vec2 uSpriteSize;
 
-    void main(void)
-    {
-      vec2 coord = vTextureCoord;
-      vec4 color = texture(uTexture, coord);
+    out vec4 finalColor;
 
-      // Здесь будет ваша шейдерная логика
-      // Примеры:
-      // color.rgb *= 1.2;                    // увеличить яркость
-      // color.r = min(color.r + 0.3, 1.0);   // добавить красный
-      // coord.x += sin(coord.y * 10.0) * 0.05; // волна
+    void main(void) {
+      // ============================================
+      // 1. КООРДИНАТЫ И МАСКА КРУГА
+      // ============================================
 
-      finalColor = color;
+      // Нормализуем координаты: из 0..1 в -1..1
+      vec2 p = (vTextureCoord - 0.5) * 2.0;
+
+      // Учитываем соотношение сторон спрайта (для квадрата не нужно)
+      p.x *= uSpriteSize.y / uSpriteSize.x;
+
+      // Вычисляем расстояние от центра
+      float r = length(p);
+
+      // Отбрасываем пиксели за пределами круга (маска планеты)
+      if (r > 1.0) {
+        discard;
+      }
+
+      // ============================================
+      // 2. СФЕРИЧЕСКОЕ ИСКАЖЕНИЕ (ЭФФЕКТ ОБЪЁМА)
+      // ============================================
+
+      // Для equirectangular проекции используем сферические координаты
+      // p.x — это долгота (-1..1), p.y — широта (-1..1)
+
+      // Преобразуем в углы
+      float lon = p.x * 3.14159 * 0.5;  // долгота: -π до π
+      float lat = p.y * 1.4;   // широта: -π/2 до π/2
+
+      // Добавляем вращение по долготе
+      lon += uTime * 0.1;
+
+      // Преобразуем обратно в UV координаты текстуры
+      vec2 uv;
+      uv.x = lon / 6.28318 + 0.5;  // 2π
+      uv.y = lat / 3.14159 + 0.45;  // π
+
+      // Сэмплируем текстуру
+      vec4 color = texture(uTexture, uv);
+
+      // ============================================
+      // 4. ОСВЕЩЕНИЕ (ФАЗА ПЛАНЕТЫ)
+      // ============================================
+
+      // Вычисляем нормаль поверхности сферы
+      // Z-компонента — это "высота" точки на сфере
+      vec3 normal = vec3(p, sqrt(max(0.0, 1.0 - r * r)));
+
+      // Направление на источник света (из uniform)
+      vec3 lightDir = normalize(vec3(uLightPos, 1.0));
+
+      // Скалярное произведение = угол между нормалью и светом
+      float light = dot(normal, lightDir);
+
+      // Ограничиваем освещённость: 0.05 — мин. подсветка "ночной" стороны
+      // 1.0 — максимум (дневная сторона)
+      light = clamp(light, 0.05, 1.0);
+
+      // Применяем освещение к цвету
+      finalColor = vec4(color.rgb * light, 1.0);
     }
   `;
 
+  // =====================================================
+  // VERTEX SHADER
+  // =====================================================
   const vertex = `
     in vec2 aPosition;
     in vec2 aTextureCoord;
@@ -80,10 +154,10 @@ export function createCustomFilter(options: CustomShaderOptions = {}) {
       vertex,
     }),
     resources: {
-      timeUniforms: {
+      planetUniforms: {
         uTime: { value: 0.0, type: "f32" },
-        uWaveAmplitude: { value: waveAmplitude, type: "f32" },
-        uWaveFrequency: { value: waveFrequency, type: "f32" },
+        uLightPos: { value: lightPos, type: "vec2<f32>" },
+        uSpriteSize: { value: spriteSize, type: "vec2<f32>" },
       },
     },
   });

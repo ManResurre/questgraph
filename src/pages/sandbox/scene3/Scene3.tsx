@@ -3,15 +3,19 @@ import { Sprite, Container, Texture } from "pixi.js";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "@/pages/sandbox/config";
 import { useAsset } from "@/hooks/useAsset";
 import { useMemo } from "react";
-import { createCustomFilter } from "./CustomFilter";
+import { createPlanetFilter } from "./CustomFilter";
 
 extend({ Sprite, Container });
 
 export default function Scene3() {
   const texture = useAsset<Texture>("/sandbox/earth.jpg");
-  const customFilter = useMemo(
-    () => createCustomFilter({ waveAmplitude: 0.05, waveFrequency: 10.0 }),
-    [],
+  const size = 512;
+
+  // Делаем спрайт квадратным для правильной формы круга
+  const planetFilter = useMemo(
+    () =>
+      createPlanetFilter({ lightPos: [0.5, 0.3], spriteSize: [size, size] }),
+    [size],
   );
 
   return (
@@ -27,7 +31,9 @@ export default function Scene3() {
           anchor={0.5}
           x={CANVAS_WIDTH / 2}
           y={CANVAS_HEIGHT / 2}
-          filters={[customFilter]}
+          width={size}
+          height={size}
+          filters={[planetFilter]}
         />
       )}
     </Application>
